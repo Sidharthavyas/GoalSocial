@@ -4,7 +4,7 @@ import api from '../utils/api';
 import Comments from './Comments';
 import Reactions from './Reactions';
 
-const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
+const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) => {
     const [selectedGoalId, setSelectedGoalId] = useState('');
     const [completed, setCompleted] = useState(false);
     const [value, setValue] = useState(0);
@@ -73,7 +73,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                         <>
                             <div className="form-group">
                                 <label>Goal</label>
-                                <select value={selectedGoalId} onChange={(e) => setSelectedGoalId(e.target.value)}>
+                                <select value={selectedGoalId} onChange={(e) => setSelectedGoalId(e.target.value)} disabled={readOnly}>
                                     {goals.map(goal => (
                                         <option key={goal._id} value={goal._id}>{goal.title}</option>
                                     ))}
@@ -84,11 +84,12 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                                 <>
                                     {selectedGoal.type === 'one-time' || selectedGoal.type === 'recurring' ? (
                                         <div className="form-group">
-                                            <label className="flex items-center gap-sm" style={{ cursor: 'pointer' }}>
+                                            <label className="flex items-center gap-sm" style={{ cursor: readOnly ? 'default' : 'pointer' }}>
                                                 <input
                                                     type="checkbox"
                                                     checked={completed}
                                                     onChange={(e) => setCompleted(e.target.checked)}
+                                                    disabled={readOnly}
                                                 />
                                                 <span>Completed</span>
                                             </label>
@@ -101,6 +102,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                                                 value={value}
                                                 onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
                                                 step="0.01"
+                                                disabled={readOnly}
                                             />
                                             {selectedGoal.targetValue && (
                                                 <div className="text-sm text-tertiary mt-sm">
@@ -117,6 +119,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                                                 onChange={(e) => setPercentage(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
                                                 min="0"
                                                 max="100"
+                                                disabled={readOnly}
                                             />
                                             <div className="progress-bar mt-sm">
                                                 <div className="progress-fill" style={{ width: `${percentage}%` }}></div>
@@ -129,7 +132,8 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                                         <textarea
                                             value={notes}
                                             onChange={(e) => setNotes(e.target.value)}
-                                            placeholder="Add any notes or reflections..."
+                                            placeholder={readOnly ? "No notes" : "Add any notes or reflections..."}
+                                            disabled={readOnly}
                                         />
                                     </div>
                                 </>
@@ -147,12 +151,17 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate }) => {
                     )}
                 </div>
 
-                {goals.length > 0 && (
+                {goals.length > 0 && !readOnly && (
                     <div className="modal-footer">
                         <button onClick={onClose} className="btn btn-secondary">Cancel</button>
                         <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
                             {saving ? 'Saving...' : 'Save Progress'}
                         </button>
+                    </div>
+                )}
+                {readOnly && (
+                    <div className="modal-footer">
+                        <button onClick={onClose} className="btn btn-primary">Close</button>
                     </div>
                 )}
             </div>

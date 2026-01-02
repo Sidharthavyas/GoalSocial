@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns';
 import DayModal from './DayModal';
 
-const Calendar = ({ goals, tasks, onUpdate }) => {
+const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
 
@@ -105,6 +105,7 @@ const Calendar = ({ goals, tasks, onUpdate }) => {
                     tasks={getTasksForDate(selectedDate)}
                     onClose={() => setSelectedDate(null)}
                     onUpdate={onUpdate}
+                    readOnly={readOnly}
                 />
             )}
         </>

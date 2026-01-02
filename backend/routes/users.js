@@ -87,4 +87,41 @@ router.get('/:userId/goals', authenticateToken, async (req, res) => {
     }
 });
 
+// Get user's tasks (only if friend or self)
+router.get('/:userId/tasks', authenticateToken, async (req, res) => {
+    try {
+        const targetUserId = req.params.userId;
+        const Task = (await import('../models/Task.js')).default;
+
+        // Check if viewing own tasks
+        if (targetUserId === req.user._id.toString()) {
+            const tasks = await Task.find({ userId: targetUserId })
+                .populate('goalId', 'title type')
+                .sort({ date: -1 });
+            return res.json({ tasks });
+        }
+
+        // Check if friends
+        const friendship = await Friend.findOne({
+            $or: [
+                { requester: req.user._id, recipient: targetUserId, status: 'accepted' },
+                { requester: targetUserId, recipient: req.user._id, status: 'accepted' }
+            ]
+        });
+
+        if (!friendship) {
+            return res.status(403).json({ error: 'Not authorized to view this user\'s tasks' });
+        }
+
+        const tasks = await Task.find({ userId: targetUserId })
+            .populate('goalId', 'title type')
+            .sort({ date: -1 });
+
+        res.json({ tasks });
+    } catch (error) {
+        console.error('Get user tasks error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 export default router;
