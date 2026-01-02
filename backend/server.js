@@ -25,10 +25,10 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 
 // ✅ Express CORS (REST)
 app.use(
-  cors({
-    origin: FRONTEND_URL,
-    credentials: true,
-  })
+    cors({
+        origin: FRONTEND_URL,
+        credentials: true,
+    })
 );
 
 // ✅ Preflight support
@@ -38,18 +38,18 @@ app.use(express.json());
 
 // ✅ Socket.IO CORS
 const io = new Server(httpServer, {
-  cors: {
-    origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+    cors: {
+        origin: FRONTEND_URL,
+        methods: ["GET", "POST"],
+        credentials: true,
+    },
 });
 
 // Database
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+    .connect(process.env.MONGODB_URI)
+    .then(() => console.log("✅ Connected to MongoDB"))
+    .catch((err) => console.error("❌ MongoDB error:", err));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -63,7 +63,7 @@ app.use("/api/activity", activityRoutes);
 
 // Health
 app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+    res.json({ status: "ok" });
 });
 
 // WebSocket handlers
@@ -72,6 +72,6 @@ setupSocketHandlers(io);
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Frontend allowed: ${FRONTEND_URL}`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Frontend allowed: ${FRONTEND_URL}`);
 });
