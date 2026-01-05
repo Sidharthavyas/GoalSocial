@@ -38,6 +38,9 @@ const allowedOrigins = [
     process.env.FRONTEND_URL,              // Vercel frontend (prod)
     "http://localhost:5173",               // Vite default
     "http://localhost:5174",               // Vite fallback
+    "https://localhost",                   // Capacitor mobile app
+    "capacitor://localhost",               // Capacitor iOS
+    "http://localhost",                    // Capacitor Android
 ];
 
 const corsOptions = {

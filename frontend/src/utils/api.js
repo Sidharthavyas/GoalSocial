@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { getApiBaseUrl } from './capacitorConfig';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
+// Use capacitorConfig to get the right API URL for web vs mobile
+const API_URL = getApiBaseUrl();
 
 export const api = axios.create({
     baseURL: `${API_URL}/api`,
