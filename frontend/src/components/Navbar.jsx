@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../hooks/useTheme';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -32,6 +34,14 @@ const Navbar = () => {
                         </ul>
                     </div>
                     <div className="flex items-center gap-md">
+                        <button
+                            onClick={toggleTheme}
+                            className="btn btn-secondary btn-sm"
+                            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                            style={{ padding: '8px 12px' }}
+                        >
+                            {theme === 'dark' ? '☀️' : '🌙'}
+                        </button>
                         <span className="text-secondary text-sm">
                             {user?.username}
                         </span>
@@ -46,3 +56,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

@@ -6,6 +6,8 @@ import StreakBadge from '../components/StreakBadge';
 import { useSocket } from '../context/SocketContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { syncQueue, getPendingCount } from '../utils/offlineQueue';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const Dashboard = () => {
     const [goals, setGoals] = useState([]);
@@ -107,8 +109,46 @@ const Dashboard = () => {
 
     if (loading) {
         return (
-            <div className="container mt-lg">
-                <div className="loading text-center">Loading dashboard...</div>
+            <div className="container mt-lg mb-lg">
+                <div className="flex items-center justify-between mb-lg">
+                    <div>
+                        <Skeleton width={200} height={40} />
+                        <Skeleton width={300} height={20} style={{ marginTop: '8px' }} />
+                    </div>
+                    <div className="flex items-center gap-sm">
+                        <Skeleton width={80} height={36} />
+                        <Skeleton width={80} height={24} />
+                    </div>
+                </div>
+
+                {/* Streak Badge Skeleton */}
+                <Skeleton width={250} height={48} style={{ marginBottom: '24px' }} />
+
+                {/* Daily Progress Bar Skeleton */}
+                <div className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
+                    <Skeleton width={150} height={24} />
+                    <Skeleton height={12} style={{ marginTop: '16px' }} />
+                    <div className="flex justify-between" style={{ marginTop: '8px' }}>
+                        <Skeleton width={100} height={16} />
+                        <Skeleton width={100} height={16} />
+                    </div>
+                </div>
+
+                {/* Stats Cards Skeleton */}
+                <div className="grid grid-3 mb-lg">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="card">
+                            <Skeleton width={120} height={16} />
+                            <Skeleton width={60} height={32} style={{ marginTop: '8px' }} />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Calendar & Activity Skeleton */}
+                <div className="grid grid-2">
+                    <Skeleton height={400} />
+                    <Skeleton height={400} />
+                </div>
             </div>
         );
     }

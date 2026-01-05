@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { triggerCelebration } from '../utils/celebrations';
 import { addToQueue } from '../utils/offlineQueue';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import toast from 'react-hot-toast';
 import Comments from './Comments';
 import Reactions from './Reactions';
 

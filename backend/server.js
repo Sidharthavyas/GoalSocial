@@ -22,37 +22,68 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-const FRONTEND_URL = process.env.FRONTEND_URL;
+/**
+ * ============================
+ * CORS CONFIG (IMPORTANT)
+ * ============================
+ * - Allows localhost ANY port (Vite)
+ * - Allows deployed Vercel frontend
+ * - Blocks unknown origins
+ */
+const allowedOrigins = [
+  process.env.FRONTEND_URL,              // Vercel frontend (prod)
+  "http://localhost:5173",               // Vite default
+  "http://localhost:5174",               // Vite fallback
+];
 
-// ✅ Express CORS (REST)
-app.use(
-    cors({
-        origin: FRONTEND_URL,
-        credentials: true,
-    })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow server-to-server & tools like curl/postman
+    if (!origin) return callback(null, true);
 
-// ✅ Preflight support
-app.options("*", cors());
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("CORS not allowed"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// ✅ REST CORS
+app.use(cors(corsOptions));
+
+// ✅ Preflight support (VERY IMPORTANT)
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
-// ✅ Socket.IO CORS
+/**
+ * ============================
+ * SOCKET.IO CORS
+ * ============================
+ */
 const io = new Server(httpServer, {
-    cors: {
-        origin: FRONTEND_URL,
-        methods: ["GET", "POST"],
-        credentials: true,
-    },
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
 });
 
-// Database
+// ============================
+// DATABASE
+// ============================
 mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => console.log("✅ Connected to MongoDB"))
-    .catch((err) => console.error("❌ MongoDB error:", err));
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB error:", err));
 
-// Routes
+// ============================
+// ROUTES
+// ============================
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
@@ -63,17 +94,24 @@ app.use("/api/reactions", reactionRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/calendar", calendarRoutes);
 
-// Health
+// ============================
+// HEALTH CHECK
+// ============================
 app.get("/health", (req, res) => {
-    res.json({ status: "ok" });
+  res.json({ status: "ok" });
 });
 
-// WebSocket handlers
+// ============================
+// SOCKET HANDLERS
+// ============================
 setupSocketHandlers(io);
 
+// ============================
+// SERVER START
+// ============================
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌐 Frontend allowed: ${FRONTEND_URL}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Allowed frontends:`, allowedOrigins);
 });

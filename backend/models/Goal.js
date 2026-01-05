@@ -44,6 +44,21 @@ const goalSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    color: {
+        type: String,
+        default: '#6366f1',
+        validate: {
+            validator: function (v) {
+                return /^#[0-9A-F]{6}$/i.test(v);
+            },
+            message: 'Color must be a valid hex color'
+        }
+    },
+    icon: {
+        type: String,
+        default: '🎯',
+        maxlength: 2
+    },
     createdAt: {
         type: Date,
         default: Date.now
