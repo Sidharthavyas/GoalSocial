@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { getWsUrl } from '../utils/capacitorConfig';
 
 const SocketContext = createContext();
 
@@ -12,7 +13,7 @@ export const useSocket = () => {
     return context;
 };
 
-const WS_URL = (import.meta.env.VITE_WS_URL || 'http://localhost:5000').replace(/\/$/, '');
+const WS_URL = getWsUrl();
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);

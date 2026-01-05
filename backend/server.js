@@ -65,6 +65,9 @@ app.use(cors(corsOptions));
 // ✅ Preflight support (VERY IMPORTANT)
 app.options("*", cors(corsOptions));
 
+// ✅ Trust proxy for Render deployment (fixes rate limiter)
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
 /**
