@@ -58,25 +58,33 @@ function App() {
                     <Route path="/dashboard" element={
                         <ProtectedRoute>
                             <Navbar />
-                            <Dashboard />
+                            <main className="app-main">
+                                <Dashboard />
+                            </main>
                         </ProtectedRoute>
                     } />
                     <Route path="/goals" element={
                         <ProtectedRoute>
                             <Navbar />
-                            <Goals />
+                            <main className="app-main">
+                                <Goals />
+                            </main>
                         </ProtectedRoute>
                     } />
                     <Route path="/friends" element={
                         <ProtectedRoute>
                             <Navbar />
-                            <Friends />
+                            <main className="app-main">
+                                <Friends />
+                            </main>
                         </ProtectedRoute>
                     } />
                     <Route path="/friends/:userId" element={
                         <ProtectedRoute>
                             <Navbar />
-                            <FriendProfile />
+                            <main className="app-main">
+                                <FriendProfile />
+                            </main>
                         </ProtectedRoute>
                     } />
 

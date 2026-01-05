@@ -14,13 +14,9 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
     const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     const getTasksForDate = (date) => {
-        return tasks.filter(task => {
-            const taskDate = new Date(task.date);
-            taskDate.setHours(0, 0, 0, 0);
-            const compareDate = new Date(date);
-            compareDate.setHours(0, 0, 0, 0);
-            return taskDate.getTime() === compareDate.getTime();
-        });
+        const dateString = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+            .toISOString().split('T')[0];
+        return tasks.filter(task => task.date === dateString || task.date.startsWith(dateString));
     };
 
     const getDayProgress = (date) => {
@@ -60,37 +56,52 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                         const progress = getDayProgress(day);
                         const dayTasks = getTasksForDate(day);
                         const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                        const isFuture = day > new Date();
+                        const isPerfectDay = progress === 100 && dayTasks.length > 0;
+                        const isMissedDay = dayTasks.length > 0 && progress === 0;
+
+                        // Calculate streak (simple version - 3+ consecutive days)
+                        const yesterday = new Date(day);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const dayBeforeYesterday = new Date(day);
+                        dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
+
+                        const yesterdayProgress = getDayProgress(yesterday);
+                        const dayBeforeProgress = getDayProgress(dayBeforeYesterday);
+                        const isStreakDay = progress > 0 && yesterdayProgress > 0 && dayBeforeProgress > 0 && !isFuture;
 
                         return (
                             <div
                                 key={day.toString()}
                                 className={`calendar-day ${isToday(day) ? 'today' : ''} ${progress > 0 ? 'has-progress' : ''}`}
-                                onClick={() => isCurrentMonth && setSelectedDate(day)}
+                                onClick={() => isCurrentMonth && !isFuture && setSelectedDate(day)}
                                 style={{
-                                    opacity: isCurrentMonth ? 1 : 0.4,
-                                    cursor: isCurrentMonth ? 'pointer' : 'default',
-                                    position: 'relative'
+                                    opacity: isFuture ? 0.3 : (isCurrentMonth ? 1 : 0.4),
+                                    cursor: isCurrentMonth && !isFuture ? 'pointer' : 'default',
+                                    position: 'relative',
+                                    background: progress > 0
+                                        ? `linear-gradient(135deg, rgba(99, 102, 241, ${progress / 300}) 0%, rgba(139, 92, 246, ${progress / 250}) 100%)`
+                                        : 'var(--bg-tertiary)'
                                 }}
+                                title={dayTasks.length > 0 ? `${progress}% complete • ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}` : ''}
                             >
-                                <div style={{ fontSize: '0.875rem', fontWeight: isToday(day) ? 700 : 400 }}>
+                                <div className="date" style={{ fontSize: '0.875rem', fontWeight: isToday(day) ? 700 : 400 }}>
                                     {format(day, 'd')}
                                 </div>
-                                {dayTasks.length > 0 && (
-                                    <div style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                                        {dayTasks.length} task{dayTasks.length > 1 ? 's' : ''}
+
+                                {/* Status Icons */}
+                                {!isFuture && (
+                                    <div style={{ fontSize: '0.5rem', marginTop: '2px' }}>
+                                        {isStreakDay && '🔥'}
+                                        {isPerfectDay && '⭐'}
+                                        {isMissedDay && '⚠️'}
                                     </div>
                                 )}
-                                {progress > 0 && (
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            height: '4px',
-                                            background: `linear-gradient(90deg, var(--accent-primary) ${progress}%, var(--bg-tertiary) ${progress}%)`
-                                        }}
-                                    />
+
+                                {dayTasks.length > 0 && (
+                                    <div className="meta" style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                                        {dayTasks.length} task{dayTasks.length > 1 ? 's' : ''}
+                                    </div>
                                 )}
                             </div>
                         );

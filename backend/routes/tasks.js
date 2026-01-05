@@ -20,14 +20,16 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Goal not found' });
         }
 
-        const taskDate = new Date(date);
-        taskDate.setHours(0, 0, 0, 0);
+        // Ensure date is in YYYY-MM-DD format
+        const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+            ? date
+            : new Date(date).toISOString().split('T')[0];
 
         // Find existing task or create new one
         let task = await Task.findOne({
             goalId,
             userId: req.user._id,
-            date: taskDate
+            date: dateString
         });
 
         if (task) {
@@ -41,7 +43,7 @@ router.post('/', authenticateToken, async (req, res) => {
             task = new Task({
                 goalId,
                 userId: req.user._id,
-                date: taskDate,
+                date: dateString,
                 completed: completed || false,
                 value: value || 0,
                 percentage: percentage || 0,
@@ -66,12 +68,12 @@ router.get('/', authenticateToken, async (req, res) => {
         let query = { userId: req.user._id };
 
         if (date) {
-            const taskDate = new Date(date);
-            taskDate.setHours(0, 0, 0, 0);
-            const nextDay = new Date(taskDate);
-            nextDay.setDate(nextDay.getDate() + 1);
+            // Convert to YYYY-MM-DD format for string comparison
+            const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+                ? date
+                : new Date(date).toISOString().split('T')[0];
 
-            query.date = { $gte: taskDate, $lt: nextDay };
+            query.date = dateString;
         }
 
         if (goalId) {

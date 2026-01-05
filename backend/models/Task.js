@@ -14,9 +14,15 @@ const taskSchema = new mongoose.Schema({
         index: true
     },
     date: {
-        type: Date,
+        type: String, // Store as YYYY-MM-DD string to avoid timezone issues
         required: true,
-        index: true
+        index: true,
+        validate: {
+            validator: function (v) {
+                return /^\d{4}-\d{2}-\d{2}$/.test(v);
+            },
+            message: 'Date must be in YYYY-MM-DD format'
+        }
     },
     completed: {
         type: Boolean,

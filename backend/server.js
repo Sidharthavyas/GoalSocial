@@ -15,6 +15,7 @@ import taskRoutes from "./routes/tasks.js";
 import commentRoutes from "./routes/comments.js";
 import reactionRoutes from "./routes/reactions.js";
 import activityRoutes from "./routes/activity.js";
+import calendarRoutes from "./routes/calendar.js";
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/reactions", reactionRoutes);
 app.use("/api/activity", activityRoutes);
+app.use("/api/calendar", calendarRoutes);
 
 // Health
 app.get("/health", (req, res) => {

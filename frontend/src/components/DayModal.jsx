@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import api from '../utils/api';
+import { triggerCelebration } from '../utils/celebrations';
+import { addToQueue } from '../utils/offlineQueue';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import Comments from './Comments';
 import Reactions from './Reactions';
 
@@ -11,6 +14,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
     const [percentage, setPercentage] = useState(0);
     const [notes, setNotes] = useState('');
     const [saving, setSaving] = useState(false);
+    const isOnline = useOnlineStatus();
 
     useEffect(() => {
         if (tasks.length > 0 && goals.length > 0) {
@@ -34,14 +38,34 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
         setSaving(true);
 
         try {
-            await api.post('/tasks', {
+            // Format date as YYYY-MM-DD in local timezone
+            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const dateString = localDate.toISOString().split('T')[0];
+
+            const taskData = {
                 goalId: selectedGoalId,
-                date: date.toISOString(),
+                date: dateString,
                 completed,
                 value,
                 percentage,
                 notes
-            });
+            };
+
+            // If offline, add to queue
+            if (!isOnline) {
+                addToQueue('CREATE_TASK', taskData);
+                alert('Saved offline. Will sync when online.');
+                onUpdate();
+                onClose();
+                return;
+            }
+
+            await api.post('/tasks', taskData);
+
+            // Trigger celebration for 100% completion
+            if (completed || percentage === 100) {
+                triggerCelebration('completion');
+            }
 
             onUpdate();
             onClose();
@@ -93,6 +117,26 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                                                 />
                                                 <span>Completed</span>
                                             </label>
+                                            {!readOnly && (
+                                                <div className="flex gap-sm mt-sm">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCompleted(true)}
+                                                        className="btn btn-success btn-sm"
+                                                        disabled={completed}
+                                                    >
+                                                        ✓ Mark Done
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCompleted(false)}
+                                                        className="btn btn-secondary btn-sm"
+                                                        disabled={!completed}
+                                                    >
+                                                        ↻ Undo
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : selectedGoal.type === 'numeric' ? (
                                         <div className="form-group">
@@ -124,6 +168,42 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                                             <div className="progress-bar mt-sm">
                                                 <div className="progress-fill" style={{ width: `${percentage}%` }}></div>
                                             </div>
+                                            {!readOnly && (
+                                                <div className="flex gap-sm mt-sm">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPercentage(Math.min(100, percentage + 10))}
+                                                        className="btn btn-secondary btn-sm"
+                                                        disabled={percentage >= 100}
+                                                    >
+                                                        +10%
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPercentage(Math.min(100, percentage + 25))}
+                                                        className="btn btn-secondary btn-sm"
+                                                        disabled={percentage >= 100}
+                                                    >
+                                                        +25%
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPercentage(100)}
+                                                        className="btn btn-success btn-sm"
+                                                        disabled={percentage === 100}
+                                                    >
+                                                        ✓ Complete
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPercentage(0)}
+                                                        className="btn btn-secondary btn-sm"
+                                                        disabled={percentage === 0}
+                                                    >
+                                                        ↻ Reset
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : null}
 
