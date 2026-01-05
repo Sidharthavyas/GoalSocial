@@ -1,0 +1,579 @@
+/* ============================
+   MICRO-INTERACTIONS & ANIMATIONS
+   ============================ */
+
+/* Smooth transitions on interactive elements */
+button,
+a,
+input,
+textarea,
+select,
+.card,
+.modal {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================
+   BUTTON INTERACTIONS
+   ============================ */
+
+/* Button ripple effect */
+.btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Button press feedback */
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* ============================
+   CARD INTERACTIONS
+   ============================ */
+
+/* Card hover lift */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Card press */
+.card:active {
+    transform: translateY(-2px);
+}
+
+/* ============================
+   INPUT INTERACTIONS
+   ============================ */
+
+/* Input focus glow */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    border-color: var(--accent-primary);
+}
+
+/* Input label float animation */
+.input-group {
+    position: relative;
+}
+
+.input-group label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    transition: all 0.2s;
+    pointer-events: none;
+    color: var(--text-tertiary);
+}
+
+.input-group input:focus+label,
+.input-group input:not(:placeholder-shown)+label {
+    top: -8px;
+    left: 8px;
+    font-size: 0.75rem;
+    background: var(--bg-card);
+    padding: 0 4px;
+    color: var(--accent-primary);
+}
+
+/* ============================
+   CHECKBOX & RADIO ANIMATIONS
+   ============================ */
+
+/* Checkbox scale on check */
+input[type="checkbox"] {
+    transition: transform 0.1s ease;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+    transform: scale(1.15);
+}
+
+/* Checkbox checkmark animation */
+@keyframes checkmark {
+    0% {
+        transform: scale(0) rotate(45deg);
+    }
+
+    50% {
+        transform: scale(1.2) rotate(45deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(45deg);
+    }
+}
+
+/* ============================
+   PROGRESS BAR ANIMATIONS
+   ============================ */
+
+/* Progress bar fill animation */
+.progress-fill {
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Progress bar pulse on update */
+@keyframes progressPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.progress-fill.updating {
+    animation: progressPulse 0.6s ease-in-out;
+}
+
+/* ============================
+   MODAL ANIMATIONS
+   ============================ */
+
+/* Modal backdrop fade in */
+@keyframes backdropFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-backdrop {
+    animation: backdropFadeIn 0.2s ease-out;
+}
+
+/* Modal slide in from bottom */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal {
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modal slide out */
+@keyframes modalSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+    }
+}
+
+.modal.closing {
+    animation: modalSlideOut 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================
+   TOAST ANIMATIONS
+   ============================ */
+
+/* Toast slide in from right */
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Toast slide out */
+@keyframes toastSlideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+/* ============================
+   NUMBER COUNT ANIMATIONS
+   ============================ */
+
+/* Number count up */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.count-up {
+    animation: countUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Number change flash */
+@keyframes numberFlash {
+
+    0%,
+    100% {
+        background: transparent;
+    }
+
+    50% {
+        background: rgba(99, 102, 241, 0.1);
+    }
+}
+
+.number-change {
+    animation: numberFlash 0.6s ease-out;
+}
+
+/* ============================
+   LOADING & SKELETON ANIMATIONS
+   ============================ */
+
+/* Shimmer effect for skeletons */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.skeleton,
+.react-loading-skeleton {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(90deg,
+            var(--bg-tertiary) 0%,
+            var(--bg-hover) 50%,
+            var(--bg-tertiary) 100%);
+    background-size: 1000px 100%;
+}
+
+/* Spinner rotation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* ============================
+   RIPPLE EFFECT
+   ============================ */
+
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.ripple:active::after {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    to {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+/* ============================
+   FADE ANIMATIONS
+   ============================ */
+
+/* Fade in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Fade out */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.fade-out {
+    animation: fadeOut 0.3s ease-out;
+}
+
+/* ============================
+   SCALE ANIMATIONS
+   ============================ */
+
+/* Scale in */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.scale-in {
+    animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Bounce in */
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.bounce-in {
+    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================
+   HOVER EFFECTS
+   ============================ */
+
+/* Link underline slide */
+a {
+    position: relative;
+    text-decoration: none;
+}
+
+a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent-primary);
+    transition: width 0.3s ease;
+}
+
+a:hover::after {
+    width: 100%;
+}
+
+/* Icon hover rotate */
+.icon-hover {
+    transition: transform 0.3s ease;
+}
+
+.icon-hover:hover {
+    transform: rotate(15deg) scale(1.1);
+}
+
+/* ============================
+   FOCUS MODE STYLES
+   ============================ */
+
+.focus-mode .navbar {
+    display: none;
+}
+
+.focus-mode .activity-feed {
+    display: none;
+}
+
+.focus-mode .stats-cards {
+    display: none;
+}
+
+.focus-mode .calendar {
+    grid-template-columns: 1fr;
+}
+
+.focus-mode .goal-card {
+    font-size: 1.2rem;
+    padding: var(--space-xl);
+}
+
+/* ============================
+   EDITABLE INLINE STYLES
+   ============================ */
+
+.editable {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.editable:hover {
+    background: var(--bg-hover);
+    outline: 1px dashed var(--border-color);
+}
+
+.editable.editing {
+    background: var(--bg-tertiary);
+    outline: 2px solid var(--accent-primary);
+}
+
+/* ============================
+   UTILITY ANIMATIONS
+   ============================ */
+
+/* Pulse */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Shake (for errors) */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(5px);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Glow effect */
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+    }
+}
+
+.glow {
+    animation: glow 2s ease-in-out infinite;
+}

@@ -16,6 +16,10 @@ import commentRoutes from "./routes/comments.js";
 import reactionRoutes from "./routes/reactions.js";
 import activityRoutes from "./routes/activity.js";
 import calendarRoutes from "./routes/calendar.js";
+import insightsRoutes from "./routes/insights.js";
+
+// Middleware
+import { apiLimiter, loginLimiter, friendRequestLimiter } from "./middleware/rateLimiter.js";
 
 dotenv.config();
 
@@ -31,25 +35,25 @@ const httpServer = createServer(app);
  * - Blocks unknown origins
  */
 const allowedOrigins = [
-  process.env.FRONTEND_URL,              // Vercel frontend (prod)
-  "http://localhost:5173",               // Vite default
-  "http://localhost:5174",               // Vite fallback
+    process.env.FRONTEND_URL,              // Vercel frontend (prod)
+    "http://localhost:5173",               // Vite default
+    "http://localhost:5174",               // Vite fallback
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // allow server-to-server & tools like curl/postman
-    if (!origin) return callback(null, true);
+    origin: (origin, callback) => {
+        // allow server-to-server & tools like curl/postman
+        if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
 
-    return callback(new Error("CORS not allowed"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+        return callback(new Error("CORS not allowed"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 // ✅ REST CORS
@@ -66,25 +70,31 @@ app.use(express.json());
  * ============================
  */
 const io = new Server(httpServer, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST"],
-  },
+    cors: {
+        origin: allowedOrigins,
+        credentials: true,
+        methods: ["GET", "POST"],
+    },
 });
 
 // ============================
 // DATABASE
 // ============================
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+    .connect(process.env.MONGODB_URI)
+    .then(() => console.log("✅ Connected to MongoDB"))
+    .catch((err) => console.error("❌ MongoDB error:", err));
 
 // ============================
-// ROUTES
+// ROUTES (with rate limiting)
 // ============================
-app.use("/api/auth", authRoutes);
+// Apply general API rate limiting to all routes
+app.use("/api/", apiLimiter);
+
+// Auth routes with strict login limiting
+app.use("/api/auth", loginLimiter, authRoutes);
+
+// Other routes
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/goals", goalRoutes);
@@ -93,12 +103,13 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/reactions", reactionRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/insights", insightsRoutes);
 
 // ============================
 // HEALTH CHECK
 // ============================
 app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+    res.json({ status: "ok" });
 });
 
 // ============================
@@ -112,6 +123,6 @@ setupSocketHandlers(io);
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Allowed frontends:`, allowedOrigins);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌐 Allowed frontends:`, allowedOrigins);
 });
