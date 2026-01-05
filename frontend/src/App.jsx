@@ -8,6 +8,8 @@ import Goals from './pages/Goals';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 import Navbar from './components/Navbar';
+import PomodoroTimer from './components/PomodoroTimer';
+
 
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
@@ -63,6 +65,15 @@ function App() {
                             </main>
                         </ProtectedRoute>
                     } />
+                    <Route
+  path="/pomodoro"
+  element={
+    <ProtectedRoute>
+      <PomodoroTimer />
+    </ProtectedRoute>
+  }
+/>
+
                     <Route path="/goals" element={
                         <ProtectedRoute>
                             <Navbar />

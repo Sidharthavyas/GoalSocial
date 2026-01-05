@@ -1,5 +1,6 @@
 /* ============================
    MICRO-INTERACTIONS & ANIMATIONS
+   Black + Muted Light Green Theme
    ============================ */
 
 /* Smooth transitions on interactive elements */
@@ -10,14 +11,14 @@ textarea,
 select,
 .card,
 .modal {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================
    BUTTON INTERACTIONS
    ============================ */
 
-/* Button ripple effect */
+/* Button ripple effect - refined for green theme */
 .btn {
     position: relative;
     overflow: hidden;
@@ -31,9 +32,9 @@ select,
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(124, 179, 138, 0.12);
     transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    transition: width 0.5s ease-out, height 0.5s ease-out;
 }
 
 .btn:hover::before {
@@ -41,41 +42,70 @@ select,
     height: 300px;
 }
 
-/* Button press feedback */
+/* Primary button special glow */
+.btn-primary::before {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Button press feedback - subtle */
 .btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+}
+
+/* Button focus ring for accessibility */
+.btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124, 179, 138, 0.4);
 }
 
 /* ============================
    CARD INTERACTIONS
    ============================ */
 
-/* Card hover lift */
+/* Card hover - subtle lift with green tint */
 .card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(124, 179, 138, 0.1);
 }
 
-/* Card press */
+/* Card press - refined feedback */
 .card:active {
-    transform: translateY(-2px);
+    transform: translateY(0);
+    transition: transform 0.1s ease;
+}
+
+/* Card focus for keyboard navigation */
+.card:focus-within {
+    box-shadow: 0 0 0 2px rgba(124, 179, 138, 0.3);
 }
 
 /* ============================
    INPUT INTERACTIONS
    ============================ */
 
-/* Input focus glow */
+/* Input focus glow - muted green */
 input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(124, 179, 138, 0.15),
+                0 1px 2px rgba(0, 0, 0, 0.1);
     border-color: var(--accent-primary);
+}
+
+/* Input hover state */
+input:hover:not(:focus),
+textarea:hover:not(:focus),
+select:hover:not(:focus) {
+    border-color: rgba(124, 179, 138, 0.4);
 }
 
 /* Input label float animation */
@@ -87,9 +117,10 @@ select:focus {
     position: absolute;
     top: 12px;
     left: 12px;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
     color: var(--text-tertiary);
+    background: transparent;
 }
 
 .input-group input:focus+label,
@@ -98,36 +129,57 @@ select:focus {
     left: 8px;
     font-size: 0.75rem;
     background: var(--bg-card);
-    padding: 0 4px;
+    padding: 0 6px;
     color: var(--accent-primary);
+    font-weight: 500;
 }
 
 /* ============================
    CHECKBOX & RADIO ANIMATIONS
    ============================ */
 
-/* Checkbox scale on check */
+/* Custom checkbox styling */
 input[type="checkbox"] {
-    transition: transform 0.1s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     cursor: pointer;
+    accent-color: var(--accent-primary);
 }
 
 input[type="checkbox"]:checked {
-    transform: scale(1.15);
+    transform: scale(1.1);
+}
+
+input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124, 179, 138, 0.3);
+}
+
+/* Radio button styling */
+input[type="radio"] {
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+input[type="radio"]:checked {
+    transform: scale(1.05);
 }
 
 /* Checkbox checkmark animation */
 @keyframes checkmark {
     0% {
         transform: scale(0) rotate(45deg);
+        opacity: 0;
     }
 
     50% {
-        transform: scale(1.2) rotate(45deg);
+        transform: scale(1.1) rotate(45deg);
+        opacity: 1;
     }
 
     100% {
         transform: scale(1) rotate(45deg);
+        opacity: 1;
     }
 }
 
@@ -135,52 +187,82 @@ input[type="checkbox"]:checked {
    PROGRESS BAR ANIMATIONS
    ============================ */
 
-/* Progress bar fill animation */
+/* Progress bar fill animation - smoother */
 .progress-fill {
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* Subtle shine effect on progress bar */
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+    );
+    animation: progressShine 2s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 /* Progress bar pulse on update */
 @keyframes progressPulse {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 1;
+        box-shadow: none;
     }
 
     50% {
-        opacity: 0.8;
+        opacity: 0.9;
+        box-shadow: 0 0 8px rgba(124, 179, 138, 0.4);
     }
 }
 
 .progress-fill.updating {
-    animation: progressPulse 0.6s ease-in-out;
+    animation: progressPulse 0.5s ease-in-out;
 }
 
 /* ============================
    MODAL ANIMATIONS
    ============================ */
 
-/* Modal backdrop fade in */
+/* Modal backdrop fade in - darker for black theme */
 @keyframes backdropFadeIn {
     from {
         opacity: 0;
+        backdrop-filter: blur(0);
     }
 
     to {
         opacity: 1;
+        backdrop-filter: blur(4px);
     }
 }
 
-.modal-backdrop {
-    animation: backdropFadeIn 0.2s ease-out;
+.modal-backdrop,
+.modal-overlay {
+    animation: backdropFadeIn 0.25s ease-out forwards;
 }
 
-/* Modal slide in from bottom */
+/* Modal slide in - refined timing */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(50px) scale(0.95);
+        transform: translateY(24px) scale(0.96);
     }
 
     to {
@@ -190,10 +272,10 @@ input[type="checkbox"]:checked {
 }
 
 .modal {
-    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: modalSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Modal slide out */
+/* Modal slide out - faster exit */
 @keyframes modalSlideOut {
     from {
         opacity: 1;
@@ -202,53 +284,66 @@ input[type="checkbox"]:checked {
 
     to {
         opacity: 0;
-        transform: translateY(50px) scale(0.95);
+        transform: translateY(16px) scale(0.98);
     }
 }
 
 .modal.closing {
-    animation: modalSlideOut 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: modalSlideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 /* ============================
    TOAST ANIMATIONS
    ============================ */
 
-/* Toast slide in from right */
+/* Toast slide in from right - with fade */
 @keyframes toastSlideIn {
     from {
         opacity: 0;
-        transform: translateX(100%);
+        transform: translateX(100%) scale(0.9);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateX(0) scale(1);
     }
+}
+
+.toast {
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Toast slide out */
 @keyframes toastSlideOut {
     from {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateX(0) scale(1);
     }
 
     to {
         opacity: 0;
-        transform: translateX(100%);
+        transform: translateX(100%) scale(0.9);
     }
+}
+
+.toast.closing {
+    animation: toastSlideOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* Toast success variant glow */
+.toast-success {
+    box-shadow: 0 4px 12px rgba(106, 191, 123, 0.2);
 }
 
 /* ============================
    NUMBER COUNT ANIMATIONS
    ============================ */
 
-/* Number count up */
+/* Number count up - refined */
 @keyframes countUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(8px);
     }
 
     to {
@@ -258,31 +353,46 @@ input[type="checkbox"]:checked {
 }
 
 .count-up {
-    animation: countUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: countUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Number change flash */
+/* Number change flash - green tint */
 @keyframes numberFlash {
-
-    0%,
-    100% {
+    0%, 100% {
         background: transparent;
     }
 
     50% {
-        background: rgba(99, 102, 241, 0.1);
+        background: rgba(124, 179, 138, 0.1);
     }
 }
 
 .number-change {
-    animation: numberFlash 0.6s ease-out;
+    animation: numberFlash 0.5s ease-out;
+    border-radius: 4px;
+}
+
+/* Number increase indicator */
+@keyframes numberIncrease {
+    0% {
+        color: var(--success);
+        transform: scale(1.1);
+    }
+    100% {
+        color: inherit;
+        transform: scale(1);
+    }
+}
+
+.number-increase {
+    animation: numberIncrease 0.4s ease-out;
 }
 
 /* ============================
    LOADING & SKELETON ANIMATIONS
    ============================ */
 
-/* Shimmer effect for skeletons */
+/* Shimmer effect - refined for dark theme */
 @keyframes shimmer {
     0% {
         background-position: -1000px 0;
@@ -295,15 +405,18 @@ input[type="checkbox"]:checked {
 
 .skeleton,
 .react-loading-skeleton {
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(90deg,
-            var(--bg-tertiary) 0%,
-            var(--bg-hover) 50%,
-            var(--bg-tertiary) 100%);
+    animation: shimmer 1.8s infinite linear;
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 0%,
+        rgba(124, 179, 138, 0.08) 50%,
+        var(--bg-tertiary) 100%
+    );
     background-size: 1000px 100%;
+    border-radius: var(--border-radius-sm);
 }
 
-/* Spinner rotation */
+/* Spinner rotation - smooth */
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -315,8 +428,37 @@ input[type="checkbox"]:checked {
 }
 
 .spinner {
-    animation: spin 1s linear infinite;
+    animation: spin 0.8s linear infinite;
+    border: 2px solid var(--bg-tertiary);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
 }
+
+/* Dots loading animation */
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.loading-dots span {
+    animation: dotPulse 1.4s ease-in-out infinite;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 0 2px;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: 0s; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
 /* ============================
    RIPPLE EFFECT
@@ -335,19 +477,19 @@ input[type="checkbox"]:checked {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(124, 179, 138, 0.25);
     transform: translate(-50%, -50%);
     pointer-events: none;
 }
 
 .ripple:active::after {
-    animation: ripple 0.6s ease-out;
+    animation: ripple 0.5s ease-out;
 }
 
 @keyframes ripple {
     to {
-        width: 300px;
-        height: 300px;
+        width: 250px;
+        height: 250px;
         opacity: 0;
     }
 }
@@ -356,7 +498,7 @@ input[type="checkbox"]:checked {
    FADE ANIMATIONS
    ============================ */
 
-/* Fade in */
+/* Fade in - refined timing */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -368,7 +510,24 @@ input[type="checkbox"]:checked {
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.25s ease-out;
+}
+
+/* Fade in up */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Fade out */
@@ -383,18 +542,31 @@ input[type="checkbox"]:checked {
 }
 
 .fade-out {
-    animation: fadeOut 0.3s ease-out;
+    animation: fadeOut 0.2s ease-out forwards;
 }
+
+/* Stagger children fade in */
+.stagger-fade-in > * {
+    opacity: 0;
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-fade-in > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-fade-in > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-fade-in > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-fade-in > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-fade-in > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-fade-in > *:nth-child(6) { animation-delay: 0.3s; }
 
 /* ============================
    SCALE ANIMATIONS
    ============================ */
 
-/* Scale in */
+/* Scale in - refined */
 @keyframes scaleIn {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.95);
     }
 
     to {
@@ -404,23 +576,23 @@ input[type="checkbox"]:checked {
 }
 
 .scale-in {
-    animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Bounce in */
+/* Bounce in - more subtle for premium feel */
 @keyframes bounceIn {
     0% {
         opacity: 0;
-        transform: scale(0.3);
+        transform: scale(0.5);
     }
 
-    50% {
+    60% {
         opacity: 1;
-        transform: scale(1.05);
+        transform: scale(1.03);
     }
 
-    70% {
-        transform: scale(0.9);
+    80% {
+        transform: scale(0.98);
     }
 
     100% {
@@ -429,41 +601,86 @@ input[type="checkbox"]:checked {
 }
 
 .bounce-in {
-    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Pop in - quick attention grabber */
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    
+    70% {
+        transform: scale(1.05);
+    }
+    
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.pop-in {
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 /* ============================
    HOVER EFFECTS
    ============================ */
 
-/* Link underline slide */
-a {
+/* Link underline slide - green accent */
+a:not(.btn):not(.nav-link):not(.card) {
     position: relative;
     text-decoration: none;
+    color: var(--accent-primary);
+    transition: color 0.2s ease;
 }
 
-a::after {
+a:not(.btn):not(.nav-link):not(.card)::after {
     content: '';
     position: absolute;
     bottom: -2px;
     left: 0;
     width: 0;
-    height: 2px;
+    height: 1.5px;
     background: var(--accent-primary);
-    transition: width 0.3s ease;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-a:hover::after {
+a:not(.btn):not(.nav-link):not(.card):hover::after {
     width: 100%;
 }
 
-/* Icon hover rotate */
+a:not(.btn):not(.nav-link):not(.card):hover {
+    color: var(--accent-secondary);
+}
+
+/* Icon hover - subtle rotation */
 .icon-hover {
-    transition: transform 0.3s ease;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .icon-hover:hover {
-    transform: rotate(15deg) scale(1.1);
+    transform: rotate(8deg) scale(1.08);
+}
+
+/* Image/Avatar hover zoom */
+.zoom-hover {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.zoom-hover:hover {
+    transform: scale(1.02);
+}
+
+.zoom-hover img {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-hover:hover img {
+    transform: scale(1.05);
 }
 
 /* ============================
@@ -471,7 +688,12 @@ a:hover::after {
    ============================ */
 
 .focus-mode .navbar {
-    display: none;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+.focus-mode .navbar:hover {
+    opacity: 1;
 }
 
 .focus-mode .activity-feed {
@@ -479,7 +701,14 @@ a:hover::after {
 }
 
 .focus-mode .stats-cards {
-    display: none;
+    opacity: 0.5;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
+}
+
+.focus-mode .stats-cards:hover {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .focus-mode .calendar {
@@ -489,6 +718,7 @@ a:hover::after {
 .focus-mode .goal-card {
     font-size: 1.2rem;
     padding: var(--space-xl);
+    box-shadow: 0 0 0 2px rgba(124, 179, 138, 0.2);
 }
 
 /* ============================
@@ -497,35 +727,39 @@ a:hover::after {
 
 .editable {
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 2px 6px;
     border-radius: 4px;
-    transition: background 0.2s;
+    transition: background 0.2s ease, outline 0.2s ease;
 }
 
 .editable:hover {
-    background: var(--bg-hover);
-    outline: 1px dashed var(--border-color);
+    background: rgba(124, 179, 138, 0.08);
+    outline: 1px dashed rgba(124, 179, 138, 0.3);
+}
+
+.editable:focus {
+    background: rgba(124, 179, 138, 0.1);
+    outline: 2px solid var(--accent-primary);
 }
 
 .editable.editing {
     background: var(--bg-tertiary);
     outline: 2px solid var(--accent-primary);
+    box-shadow: 0 0 0 4px rgba(124, 179, 138, 0.1);
 }
 
 /* ============================
    UTILITY ANIMATIONS
    ============================ */
 
-/* Pulse */
+/* Pulse - subtle green */
 @keyframes pulse {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 1;
     }
 
     50% {
-        opacity: 0.7;
+        opacity: 0.6;
     }
 }
 
@@ -533,47 +767,225 @@ a:hover::after {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Shake (for errors) */
-@keyframes shake {
+/* Breathing effect - for active/live indicators */
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
 
-    0%,
-    100% {
+.breathe {
+    animation: breathe 3s ease-in-out infinite;
+}
+
+/* Shake (for errors) - refined */
+@keyframes shake {
+    0%, 100% {
         transform: translateX(0);
     }
 
-    10%,
-    30%,
-    50%,
-    70%,
-    90% {
-        transform: translateX(-5px);
+    20%, 60% {
+        transform: translateX(-4px);
     }
 
-    20%,
-    40%,
-    60%,
-    80% {
-        transform: translateX(5px);
+    40%, 80% {
+        transform: translateX(4px);
     }
 }
 
 .shake {
-    animation: shake 0.5s ease-in-out;
+    animation: shake 0.4s ease-in-out;
 }
 
-/* Glow effect */
+/* Glow effect - muted green */
 @keyframes glow {
-
-    0%,
-    100% {
-        box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+    0%, 100% {
+        box-shadow: 0 0 4px rgba(124, 179, 138, 0.3);
     }
 
     50% {
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+        box-shadow: 0 0 16px rgba(124, 179, 138, 0.5);
     }
 }
 
 .glow {
-    animation: glow 2s ease-in-out infinite;
+    animation: glow 2.5s ease-in-out infinite;
+}
+
+/* Success checkmark animation */
+@keyframes successCheck {
+    0% {
+        stroke-dashoffset: 100;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+.success-check path {
+    stroke-dasharray: 100;
+    animation: successCheck 0.5s ease-out forwards;
+}
+
+/* Attention grabber - subtle bounce */
+@keyframes attention {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-3px);
+    }
+    75% {
+        transform: translateY(1px);
+    }
+}
+
+.attention {
+    animation: attention 0.6s ease-in-out;
+}
+
+/* ============================
+   CALENDAR DAY ANIMATIONS
+   ============================ */
+
+.calendar-day {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calendar-day:hover {
+    background: rgba(124, 179, 138, 0.08);
+}
+
+.calendar-day.today {
+    animation: todayPulse 3s ease-in-out infinite;
+}
+
+@keyframes todayPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(124, 179, 138, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(124, 179, 138, 0.3);
+    }
+}
+
+/* ============================
+   BADGE ANIMATIONS
+   ============================ */
+
+.badge {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* New badge notification pulse */
+.badge-new::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: badgePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+}
+
+/* ============================
+   REDUCED MOTION PREFERENCES
+   ============================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .skeleton,
+    .react-loading-skeleton {
+        animation: none;
+        background: var(--bg-tertiary);
+    }
+    
+    .spinner {
+        animation: spin 1.5s linear infinite;
+    }
+}
+
+/* ============================
+   DARK MODE ENHANCEMENTS
+   ============================ */
+
+/* Subtle highlight on interactive elements in dark mode */
+@media (prefers-color-scheme: dark) {
+    .card:hover,
+    .btn:hover {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
+                    0 0 0 1px rgba(124, 179, 138, 0.1);
+    }
+}
+
+/* ============================
+   SELECTION STYLING
+   ============================ */
+
+::selection {
+    background: rgba(124, 179, 138, 0.3);
+    color: var(--text-primary);
+}
+
+::-moz-selection {
+    background: rgba(124, 179, 138, 0.3);
+    color: var(--text-primary);
+}
+
+/* ============================
+   SCROLLBAR STYLING
+   ============================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(124, 179, 138, 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 179, 138, 0.5);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 179, 138, 0.3) var(--bg-secondary);
 }

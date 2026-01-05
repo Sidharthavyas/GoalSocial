@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+// components/PomodoroTimer.jsx
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../hooks/useTheme';
 
-const PomodoroTimer = ({ onClose }) => {
+const PomodoroTimer = () => {
+    const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
+    
     const [mode, setMode] = useState('pomodoro');
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
@@ -8,9 +14,11 @@ const PomodoroTimer = ({ onClose }) => {
     const [activeTaskId, setActiveTaskId] = useState(null);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [isAddingTask, setIsAddingTask] = useState(false);
-    const [focusMode, setFocusMode] = useState(false);
+    const [showTasks, setShowTasks] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(true);
+    const [completedPomodoros, setCompletedPomodoros] = useState(0);
+    const [showQuote, setShowQuote] = useState(true);
 
     const [timers, setTimers] = useState({
         pomodoro: 25,
@@ -19,31 +27,43 @@ const PomodoroTimer = ({ onClose }) => {
     });
 
     const timerRef = useRef(null);
+    const inputRef = useRef(null);
+
+    const quotes = [
+        { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+        { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+        { text: "It's not about having time, it's about making time.", author: "Unknown" },
+        { text: "Deep work is the ability to focus without distraction.", author: "Cal Newport" },
+        { text: "Where focus goes, energy flows.", author: "Tony Robbins" }
+    ];
+
+    const [currentQuote] = useState(() => quotes[Math.floor(Math.random() * quotes.length)]);
 
     const modes = {
         pomodoro: {
             label: 'Focus',
             color: 'var(--accent-primary)',
-            bgColor: 'var(--bg-tertiary)',
             icon: '🧠',
-            message: "Time to focus!"
+            message: "Time to focus!",
+            gradient: 'linear-gradient(135deg, rgba(124, 179, 138, 0.1) 0%, rgba(154, 201, 168, 0.05) 100%)'
         },
         short: {
             label: 'Short Break',
             color: 'var(--success)',
-            bgColor: 'var(--bg-tertiary)',
             icon: '☕',
-            message: "Time for a break!"
+            message: "Take a quick breather!",
+            gradient: 'linear-gradient(135deg, rgba(106, 191, 123, 0.1) 0%, rgba(106, 191, 123, 0.05) 100%)'
         },
         long: {
             label: 'Long Break',
             color: 'var(--info)',
-            bgColor: 'var(--bg-tertiary)',
-            icon: '⚡',
-            message: "Time for a long break!"
+            icon: '🌿',
+            message: "You've earned a longer rest!",
+            gradient: 'linear-gradient(135deg, rgba(106, 159, 181, 0.1) 0%, rgba(106, 159, 181, 0.05) 100%)'
         }
     };
 
+    // Timer logic
     useEffect(() => {
         if (isActive && timeLeft > 0) {
             timerRef.current = setInterval(() => {
@@ -52,21 +72,77 @@ const PomodoroTimer = ({ onClose }) => {
         } else if (timeLeft === 0) {
             clearInterval(timerRef.current);
             setIsActive(false);
+            
+            if (mode === 'pomodoro') {
+                setCompletedPomodoros(prev => prev + 1);
+                if (activeTaskId) {
+                    setTasks(tasks.map(t => 
+                        t.id === activeTaskId 
+                            ? { ...t, actPomodoros: t.actPomodoros + 1 }
+                            : t
+                    ));
+                }
+            }
+            
             if (soundEnabled) {
                 const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
                 audio.play().catch(e => console.log("Audio play failed", e));
             }
+            
+            // Show notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(modes[mode].message, {
+                    body: mode === 'pomodoro' ? 'Great work! Take a break.' : 'Break is over. Ready to focus?',
+                    icon: '⏱️'
+                });
+            }
         }
 
         return () => clearInterval(timerRef.current);
-    }, [isActive, timeLeft, soundEnabled]);
+    }, [isActive, timeLeft, soundEnabled, mode, activeTaskId, tasks]);
 
-    const toggleTimer = () => setIsActive(!isActive);
+    // Request notification permission
+    useEffect(() => {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, []);
 
-    const resetTimer = () => {
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    toggleTimer();
+                    break;
+                case 'KeyR':
+                    if (e.ctrlKey || e.metaKey) return;
+                    resetTimer();
+                    break;
+                case 'Escape':
+                    navigate('/dashboard');
+                    break;
+                case 'KeyT':
+                    setShowTasks(prev => !prev);
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    const toggleTimer = useCallback(() => setIsActive(prev => !prev), []);
+
+    const resetTimer = useCallback(() => {
         setIsActive(false);
         setTimeLeft(timers[mode] * 60);
-    };
+    }, [mode, timers]);
 
     const switchMode = (newMode) => {
         setMode(newMode);
@@ -77,6 +153,7 @@ const PomodoroTimer = ({ onClose }) => {
     const handleAddTask = (e) => {
         e.preventDefault();
         if (!newTaskTitle.trim()) return;
+        
         const newTask = {
             id: Date.now(),
             title: newTaskTitle,
@@ -84,7 +161,8 @@ const PomodoroTimer = ({ onClose }) => {
             estPomodoros: 1,
             actPomodoros: 0
         };
-        setTasks([...tasks, newTask]);
+        
+        setTasks(prev => [...prev, newTask]);
         if (!activeTaskId) setActiveTaskId(newTask.id);
         setNewTaskTitle('');
         setIsAddingTask(false);
@@ -96,10 +174,11 @@ const PomodoroTimer = ({ onClose }) => {
 
     const deleteTask = (id) => {
         setTasks(tasks.filter(t => t.id !== id));
-        if (activeTaskId === id) setActiveTaskId(null);
+        if (activeTaskId === id) {
+            const remaining = tasks.filter(t => t.id !== id && !t.completed);
+            setActiveTaskId(remaining[0]?.id || null);
+        }
     };
-
-    const selectTask = (id) => setActiveTaskId(id);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -114,326 +193,803 @@ const PomodoroTimer = ({ onClose }) => {
 
     const currentTheme = modes[mode];
     const activeTaskObj = tasks.find(t => t.id === activeTaskId);
+    const remainingTasks = tasks.filter(t => !t.completed);
+    const completedTasks = tasks.filter(t => t.completed);
+
+    // Calculate circumference for circular progress
+    const radius = 180;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (calculateProgress() / 100) * circumference;
 
     return (
-        <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1000 }}>
-            <div
-                className="modal fade-in"
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    maxWidth: focusMode ? '800px' : '600px',
-                    maxHeight: '90vh',
-                    overflow: 'auto',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)'
-                }}
-            >
-                {/* Progress Bar */}
+        <div className="pomodoro-page" style={{
+            minHeight: '100vh',
+            background: `var(--bg-primary)`,
+            display: 'flex',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Ambient background effect */}
+            <div style={{
+                position: 'absolute',
+                top: '-50%',
+                left: '-50%',
+                width: '200%',
+                height: '200%',
+                background: currentTheme.gradient,
+                opacity: isActive ? 0.8 : 0.4,
+                transition: 'opacity 1s ease',
+                pointerEvents: 'none'
+            }} />
+
+            {/* Top Navigation Bar */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                padding: '16px 24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                zIndex: 100,
+                background: 'linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%)'
+            }}>
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="btn btn-secondary"
+                    style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        background: 'var(--glass-bg)',
+                        backdropFilter: 'blur(10px)'
+                    }}
+                >
+                    ← Back to Dashboard
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={() => setShowTasks(!showTasks)}
+                        className="btn btn-secondary btn-sm"
+                        title="Toggle Tasks (T)"
+                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
+                    >
+                        {showTasks ? '📋' : '📋'}
+                    </button>
+                    <button
+                        onClick={() => setSoundEnabled(!soundEnabled)}
+                        className="btn btn-secondary btn-sm"
+                        title="Toggle Sound"
+                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
+                    >
+                        {soundEnabled ? '🔊' : '🔇'}
+                    </button>
+                    <button
+                        onClick={toggleTheme}
+                        className="btn btn-secondary btn-sm"
+                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
+                    >
+                        {theme === 'dark' ? '☀️' : '🌙'}
+                    </button>
+                    <button
+                        onClick={() => setSettingsOpen(true)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
+                    >
+                        ⚙️
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Timer Section */}
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '80px 40px 40px',
+                position: 'relative',
+                zIndex: 1
+            }}>
+                {/* Session Counter */}
                 <div style={{
-                    height: '4px',
-                    background: 'var(--bg-tertiary)',
-                    borderRadius: '2px',
-                    overflow: 'hidden'
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '24px'
                 }}>
-                    <div
+                    {[...Array(4)].map((_, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: i < (completedPomodoros % 4) 
+                                    ? currentTheme.color 
+                                    : 'var(--bg-tertiary)',
+                                border: `2px solid ${currentTheme.color}`,
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
+                    ))}
+                </div>
+
+                {/* Mode Switcher */}
+                <div style={{
+                    display: 'flex',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '16px',
+                    padding: '6px',
+                    marginBottom: '48px',
+                    border: '1px solid var(--border-color)'
+                }}>
+                    {Object.keys(modes).map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => switchMode(m)}
+                            style={{
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                border: 'none',
+                                background: mode === m ? currentTheme.color : 'transparent',
+                                color: mode === m ? 'var(--bg-primary)' : 'var(--text-secondary)',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <span>{modes[m].icon}</span>
+                            <span>{modes[m].label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Circular Timer */}
+                <div style={{
+                    position: 'relative',
+                    width: '400px',
+                    height: '400px',
+                    marginBottom: '48px'
+                }}>
+                    {/* SVG Circle Progress */}
+                    <svg
                         style={{
-                            height: '100%',
-                            background: currentTheme.color,
-                            width: `${calculateProgress()}%`,
-                            transition: 'width 1s linear'
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            transform: 'rotate(-90deg)',
+                            width: '100%',
+                            height: '100%'
                         }}
-                    />
-                </div>
+                    >
+                        {/* Background circle */}
+                        <circle
+                            cx="200"
+                            cy="200"
+                            r={radius}
+                            fill="none"
+                            stroke="var(--bg-tertiary)"
+                            strokeWidth="8"
+                        />
+                        {/* Progress circle */}
+                        <circle
+                            cx="200"
+                            cy="200"
+                            r={radius}
+                            fill="none"
+                            stroke={currentTheme.color}
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            style={{
+                                transition: 'stroke-dashoffset 1s linear',
+                                filter: `drop-shadow(0 0 10px ${currentTheme.color}40)`
+                            }}
+                        />
+                    </svg>
 
-                {/* Header */}
-                <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '24px' }}>⏱️</span>
-                        <h2 style={{ margin: 0 }}>Pomodoro Timer</h2>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                            onClick={() => setFocusMode(!focusMode)}
-                            className="btn btn-secondary btn-sm"
-                            title={focusMode ? 'Exit Focus' : 'Focus Mode'}
-                        >
-                            {focusMode ? '🔻' : '🔺'}
-                        </button>
-                        <button
-                            onClick={() => setSoundEnabled(!soundEnabled)}
-                            className="btn btn-secondary btn-sm"
-                            title="Toggle Sound"
-                        >
-                            {soundEnabled ? '🔊' : '🔇'}
-                        </button>
-                        <button
-                            onClick={() => setSettingsOpen(!settingsOpen)}
-                            className="btn btn-secondary btn-sm"
-                        >
-                            ⚙️
-                        </button>
-                        <button onClick={onClose} className="btn-close">×</button>
-                    </div>
-                </div>
-
-                <div className="modal-body">
-                    {/* Timer Card */}
-                    <div className="card" style={{
-                        padding: focusMode ? '48px' : '32px',
-                        background: currentTheme.bgColor,
-                        textAlign: 'center',
-                        transition: 'all 0.3s ease'
-                    }}>
-
-                        {/* Mode Toggles */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '32px' }}>
-                            {Object.keys(modes).map((m) => (
-                                <button
-                                    key={m}
-                                    onClick={() => switchMode(m)}
-                                    className={`btn ${mode === m ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                                    style={{ minWidth: '100px' }}
-                                >
-                                    {modes[m].icon} {modes[m].label}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Timer Display */}
-                        <div style={{
-                            fontSize: focusMode ? '96px' : '72px',
-                            fontWeight: 'bold',
-                            lineHeight: '1',
-                            marginBottom: '32px',
-                            fontFamily: 'monospace',
-                            color: currentTheme.color,
-                            transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                            transition: 'all 0.3s ease'
-                        }}>
-                            {formatTime(timeLeft)}
-                        </div>
-
-                        {/* Main Action Buttons */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-                            <button
-                                onClick={toggleTimer}
-                                className="btn btn-primary ripple"
-                                style={{
-                                    fontSize: '18px',
-                                    fontWeight: 'bold',
-                                    padding: '16px 48px',
-                                    textTransform: 'uppercase'
-                                }}
-                            >
-                                {isActive ? '⏸️ Pause' : '▶️ Start'}
-                            </button>
-
-                            {isActive && (
-                                <button
-                                    onClick={resetTimer}
-                                    className="btn btn-secondary"
-                                    style={{ padding: '16px 24px' }}
-                                    title="Reset Timer"
-                                >
-                                    🔄 Reset
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Tasks Section (Hidden in Focus Mode) */}
-                    {!focusMode && (
-                        <div style={{ marginTop: '24px' }}>
-                            {/* Current Task Status */}
-                            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                <div className="text-tertiary text-sm" style={{ textTransform: 'uppercase', marginBottom: '8px' }}>
-                                    #{tasks.findIndex(t => t.id === activeTaskId) + 1 || '0'}
-                                </div>
-                                <div className="text-lg">
-                                    {activeTaskId ? activeTaskObj?.title : 'Select a task to focus on'}
-                                </div>
-                            </div>
-
-                            {/* Task List Header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
-                                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    📋 Tasks
-                                    <span className="badge" style={{ background: 'var(--bg-tertiary)', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>
-                                        {tasks.length}
-                                    </span>
-                                </h3>
-                            </div>
-
-                            {/* Active Task Highlight */}
-                            {activeTaskId && activeTaskObj && !activeTaskObj.completed && (
-                                <div className="card" style={{
-                                    padding: '16px',
-                                    marginBottom: '16px',
-                                    borderLeft: `4px solid ${currentTheme.color}`,
-                                    background: 'var(--bg-tertiary)'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <div className="text-xs text-tertiary" style={{ textTransform: 'uppercase', marginBottom: '4px' }}>
-                                                ⭐ Current Focus
-                                            </div>
-                                            <div className="font-bold">{activeTaskObj.title}</div>
-                                        </div>
-                                        <button
-                                            onClick={() => toggleTaskComplete(activeTaskId)}
-                                            className="btn btn-success btn-sm"
-                                        >
-                                            ✓
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tasks List */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {tasks.map(task => (
-                                    <div
-                                        key={task.id}
-                                        onClick={() => selectTask(task.id)}
-                                        className="card ripple"
-                                        style={{
-                                            padding: '12px',
-                                            cursor: 'pointer',
-                                            borderLeft: activeTaskId === task.id ? `4px solid ${currentTheme.color}` : '4px solid transparent',
-                                            opacity: task.completed ? 0.6 : 1
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
-                                                    style={{
-                                                        width: '24px',
-                                                        height: '24px',
-                                                        borderRadius: '50%',
-                                                        border: '2px solid var(--border-color)',
-                                                        background: task.completed ? 'var(--success)' : 'transparent',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    {task.completed && '✓'}
-                                                </button>
-                                                <span style={{ textDecoration: task.completed ? 'line-through' : 'none' }}>
-                                                    {task.title}
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                <span className="text-sm text-tertiary">
-                                                    {task.actPomodoros}/{task.estPomodoros} 🍅
-                                                </span>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }}
-                                                    className="btn btn-sm"
-                                                    style={{ padding: '4px 8px' }}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Add Task */}
-                            {!isAddingTask ? (
-                                <button
-                                    onClick={() => setIsAddingTask(true)}
-                                    className="btn btn-secondary"
-                                    style={{
-                                        width: '100%',
-                                        marginTop: '16px',
-                                        border: '2px dashed var(--border-color)'
-                                    }}
-                                >
-                                    ➕ Add Task
-                                </button>
-                            ) : (
-                                <div className="card" style={{ marginTop: '16px', padding: '16px' }}>
-                                    <input
-                                        autoFocus
-                                        type="text"
-                                        placeholder="What are you working on?"
-                                        className="input"
-                                        value={newTaskTitle}
-                                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddTask(e)}
-                                        style={{ marginBottom: '16px' }}
-                                    />
-                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                        <button
-                                            onClick={() => setIsAddingTask(false)}
-                                            className="btn btn-secondary btn-sm"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleAddTask}
-                                            className="btn btn-primary btn-sm"
-                                        >
-                                            💾 Save
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Settings Modal */}
-                {settingsOpen && (
+                    {/* Timer Content */}
                     <div style={{
                         position: 'absolute',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        background: 'var(--bg-card)',
-                        padding: '24px',
-                        borderRadius: 'var(--border-radius-lg)',
-                        border: '1px solid var(--border-color)',
-                        boxShadow: 'var(--shadow-xl)',
-                        minWidth: '300px',
-                        zIndex: 10
+                        textAlign: 'center'
                     }}>
-                        <h3 style={{ marginBottom: '16px' }}>⚙️ Settings</h3>
-                        <div style={{ marginBottom: '24px' }}>
-                            <div className="text-sm text-tertiary" style={{ marginBottom: '12px', textTransform: 'uppercase' }}>
-                                Timer Duration (minutes)
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                                {Object.keys(timers).map(t => (
-                                    <div key={t}>
-                                        <label className="text-sm" style={{ display: 'block', marginBottom: '4px', textTransform: 'capitalize' }}>
-                                            {modes[t].icon} {t}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={timers[t]}
-                                            onChange={(e) => setTimers({ ...timers, [t]: parseInt(e.target.value) || 0 })}
-                                            className="input"
-                                            style={{ width: '100%' }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                        <div style={{
+                            fontSize: '96px',
+                            fontWeight: '200',
+                            fontFamily: "'SF Mono', 'Fira Code', monospace",
+                            color: 'var(--text-primary)',
+                            letterSpacing: '-4px',
+                            lineHeight: 1,
+                            marginBottom: '8px'
+                        }}>
+                            {formatTime(timeLeft)}
                         </div>
-                        <button
-                            onClick={() => setSettingsOpen(false)}
-                            className="btn btn-primary"
-                            style={{ width: '100%' }}
-                        >
-                            ✓ OK
-                        </button>
+                        <div style={{
+                            fontSize: '14px',
+                            color: 'var(--text-tertiary)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '2px'
+                        }}>
+                            {currentTheme.message}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Current Task Display */}
+                {activeTaskObj && !activeTaskObj.completed && (
+                    <div style={{
+                        marginBottom: '32px',
+                        textAlign: 'center',
+                        padding: '16px 32px',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border-color)'
+                    }}>
+                        <div style={{
+                            fontSize: '12px',
+                            color: 'var(--text-tertiary)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            marginBottom: '4px'
+                        }}>
+                            Working on
+                        </div>
+                        <div style={{
+                            fontSize: '18px',
+                            fontWeight: '500',
+                            color: 'var(--text-primary)'
+                        }}>
+                            {activeTaskObj.title}
+                        </div>
                     </div>
                 )}
+
+                {/* Control Buttons */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <button
+                        onClick={resetTimer}
+                        className="btn btn-secondary"
+                        style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '50%',
+                            padding: 0,
+                            fontSize: '20px'
+                        }}
+                        title="Reset (R)"
+                    >
+                        🔄
+                    </button>
+
+                    <button
+                        onClick={toggleTimer}
+                        className="btn btn-primary ripple"
+                        style={{
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            padding: 0,
+                            fontSize: '32px',
+                            background: currentTheme.color,
+                            boxShadow: `0 8px 32px ${currentTheme.color}40`,
+                            transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                            transition: 'all 0.3s ease'
+                        }}
+                        title="Start/Pause (Space)"
+                    >
+                        {isActive ? '⏸️' : '▶️'}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            if (mode === 'pomodoro') {
+                                switchMode('short');
+                            } else {
+                                switchMode('pomodoro');
+                            }
+                        }}
+                        className="btn btn-secondary"
+                        style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '50%',
+                            padding: 0,
+                            fontSize: '20px'
+                        }}
+                        title="Skip to next"
+                    >
+                        ⏭️
+                    </button>
+                </div>
+
+                {/* Keyboard Shortcuts Hint */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '24px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    gap: '24px',
+                    color: 'var(--text-muted)',
+                    fontSize: '12px'
+                }}>
+                    <span><kbd style={{ 
+                        padding: '2px 8px', 
+                        background: 'var(--bg-tertiary)', 
+                        borderRadius: '4px',
+                        marginRight: '4px'
+                    }}>Space</kbd> Play/Pause</span>
+                    <span><kbd style={{ 
+                        padding: '2px 8px', 
+                        background: 'var(--bg-tertiary)', 
+                        borderRadius: '4px',
+                        marginRight: '4px'
+                    }}>R</kbd> Reset</span>
+                    <span><kbd style={{ 
+                        padding: '2px 8px', 
+                        background: 'var(--bg-tertiary)', 
+                        borderRadius: '4px',
+                        marginRight: '4px'
+                    }}>T</kbd> Tasks</span>
+                    <span><kbd style={{ 
+                        padding: '2px 8px', 
+                        background: 'var(--bg-tertiary)', 
+                        borderRadius: '4px',
+                        marginRight: '4px'
+                    }}>Esc</kbd> Exit</span>
+                </div>
             </div>
+
+            {/* Tasks Sidebar */}
+            <div style={{
+                width: showTasks ? '380px' : '0',
+                background: 'var(--bg-secondary)',
+                borderLeft: showTasks ? '1px solid var(--border-color)' : 'none',
+                overflow: 'hidden',
+                transition: 'width 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                zIndex: 1
+            }}>
+                <div style={{
+                    padding: '80px 24px 24px',
+                    flex: 1,
+                    overflowY: 'auto',
+                    display: showTasks ? 'block' : 'none'
+                }}>
+                    {/* Stats */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                        marginBottom: '24px'
+                    }}>
+                        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '32px', fontWeight: 'bold', color: currentTheme.color }}>
+                                {completedPomodoros}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                                Pomodoros
+                            </div>
+                        </div>
+                        <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--success)' }}>
+                                {completedTasks.length}
+                            </div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                                Completed
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Quote */}
+                    {showQuote && (
+                        <div 
+                            className="card" 
+                            style={{ 
+                                padding: '20px', 
+                                marginBottom: '24px',
+                                background: 'var(--bg-tertiary)',
+                                borderLeft: `3px solid ${currentTheme.color}`,
+                                position: 'relative'
+                            }}
+                        >
+                            <button
+                                onClick={() => setShowQuote(false)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '8px',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                }}
+                            >
+                                ✕
+                            </button>
+                            <p style={{ 
+                                margin: 0, 
+                                fontStyle: 'italic', 
+                                color: 'var(--text-secondary)',
+                                fontSize: '14px',
+                                lineHeight: '1.6'
+                            }}>
+                                "{currentQuote.text}"
+                            </p>
+                            <p style={{ 
+                                margin: '8px 0 0', 
+                                color: 'var(--text-muted)',
+                                fontSize: '12px'
+                            }}>
+                                — {currentQuote.author}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Tasks Header */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '16px'
+                    }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            📋 Tasks
+                            <span style={{
+                                background: 'var(--bg-tertiary)',
+                                padding: '2px 10px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                color: 'var(--text-tertiary)'
+                            }}>
+                                {remainingTasks.length}
+                            </span>
+                        </h3>
+                    </div>
+
+                    {/* Tasks List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {remainingTasks.map(task => (
+                            <div
+                                key={task.id}
+                                onClick={() => setActiveTaskId(task.id)}
+                                className="card"
+                                style={{
+                                    padding: '14px 16px',
+                                    cursor: 'pointer',
+                                    borderLeft: activeTaskId === task.id 
+                                        ? `4px solid ${currentTheme.color}` 
+                                        : '4px solid transparent',
+                                    background: activeTaskId === task.id 
+                                        ? 'var(--bg-tertiary)' 
+                                        : 'var(--bg-card)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <button
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); 
+                                                toggleTaskComplete(task.id); 
+                                            }}
+                                            style={{
+                                                width: '22px',
+                                                height: '22px',
+                                                borderRadius: '50%',
+                                                border: `2px solid ${currentTheme.color}`,
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: currentTheme.color,
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            
+                                        </button>
+                                        <span style={{ 
+                                            fontSize: '14px',
+                                            color: 'var(--text-primary)'
+                                        }}>
+                                            {task.title}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <span style={{
+                                            fontSize: '12px',
+                                            color: 'var(--text-tertiary)'
+                                        }}>
+                                            {task.actPomodoros}/{task.estPomodoros} 🍅
+                                        </span>
+                                        <button
+                                            onClick={(e) => { 
+                                                e.stopPropagation(); 
+                                                deleteTask(task.id); 
+                                            }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: 'var(--text-muted)',
+                                                fontSize: '14px',
+                                                padding: '4px',
+                                                opacity: 0.6,
+                                                transition: 'opacity 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.opacity = 1}
+                                            onMouseLeave={(e) => e.target.style.opacity = 0.6}
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Completed Tasks */}
+                        {completedTasks.length > 0 && (
+                            <>
+                                <div style={{
+                                    fontSize: '12px',
+                                    color: 'var(--text-muted)',
+                                    textTransform: 'uppercase',
+                                    marginTop: '16px',
+                                    marginBottom: '8px'
+                                }}>
+                                    Completed ({completedTasks.length})
+                                </div>
+                                {completedTasks.map(task => (
+                                    <div
+                                        key={task.id}
+                                        className="card"
+                                        style={{
+                                            padding: '12px 16px',
+                                            opacity: 0.5,
+                                            background: 'var(--bg-card)'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{
+                                                width: '22px',
+                                                height: '22px',
+                                                borderRadius: '50%',
+                                                background: 'var(--success)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white',
+                                                fontSize: '12px'
+                                            }}>
+                                                ✓
+                                            </div>
+                                            <span style={{ 
+                                                textDecoration: 'line-through',
+                                                fontSize: '14px'
+                                            }}>
+                                                {task.title}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </div>
+
+                    {/* Add Task */}
+                    {!isAddingTask ? (
+                        <button
+                            onClick={() => {
+                                setIsAddingTask(true);
+                                setTimeout(() => inputRef.current?.focus(), 100);
+                            }}
+                            style={{
+                                width: '100%',
+                                marginTop: '16px',
+                                padding: '14px',
+                                background: 'transparent',
+                                border: '2px dashed var(--border-color)',
+                                borderRadius: '12px',
+                                color: 'var(--text-tertiary)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                fontSize: '14px'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.borderColor = currentTheme.color;
+                                e.target.style.color = currentTheme.color;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.borderColor = 'var(--border-color)';
+                                e.target.style.color = 'var(--text-tertiary)';
+                            }}
+                        >
+                            + Add Task
+                        </button>
+                    ) : (
+                        <div className="card" style={{ marginTop: '16px', padding: '16px' }}>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                placeholder="What are you working on?"
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleAddTask(e);
+                                    if (e.key === 'Escape') setIsAddingTask(false);
+                                }}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    background: 'var(--bg-tertiary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '8px',
+                                    color: 'var(--text-primary)',
+                                    fontSize: '14px',
+                                    marginBottom: '12px'
+                                }}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                <button
+                                    onClick={() => setIsAddingTask(false)}
+                                    className="btn btn-secondary btn-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddTask}
+                                    className="btn btn-primary btn-sm"
+                                    style={{ background: currentTheme.color }}
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Settings Modal */}
+            {settingsOpen && (
+                <div 
+                    className="modal-overlay"
+                    onClick={() => setSettingsOpen(false)}
+                    style={{ zIndex: 1000 }}
+                >
+                    <div 
+                        className="modal fade-in"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            maxWidth: '400px',
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)'
+                        }}
+                    >
+                        <div className="modal-header">
+                            <h3 style={{ margin: 0 }}>⚙️ Timer Settings</h3>
+                            <button 
+                                onClick={() => setSettingsOpen(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    color: 'var(--text-secondary)'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ marginBottom: '24px' }}>
+                                <div style={{
+                                    fontSize: '12px',
+                                    color: 'var(--text-tertiary)',
+                                    textTransform: 'uppercase',
+                                    marginBottom: '16px'
+                                }}>
+                                    Timer Duration (minutes)
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                    {Object.keys(timers).map(t => (
+                                        <div key={t}>
+                                            <label style={{
+                                                display: 'block',
+                                                fontSize: '12px',
+                                                marginBottom: '6px',
+                                                color: 'var(--text-secondary)'
+                                            }}>
+                                                {modes[t].icon} {modes[t].label}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="120"
+                                                value={timers[t]}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value) || 1;
+                                                    setTimers(prev => ({ ...prev, [t]: val }));
+                                                    if (mode === t && !isActive) {
+                                                        setTimeLeft(val * 60);
+                                                    }
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px',
+                                                    background: 'var(--bg-tertiary)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '8px',
+                                                    color: 'var(--text-primary)',
+                                                    fontSize: '16px',
+                                                    textAlign: 'center'
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '16px 0',
+                                borderTop: '1px solid var(--border-color)'
+                            }}>
+                                <span>Sound notifications</span>
+                                <button
+                                    onClick={() => setSoundEnabled(!soundEnabled)}
+                                    style={{
+                                        width: '48px',
+                                        height: '28px',
+                                        borderRadius: '14px',
+                                        border: 'none',
+                                        background: soundEnabled ? currentTheme.color : 'var(--bg-tertiary)',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        transition: 'background 0.2s ease'
+                                    }}
+                                >
+                                    <div style={{
+                                        width: '22px',
+                                        height: '22px',
+                                        borderRadius: '50%',
+                                        background: 'white',
+                                        position: 'absolute',
+                                        top: '3px',
+                                        left: soundEnabled ? '23px' : '3px',
+                                        transition: 'left 0.2s ease'
+                                    }} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button
+                                onClick={() => setSettingsOpen(false)}
+                                className="btn btn-primary"
+                                style={{ width: '100%', background: currentTheme.color }}
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
