@@ -1,6 +1,6 @@
 # GoalTracker - Real-Time Goal & Habit Tracking
 
-A **production-ready**, real-time, friend-based goal and habit tracking web application with offline-first architecture, WebSocket-powered live updates, MongoDB backend, and premium UI/UX.
+A **production-ready**, real-time, friend-based goal and habit tracking web application with offline-first architecture, WebSocket-powered live updates, MongoDB backend, premium UI/UX, and a Pomodoro timer for focused work sessions.
 
 ## ✨ Features
 
@@ -12,9 +12,11 @@ A **production-ready**, real-time, friend-based goal and habit tracking web appl
 - **Interactive Calendar**: Monthly view with intelligent progress indicators and streak tracking
 - **Social Features**: Comments, emoji reactions, and real-time activity feed
 - **Privacy First**: All data private by default, friends get read-only access
+- **Pomodoro Timer**: Built-in focus timer with task management and progress tracking
 
-### Premium UX (Phases 1-5)
-- **📱 Mobile-First Design**: Fully responsive with touch-optimized controls
+### Premium UX (Phases 1-6)
+- **📱 Fully Responsive Design**: Mobile-first with hamburger menu, optimized touch targets (44px+), and adaptive layouts
+- **🍔 Mobile Navigation**: Slide-in menu drawer with smooth animations and backdrop overlay
 - **🌓 Dark/Light Mode**: Seamless theme switching with localStorage persistence
 - **💾 Offline-First**: Works completely offline with automatic sync when online
 - **🎉 Micro-Celebrations**: Confetti animations on milestones and achievements
@@ -29,6 +31,20 @@ A **production-ready**, real-time, friend-based goal and habit tracking web appl
   - Hover tooltips with progress details
   - Future days greyed out
 - **🎯 Empty States**: Helpful messages and CTAs for new users
+- **⏱️ Pomodoro Focus Mode**: 
+  - 25/5/15 minute timer cycles (work/short break/long break)
+  - Task integration with completion tracking
+  - Circular progress indicator
+  - Browser notifications
+  - Session statistics
+  - Mobile-optimized responsive layout
+
+### Responsive Design Highlights
+- **Desktop (>768px)**: Horizontal navigation, max-width 1400px, 15px base font
+- **Tablet (768px)**: Single-column layouts, hamburger menu
+- **Mobile (<768px)**: 13px base font, slide-in navigation, stacked layouts
+- **Small Mobile (<480px)**: Optimized spacing, hidden non-essential elements
+- **Touch Targets**: Minimum 44px height for all interactive elements (WCAG 2.1 compliant)
 
 ## 🛠️ Tech Stack
 
@@ -39,6 +55,7 @@ A **production-ready**, real-time, friend-based goal and habit tracking web appl
 - JWT Authentication (httpOnly cookies)
 - bcryptjs for password hashing
 - Calendar API with streak calculation
+- express-rate-limit for API protection
 
 ### Frontend
 - React 18 with Hooks
@@ -50,6 +67,7 @@ A **production-ready**, real-time, friend-based goal and habit tracking web appl
 - Chart.js (analytics)
 - date-fns (date utilities)
 - Axios (HTTP client with offline queue)
+- Vanilla CSS with CSS custom properties
 
 ## 📋 Prerequisites
 
@@ -165,10 +183,23 @@ gt2/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/  # React components
+│   │   │   ├── Navbar.jsx         # Mobile-responsive navigation
+│   │   │   ├── Calendar.jsx       # Interactive calendar
+│   │   │   ├── DayModal.jsx       # Day detail modal
+│   │   │   ├── PomodoroTimer.jsx  # Focus timer (mobile-optimized)
+│   │   │   ├── ActivityFeed.jsx   # Social activity feed
+│   │   │   └── ...
 │   │   ├── pages/       # Page components
+│   │   │   ├── Dashboard.jsx  # Main dashboard
+│   │   │   ├── Goals.jsx      # Goals management
+│   │   │   ├── Friends.jsx    # Friends list
+│   │   │   └── ...
 │   │   ├── context/     # React context providers
+│   │   │   ├── AuthContext.jsx
+│   │   │   └── SocketContext.jsx
 │   │   ├── utils/       # Utilities
-│   │   ├── api/         # API functions
+│   │   ├── hooks/       # Custom React hooks
+│   │   ├── index.css    # Global responsive styles
 │   │   └── App.jsx      # Main app component
 │   └── index.html
 └── README.md
@@ -282,20 +313,94 @@ gt2/
 - ✅ **Streak Calculator**: Server-side streak validation (no cheating!)
 - ✅ **Performance**: Optimized queries with proper indexing
 
+### Phase 6: Advanced Features & Responsive Overhaul
+- ✅ **Pomodoro Timer**: Full-featured focus mode with task integration
+  - 25/5/15 minute customizable timers
+  - Circular SVG progress indicator with gradient animation
+  - Task management and completion tracking
+  - Session statistics and pomodoro counting
+  - Desktop keyboard shortcuts (Space, R, T, Esc)
+  - Browser notifications on timer completion
+  - Theme-aware color schemes for different modes
+  - Mobile-optimized with responsive layouts
+  - Collapsible task sidebar (desktop) / bottom panel (mobile)
+  
+- ✅ **Mobile Responsiveness Overhaul**:
+  - **Font Size Optimization**: Reduced from 16px → 15px (desktop), 13px (mobile)
+  - **Hamburger Navigation**: Slide-in menu from right with backdrop overlay
+  - **Touch Target Compliance**: All buttons minimum 44px height on mobile
+  - **Responsive Breakpoints**:
+    - Large Desktop (1441px+): Constrained scaling
+    - Desktop (768px-1440px): Full features, horizontal nav
+    - Tablet (768px): Hamburger menu activation
+    - Mobile (<768px): Stacked layouts, optimized spacing
+    - Small Mobile (<480px): Compact UI, hidden non-essentials
+  - **Component Optimizations**:
+    - Dashboard: Flexible header wrapping, compact badges
+    - Calendar: Reduced grid gaps (3px), increased tap targets (48px)
+    - Navbar: Mobile menu with theme toggle and logout
+    - ActivityFeed: Better text wrapping, flex-shrink controls
+    - Pomodoro: Column layout on mobile, reduced timer size (280px)
+  - **Utility Classes**: `.mobile-only` and `.desktop-only` for conditional rendering
+  
+- ✅ **Weekly Review & Insights**: Data-driven progress analytics
+- ✅ **Inline Editing**: Quick edit goals without modal
+- ✅ **Public Read-Only Profiles**: Share progress with non-friends
+- ✅ **Rate Limiting**: API protection with express-rate-limit
+
 ### Quick Wins (Latest)
 - ✅ **Dark/Light Mode**: Theme toggle with localStorage persistence
 - ✅ **Toast Notifications**: Replaced alerts with elegant toasts
 - ✅ **Goal Colors/Icons**: Personalize goals with colors and emojis
 - ✅ **Loading Skeletons**: Premium shimmer effects while loading
 - ✅ **CORS Fix**: Multi-port support for Vite (5173, 5174)
+- ✅ **Mobile Menu**: Hamburger navigation with smooth animations
+- ✅ **Viewport Constraints**: max-width 1400px to prevent over-zooming
 
-## 🔒 Security Notes
+## � Mobile Testing
+
+### Recommended Test Viewports
+- **iPhone SE**: 375x667px
+- **iPhone 12 Pro**: 390x844px
+- **Samsung Galaxy S21**: 360x800px
+- **iPad Mini**: 768x1024px
+- **Desktop**: 1920x1080px
+
+### Testing Checklist
+- [ ] Hamburger menu appears at ≤768px width
+- [ ] All buttons are tappable (≥44px)
+- [ ] No horizontal scrolling on any viewport
+- [ ] Text is readable at all sizes
+- [ ] Calendar days have adequate tap targets
+- [ ] Pomodoro timer adapts to mobile layout
+- [ ] Modals fit within viewport
+- [ ] Theme toggle works in mobile menu
+
+## ⌨️ Keyboard Shortcuts
+
+### Pomodoro Timer (Desktop only)
+- `Space` - Start/Pause timer
+- `R` - Reset current timer
+- `T` - Toggle tasks sidebar
+- `Esc` - Exit Pomodoro mode
+
+## �🔒 Security Notes
 
 - Change `JWT_SECRET` in production
 - Use environment variables for sensitive data
 - Enable CORS only for trusted domains
 - Use HTTPS in production
 - Keep dependencies updated
+- Rate limiting enabled on all API routes
+
+## 🎨 Design Philosophy
+
+- **Mobile-First**: Designed for mobile, enhanced for desktop
+- **Touch-Friendly**: Minimum 44px touch targets throughout
+- **Performance**: Lazy loading, optimized assets, efficient re-renders
+- **Accessibility**: Semantic HTML, ARIA labels, keyboard navigation
+- **Consistency**: Design system with CSS custom properties
+- **Responsiveness**: Fluid typography and adaptive layouts
 
 ## 📝 License
 
@@ -311,4 +416,4 @@ For issues and questions, please open an issue on GitHub.
 
 ---
 
-Built with ❤️ using Node.js, React, and MongoDB
+Built with ❤️ using Node.js, React, and MongoDB | Fully responsive and offline-capable
