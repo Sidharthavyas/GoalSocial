@@ -41,10 +41,10 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
     return (
         <>
             <div className="calendar">
-                <div className="calendar-header">
-                    <button onClick={prevMonth} className="btn btn-secondary btn-sm">‹</button>
-                    <h3 style={{ margin: 0 }}>{format(currentDate, 'MMMM yyyy')}</h3>
-                    <button onClick={nextMonth} className="btn btn-secondary btn-sm">›</button>
+                <div className="calendar-header" style={{ gap: 'var(--space-sm)' }}>
+                    <button onClick={prevMonth} className="btn btn-secondary btn-sm" aria-label="Previous month">‹</button>
+                    <h3 style={{ margin: 0, flex: 1, textAlign: 'center' }}>{format(currentDate, 'MMMM yyyy')}</h3>
+                    <button onClick={nextMonth} className="btn btn-secondary btn-sm" aria-label="Next month">›</button>
                 </div>
 
                 <div className="calendar-grid">

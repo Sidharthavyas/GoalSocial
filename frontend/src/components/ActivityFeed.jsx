@@ -87,12 +87,13 @@ const ActivityFeed = () => {
                             key={index}
                             className="flex gap-md p-md"
                             style={{
-                                borderTop: index > 0 ? '1px solid var(--border-color)' : 'none'
+                                borderTop: index > 0 ? '1px solid var(--border-color)' : 'none',
+                                alignItems: 'flex-start'
                             }}
                         >
-                            <div style={{ fontSize: '1.5rem' }}>{getActivityIcon(activity.type)}</div>
-                            <div style={{ flex: 1 }}>
-                                <div className="text-sm">
+                            <div style={{ fontSize: '1.25rem', flexShrink: 0 }}>{getActivityIcon(activity.type)}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div className="text-sm" style={{ wordBreak: 'break-word' }}>
                                     <span style={{ fontWeight: 600 }}>{activity.user?.username}</span>{' '}
                                     <span className="text-secondary">{getActivityText(activity)}</span>
                                 </div>

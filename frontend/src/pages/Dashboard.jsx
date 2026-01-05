@@ -155,12 +155,12 @@ const Dashboard = () => {
 
     return (
         <div className="container mt-lg mb-lg">
-            <div className="flex items-center justify-between mb-lg">
+            <div className="flex items-center justify-between mb-lg" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
                 <div>
-                    <h1>Dashboard</h1>
-                    <p className="text-secondary">Track your goals and monitor progress</p>
+                    <h1 style={{ marginBottom: 'var(--space-xs)' }}>Dashboard</h1>
+                    <p className="text-secondary" style={{ margin: 0 }}>Track your goals and monitor progress</p>
                 </div>
-                <div className="flex items-center gap-sm">
+                <div className="flex items-center gap-sm" style={{ flexWrap: 'wrap' }}>
                     {!isOnline && pendingCount > 0 && (
                         <button
                             onClick={handleSync}
@@ -168,7 +168,7 @@ const Dashboard = () => {
                             disabled
                             title={`${pendingCount} actions pending sync`}
                         >
-                            ⏳ {pendingCount} Pending
+                            ⏳ {pendingCount}
                         </button>
                     )}
                     <button
@@ -177,7 +177,7 @@ const Dashboard = () => {
                         disabled={refreshing}
                         title="Refresh data"
                     >
-                        {refreshing ? '🔄' : '↻'} Refresh
+                        {refreshing ? '🔄' : '↻'}
                     </button>
                     <span className={`badge ${isOnline ? 'badge-success' : 'badge-error'}`}>
                         {isOnline ? '🟢 Online' : '🔴 Offline'}

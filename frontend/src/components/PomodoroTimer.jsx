@@ -16,9 +16,9 @@ const PomodoroTimer = () => {
     const [isAddingTask, setIsAddingTask] = useState(false);
     const [showTasks, setShowTasks] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [soundEnabled, setSoundEnabled] = useState(true);
     const [completedPomodoros, setCompletedPomodoros] = useState(0);
     const [showQuote, setShowQuote] = useState(true);
+    const [isMobile, setIsMobile] = useState(false);
 
     const [timers, setTimers] = useState({
         pomodoro: 25,
@@ -63,6 +63,17 @@ const PomodoroTimer = () => {
         }
     };
 
+    // Detect mobile device
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     // Timer logic
     useEffect(() => {
         if (isActive && timeLeft > 0) {
@@ -84,11 +95,6 @@ const PomodoroTimer = () => {
                 }
             }
             
-            if (soundEnabled) {
-                const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-                audio.play().catch(e => console.log("Audio play failed", e));
-            }
-            
             // Show notification
             if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification(modes[mode].message, {
@@ -99,7 +105,7 @@ const PomodoroTimer = () => {
         }
 
         return () => clearInterval(timerRef.current);
-    }, [isActive, timeLeft, soundEnabled, mode, activeTaskId, tasks]);
+    }, [isActive, timeLeft, mode, activeTaskId, tasks]);
 
     // Request notification permission
     useEffect(() => {
@@ -108,8 +114,17 @@ const PomodoroTimer = () => {
         }
     }, []);
 
-    // Keyboard shortcuts
+    const toggleTimer = useCallback(() => setIsActive(prev => !prev), []);
+
+    const resetTimer = useCallback(() => {
+        setIsActive(false);
+        setTimeLeft(timers[mode] * 60);
+    }, [mode, timers]);
+
+    // Keyboard shortcuts - Desktop only
     useEffect(() => {
+        if (isMobile) return;
+        
         const handleKeyDown = (e) => {
             if (e.target.tagName === 'INPUT') return;
             
@@ -135,14 +150,7 @@ const PomodoroTimer = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
-    const toggleTimer = useCallback(() => setIsActive(prev => !prev), []);
-
-    const resetTimer = useCallback(() => {
-        setIsActive(false);
-        setTimeLeft(timers[mode] * 60);
-    }, [mode, timers]);
+    }, [isMobile, toggleTimer, resetTimer, navigate]);
 
     const switchMode = (newMode) => {
         setMode(newMode);
@@ -207,7 +215,8 @@ const PomodoroTimer = () => {
             background: `var(--bg-primary)`,
             display: 'flex',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            flexDirection: isMobile ? 'column' : 'row'
         }}>
             {/* Ambient background effect */}
             <div style={{
@@ -228,7 +237,7 @@ const PomodoroTimer = () => {
                 top: 0,
                 left: 0,
                 right: 0,
-                padding: '16px 24px',
+                padding: isMobile ? '12px 16px' : '16px 24px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -243,29 +252,25 @@ const PomodoroTimer = () => {
                         alignItems: 'center', 
                         gap: '8px',
                         background: 'var(--glass-bg)',
-                        backdropFilter: 'blur(10px)'
+                        backdropFilter: 'blur(10px)',
+                        padding: isMobile ? '8px 12px' : '10px 16px',
+                        fontSize: isMobile ? '12px' : '14px'
                     }}
                 >
-                    ← Back to Dashboard
+                    ← {isMobile ? 'Back' : 'Back to Dashboard'}
                 </button>
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                        onClick={() => setShowTasks(!showTasks)}
-                        className="btn btn-secondary btn-sm"
-                        title="Toggle Tasks (T)"
-                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
-                    >
-                        {showTasks ? '📋' : '📋'}
-                    </button>
-                    <button
-                        onClick={() => setSoundEnabled(!soundEnabled)}
-                        className="btn btn-secondary btn-sm"
-                        title="Toggle Sound"
-                        style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
-                    >
-                        {soundEnabled ? '🔊' : '🔇'}
-                    </button>
+                    {!isMobile && (
+                        <button
+                            onClick={() => setShowTasks(!showTasks)}
+                            className="btn btn-secondary btn-sm"
+                            title="Toggle Tasks (T)"
+                            style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(10px)' }}
+                        >
+                            📋
+                        </button>
+                    )}
                     <button
                         onClick={toggleTheme}
                         className="btn btn-secondary btn-sm"
@@ -290,7 +295,7 @@ const PomodoroTimer = () => {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                padding: '80px 40px 40px',
+                padding: isMobile ? '70px 20px 20px' : '80px 40px 40px',
                 position: 'relative',
                 zIndex: 1
             }}>
@@ -298,14 +303,14 @@ const PomodoroTimer = () => {
                 <div style={{
                     display: 'flex',
                     gap: '8px',
-                    marginBottom: '24px'
+                    marginBottom: isMobile ? '16px' : '24px'
                 }}>
                     {[...Array(4)].map((_, i) => (
                         <div
                             key={i}
                             style={{
-                                width: '12px',
-                                height: '12px',
+                                width: isMobile ? '10px' : '12px',
+                                height: isMobile ? '10px' : '12px',
                                 borderRadius: '50%',
                                 background: i < (completedPomodoros % 4) 
                                     ? currentTheme.color 
@@ -323,15 +328,17 @@ const PomodoroTimer = () => {
                     background: 'var(--bg-secondary)',
                     borderRadius: '16px',
                     padding: '6px',
-                    marginBottom: '48px',
-                    border: '1px solid var(--border-color)'
+                    marginBottom: isMobile ? '24px' : '48px',
+                    border: '1px solid var(--border-color)',
+                    flexWrap: isMobile ? 'wrap' : 'nowrap',
+                    justifyContent: 'center'
                 }}>
                     {Object.keys(modes).map((m) => (
                         <button
                             key={m}
                             onClick={() => switchMode(m)}
                             style={{
-                                padding: '12px 24px',
+                                padding: isMobile ? '10px 16px' : '12px 24px',
                                 borderRadius: '12px',
                                 border: 'none',
                                 background: mode === m ? currentTheme.color : 'transparent',
@@ -341,7 +348,8 @@ const PomodoroTimer = () => {
                                 transition: 'all 0.3s ease',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px'
+                                gap: '8px',
+                                fontSize: isMobile ? '12px' : '14px'
                             }}
                         >
                             <span>{modes[m].icon}</span>
@@ -353,9 +361,9 @@ const PomodoroTimer = () => {
                 {/* Circular Timer */}
                 <div style={{
                     position: 'relative',
-                    width: '400px',
-                    height: '400px',
-                    marginBottom: '48px'
+                    width: isMobile ? '280px' : '400px',
+                    height: isMobile ? '280px' : '400px',
+                    marginBottom: isMobile ? '24px' : '48px'
                 }}>
                     {/* SVG Circle Progress */}
                     <svg
@@ -367,6 +375,7 @@ const PomodoroTimer = () => {
                             width: '100%',
                             height: '100%'
                         }}
+                        viewBox="0 0 400 400"
                     >
                         {/* Background circle */}
                         <circle
@@ -404,7 +413,7 @@ const PomodoroTimer = () => {
                         textAlign: 'center'
                     }}>
                         <div style={{
-                            fontSize: '96px',
+                            fontSize: isMobile ? '64px' : '96px',
                             fontWeight: '200',
                             fontFamily: "'SF Mono', 'Fira Code', monospace",
                             color: 'var(--text-primary)',
@@ -415,7 +424,7 @@ const PomodoroTimer = () => {
                             {formatTime(timeLeft)}
                         </div>
                         <div style={{
-                            fontSize: '14px',
+                            fontSize: isMobile ? '12px' : '14px',
                             color: 'var(--text-tertiary)',
                             textTransform: 'uppercase',
                             letterSpacing: '2px'
@@ -428,12 +437,13 @@ const PomodoroTimer = () => {
                 {/* Current Task Display */}
                 {activeTaskObj && !activeTaskObj.completed && (
                     <div style={{
-                        marginBottom: '32px',
+                        marginBottom: isMobile ? '20px' : '32px',
                         textAlign: 'center',
-                        padding: '16px 32px',
+                        padding: isMobile ? '12px 20px' : '16px 32px',
                         background: 'var(--bg-secondary)',
                         borderRadius: '12px',
-                        border: '1px solid var(--border-color)'
+                        border: '1px solid var(--border-color)',
+                        maxWidth: isMobile ? '90%' : 'auto'
                     }}>
                         <div style={{
                             fontSize: '12px',
@@ -445,7 +455,7 @@ const PomodoroTimer = () => {
                             Working on
                         </div>
                         <div style={{
-                            fontSize: '18px',
+                            fontSize: isMobile ? '14px' : '18px',
                             fontWeight: '500',
                             color: 'var(--text-primary)'
                         }}>
@@ -460,13 +470,13 @@ const PomodoroTimer = () => {
                         onClick={resetTimer}
                         className="btn btn-secondary"
                         style={{
-                            width: '56px',
-                            height: '56px',
+                            width: isMobile ? '48px' : '56px',
+                            height: isMobile ? '48px' : '56px',
                             borderRadius: '50%',
                             padding: 0,
-                            fontSize: '20px'
+                            fontSize: isMobile ? '16px' : '20px'
                         }}
-                        title="Reset (R)"
+                        title="Reset"
                     >
                         🔄
                     </button>
@@ -475,17 +485,17 @@ const PomodoroTimer = () => {
                         onClick={toggleTimer}
                         className="btn btn-primary ripple"
                         style={{
-                            width: '80px',
-                            height: '80px',
+                            width: isMobile ? '70px' : '80px',
+                            height: isMobile ? '70px' : '80px',
                             borderRadius: '50%',
                             padding: 0,
-                            fontSize: '32px',
+                            fontSize: isMobile ? '28px' : '32px',
                             background: currentTheme.color,
                             boxShadow: `0 8px 32px ${currentTheme.color}40`,
                             transform: isActive ? 'scale(1.05)' : 'scale(1)',
                             transition: 'all 0.3s ease'
                         }}
-                        title="Start/Pause (Space)"
+                        title="Start/Pause"
                     >
                         {isActive ? '⏸️' : '▶️'}
                     </button>
@@ -500,11 +510,11 @@ const PomodoroTimer = () => {
                         }}
                         className="btn btn-secondary"
                         style={{
-                            width: '56px',
-                            height: '56px',
+                            width: isMobile ? '48px' : '56px',
+                            height: isMobile ? '48px' : '56px',
                             borderRadius: '50%',
                             padding: 0,
-                            fontSize: '20px'
+                            fontSize: isMobile ? '16px' : '20px'
                         }}
                         title="Skip to next"
                     >
@@ -512,58 +522,78 @@ const PomodoroTimer = () => {
                     </button>
                 </div>
 
-                {/* Keyboard Shortcuts Hint */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '24px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    gap: '24px',
-                    color: 'var(--text-muted)',
-                    fontSize: '12px'
-                }}>
-                    <span><kbd style={{ 
-                        padding: '2px 8px', 
-                        background: 'var(--bg-tertiary)', 
-                        borderRadius: '4px',
-                        marginRight: '4px'
-                    }}>Space</kbd> Play/Pause</span>
-                    <span><kbd style={{ 
-                        padding: '2px 8px', 
-                        background: 'var(--bg-tertiary)', 
-                        borderRadius: '4px',
-                        marginRight: '4px'
-                    }}>R</kbd> Reset</span>
-                    <span><kbd style={{ 
-                        padding: '2px 8px', 
-                        background: 'var(--bg-tertiary)', 
-                        borderRadius: '4px',
-                        marginRight: '4px'
-                    }}>T</kbd> Tasks</span>
-                    <span><kbd style={{ 
-                        padding: '2px 8px', 
-                        background: 'var(--bg-tertiary)', 
-                        borderRadius: '4px',
-                        marginRight: '4px'
-                    }}>Esc</kbd> Exit</span>
-                </div>
+                {/* Mobile Tasks Toggle */}
+                {isMobile && (
+                    <button
+                        onClick={() => setShowTasks(!showTasks)}
+                        className="btn btn-secondary"
+                        style={{
+                            marginTop: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        📋 {showTasks ? 'Hide Tasks' : 'Show Tasks'}
+                    </button>
+                )}
+
+                {/* Keyboard Shortcuts Hint - Desktop only */}
+                {!isMobile && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '24px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        display: 'flex',
+                        gap: '24px',
+                        color: 'var(--text-muted)',
+                        fontSize: '12px'
+                    }}>
+                        <span><kbd style={{ 
+                            padding: '2px 8px', 
+                            background: 'var(--bg-tertiary)', 
+                            borderRadius: '4px',
+                            marginRight: '4px'
+                        }}>Space</kbd> Play/Pause</span>
+                        <span><kbd style={{ 
+                            padding: '2px 8px', 
+                            background: 'var(--bg-tertiary)', 
+                            borderRadius: '4px',
+                            marginRight: '4px'
+                        }}>R</kbd> Reset</span>
+                        <span><kbd style={{ 
+                            padding: '2px 8px', 
+                            background: 'var(--bg-tertiary)', 
+                            borderRadius: '4px',
+                            marginRight: '4px'
+                        }}>T</kbd> Tasks</span>
+                        <span><kbd style={{ 
+                            padding: '2px 8px', 
+                            background: 'var(--bg-tertiary)', 
+                            borderRadius: '4px',
+                            marginRight: '4px'
+                        }}>Esc</kbd> Exit</span>
+                    </div>
+                )}
             </div>
 
-            {/* Tasks Sidebar */}
+            {/* Tasks Sidebar / Mobile Panel */}
             <div style={{
-                width: showTasks ? '380px' : '0',
+                width: isMobile ? '100%' : (showTasks ? '380px' : '0'),
+                maxHeight: isMobile ? (showTasks ? '50vh' : '0') : 'none',
                 background: 'var(--bg-secondary)',
-                borderLeft: showTasks ? '1px solid var(--border-color)' : 'none',
+                borderLeft: !isMobile && showTasks ? '1px solid var(--border-color)' : 'none',
+                borderTop: isMobile && showTasks ? '1px solid var(--border-color)' : 'none',
                 overflow: 'hidden',
-                transition: 'width 0.3s ease',
+                transition: isMobile ? 'max-height 0.3s ease' : 'width 0.3s ease',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
                 zIndex: 1
             }}>
                 <div style={{
-                    padding: '80px 24px 24px',
+                    padding: isMobile ? '16px' : '80px 24px 24px',
                     flex: 1,
                     overflowY: 'auto',
                     display: showTasks ? 'block' : 'none'
@@ -576,7 +606,7 @@ const PomodoroTimer = () => {
                         marginBottom: '24px'
                     }}>
                         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '32px', fontWeight: 'bold', color: currentTheme.color }}>
+                            <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 'bold', color: currentTheme.color }}>
                                 {completedPomodoros}
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
@@ -584,7 +614,7 @@ const PomodoroTimer = () => {
                             </div>
                         </div>
                         <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--success)' }}>
+                            <div style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 'bold', color: 'var(--success)' }}>
                                 {completedTasks.length}
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
@@ -593,8 +623,8 @@ const PomodoroTimer = () => {
                         </div>
                     </div>
 
-                    {/* Quote */}
-                    {showQuote && (
+                    {/* Quote - Desktop only */}
+                    {showQuote && !isMobile && (
                         <div 
                             className="card" 
                             style={{ 
@@ -646,7 +676,7 @@ const PomodoroTimer = () => {
                         alignItems: 'center',
                         marginBottom: '16px'
                     }}>
-                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: isMobile ? '16px' : '18px' }}>
                             📋 Tasks
                             <span style={{
                                 background: 'var(--bg-tertiary)',
@@ -668,7 +698,7 @@ const PomodoroTimer = () => {
                                 onClick={() => setActiveTaskId(task.id)}
                                 className="card"
                                 style={{
-                                    padding: '14px 16px',
+                                    padding: isMobile ? '12px 14px' : '14px 16px',
                                     cursor: 'pointer',
                                     borderLeft: activeTaskId === task.id 
                                         ? `4px solid ${currentTheme.color}` 
@@ -698,13 +728,14 @@ const PomodoroTimer = () => {
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 color: currentTheme.color,
-                                                fontSize: '12px'
+                                                fontSize: '12px',
+                                                flexShrink: 0
                                             }}
                                         >
                                             
                                         </button>
                                         <span style={{ 
-                                            fontSize: '14px',
+                                            fontSize: isMobile ? '13px' : '14px',
                                             color: 'var(--text-primary)'
                                         }}>
                                             {task.title}
@@ -774,7 +805,8 @@ const PomodoroTimer = () => {
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 color: 'white',
-                                                fontSize: '12px'
+                                                fontSize: '12px',
+                                                flexShrink: 0
                                             }}>
                                                 ✓
                                             </div>
@@ -876,6 +908,7 @@ const PomodoroTimer = () => {
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             maxWidth: '400px',
+                            width: isMobile ? '90%' : '400px',
                             background: 'var(--bg-card)',
                             border: '1px solid var(--border-color)'
                         }}
@@ -942,40 +975,6 @@ const PomodoroTimer = () => {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '16px 0',
-                                borderTop: '1px solid var(--border-color)'
-                            }}>
-                                <span>Sound notifications</span>
-                                <button
-                                    onClick={() => setSoundEnabled(!soundEnabled)}
-                                    style={{
-                                        width: '48px',
-                                        height: '28px',
-                                        borderRadius: '14px',
-                                        border: 'none',
-                                        background: soundEnabled ? currentTheme.color : 'var(--bg-tertiary)',
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        transition: 'background 0.2s ease'
-                                    }}
-                                >
-                                    <div style={{
-                                        width: '22px',
-                                        height: '22px',
-                                        borderRadius: '50%',
-                                        background: 'white',
-                                        position: 'absolute',
-                                        top: '3px',
-                                        left: soundEnabled ? '23px' : '3px',
-                                        transition: 'left 0.2s ease'
-                                    }} />
-                                </button>
                             </div>
                         </div>
                         <div className="modal-footer">
