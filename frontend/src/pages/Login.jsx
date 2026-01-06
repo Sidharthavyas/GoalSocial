@@ -18,7 +18,7 @@ const Login = () => {
 
         try {
             const data = await loginApi(usernameOrEmail, password);
-            login(data.token, data.user);
+            await login(data.token, data.user);
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed');

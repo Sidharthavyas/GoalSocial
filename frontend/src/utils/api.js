@@ -4,8 +4,11 @@ import { getApiBaseUrl } from './capacitorConfig';
 // Use capacitorConfig to get the right API URL for web vs mobile
 const API_URL = getApiBaseUrl();
 
+// Ensure no double slashes in URL - remove trailing slash from base URL
+const baseURL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+
 export const api = axios.create({
-    baseURL: `${API_URL}/api`,
+    baseURL: `${baseURL}/api`,
     headers: {
         'Content-Type': 'application/json'
     }

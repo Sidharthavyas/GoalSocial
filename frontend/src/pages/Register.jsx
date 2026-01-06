@@ -31,7 +31,7 @@ const Register = () => {
 
         try {
             const data = await registerApi(username, email, password);
-            login(data.token, data.user);
+            await login(data.token, data.user);
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.error || 'Registration failed');

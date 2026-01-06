@@ -26,15 +26,44 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
     return (
         <div className="card">
             <div className="flex items-center justify-between mb-md">
-                <span
-                    className="badge"
-                    style={{
-                        background: `${getGoalTypeColor(goal.type)}20`,
-                        color: getGoalTypeColor(goal.type)
-                    }}
-                >
-                    {getGoalTypeLabel(goal.type)}
-                </span>
+                <div className="flex items-center gap-md">
+                    {!readOnly && (
+                        <button
+                            onClick={() => {
+                                // Toggle completion - emit event to parent
+                                if (goal.onToggleComplete) {
+                                    goal.onToggleComplete(goal._id, !goal.completed);
+                                }
+                            }}
+                            className={`completion-checkbox ${goal.completed ? 'checked' : ''}`}
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: 'var(--border-radius-sm)',
+                                border: `2px solid ${goal.completed ? 'var(--success)' : 'var(--border-color)'}`,
+                                background: goal.completed ? 'var(--success)' : 'transparent',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all var(--transition-base)',
+                                flexShrink: 0
+                            }}
+                            title={goal.completed ? 'Mark as incomplete' : 'Mark as complete'}
+                        >
+                            {goal.completed && <span style={{ color: '#0a0a0a', fontSize: '1.25rem', fontWeight: 'bold' }}>✓</span>}
+                        </button>
+                    )}
+                    <span
+                        className="badge"
+                        style={{
+                            background: `${getGoalTypeColor(goal.type)}20`,
+                            color: getGoalTypeColor(goal.type)
+                        }}
+                    >
+                        {getGoalTypeLabel(goal.type)}
+                    </span>
+                </div>
                 {!readOnly && (
                     <div className="flex gap-sm">
                         <button onClick={() => onEdit(goal)} className="btn btn-secondary btn-sm">

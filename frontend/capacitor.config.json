@@ -8,6 +8,13 @@
       "launchShowDuration": 2000,
       "backgroundColor": "#0a0a0a",
       "showSpinner": false
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     }
   }
 }

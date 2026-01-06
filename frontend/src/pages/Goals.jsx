@@ -50,6 +50,16 @@ const Goals = () => {
         }
     };
 
+    const handleToggleComplete = async (goalId, completed) => {
+        try {
+            await api.put(`/goals/${goalId}`, { completed });
+            loadGoals();
+        } catch (error) {
+            console.error('Failed to update goal:', error);
+            alert('Failed to update goal');
+        }
+    };
+
     const handleFormClose = () => {
         setShowForm(false);
         setEditingGoal(null);
@@ -89,7 +99,7 @@ const Goals = () => {
                     {goals.map(goal => (
                         <GoalCard
                             key={goal._id}
-                            goal={goal}
+                            goal={{ ...goal, onToggleComplete: handleToggleComplete }}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                         />
