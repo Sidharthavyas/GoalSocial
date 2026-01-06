@@ -78,6 +78,48 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
         }
     };
 
+    const handleBulkComplete = async () => {
+        if (!window.confirm('Complete all goals for today?')) {
+            return;
+        }
+
+        setSaving(true);
+
+        try {
+            // Format date as YYYY-MM-DD in local timezone
+            const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const dateString = localDate.toISOString().split('T')[0];
+
+            const goalIds = goals.map(g => g._id);
+
+            // If offline, add to queue
+            if (!isOnline) {
+                addToQueue('BULK_COMPLETE', { date: dateString, goalIds });
+                alert('Saved offline. Will sync when online.');
+                onUpdate();
+                onClose();
+                return;
+            }
+
+            await api.post('/tasks/bulk-complete', {
+                date: dateString,
+                goalIds
+            });
+
+            // Trigger celebration
+            triggerCelebration('completion');
+            toast.success('All goals completed! 🎉');
+
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error('Failed to bulk complete:', error);
+            alert('Failed to complete all goals');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const selectedGoal = goals.find(g => g._id === selectedGoalId);
 
     return (
@@ -92,6 +134,20 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                 </div>
 
                 <div className="modal-body">
+                    {/* Bulk Complete Button */}
+                    {goals.length > 0 && !readOnly && (
+                        <div className="mb-md">
+                            <button
+                                onClick={handleBulkComplete}
+                                className="btn btn-success"
+                                style={{ width: '100%' }}
+                                disabled={saving}
+                            >
+                                ✓ Complete All Today
+                            </button>
+                        </div>
+                    )}
+
                     {goals.length === 0 ? (
                         <p className="text-secondary">No active goals. Create a goal first!</p>
                     ) : (

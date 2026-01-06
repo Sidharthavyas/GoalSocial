@@ -8,9 +8,13 @@ export const isNative = Capacitor.isNativePlatform();
 
 // Get the appropriate API base URL
 export const getApiBaseUrl = () => {
-    // Always use production HTTPS backend for mobile
-    // For web, this will be overridden by Vite's proxy in development
-    return 'https://goalsocial-1.onrender.com';
+    if (isNative) {
+        // Mobile: use production HTTPS backend
+        return 'https://goalsocial-1.onrender.com';
+    } else {
+        // Web: use environment variable or localhost for development
+        return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    }
 };
 
 // Get WebSocket URL

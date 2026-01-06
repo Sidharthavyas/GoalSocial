@@ -112,4 +112,62 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
     }
 });
 
+// Bulk complete all goals for a date
+router.post('/bulk-complete', authenticateToken, async (req, res) => {
+    try {
+        const { date, goalIds } = req.body;
+
+        if (!date || !goalIds || !Array.isArray(goalIds)) {
+            return res.status(400).json({ error: 'Date and goalIds array are required' });
+        }
+
+        // Ensure date is in YYYY-MM-DD format
+        const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+            ? date
+            : new Date(date).toISOString().split('T')[0];
+
+        const tasks = [];
+
+        for (const goalId of goalIds) {
+            // Verify goal exists and belongs to user
+            const goal = await Goal.findById(goalId);
+            if (!goal || goal.userId.toString() !== req.user._id.toString()) {
+                continue; // Skip invalid goals
+            }
+
+            // Find existing task or create new one
+            let task = await Task.findOne({
+                goalId,
+                userId: req.user._id,
+                date: dateString
+            });
+
+            if (task) {
+                // Update existing
+                task.completed = true;
+                task.percentage = 100;
+            } else {
+                // Create new
+                task = new Task({
+                    goalId,
+                    userId: req.user._id,
+                    date: dateString,
+                    completed: true,
+                    value: 0,
+                    percentage: 100,
+                    notes: ''
+                });
+            }
+
+            await task.save();
+            tasks.push(task);
+        }
+
+        res.json({ tasks, message: `Completed ${tasks.length} goals` });
+    } catch (error) {
+        console.error('Bulk complete error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 export default router;

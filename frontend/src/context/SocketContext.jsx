@@ -74,7 +74,8 @@ export const SocketProvider = ({ children }) => {
             'progress.updated',
             'comment.created',
             'reaction.created',
-            'activity.new'
+            'activity.new',
+            'notification.new'
         ].forEach(eventName => {
             newSocket.on(eventName, (data) => {
                 console.log(`📡 Received: ${eventName}`, data);

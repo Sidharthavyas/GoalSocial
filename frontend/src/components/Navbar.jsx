@@ -1,7 +1,9 @@
 // components/Navbar.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
+import NotificationCenter from './NotificationCenter';
 import { useTheme } from '../hooks/useTheme';
 
 const Navbar = () => {
@@ -80,6 +82,7 @@ const Navbar = () => {
                         </ul>
                     </div>
                     <div className="flex items-center gap-md desktop-only">
+                        <NotificationCenter />
                         <button
                             onClick={toggleTheme}
                             className="btn btn-secondary btn-sm"

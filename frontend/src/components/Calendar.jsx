@@ -89,6 +89,18 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                                     {format(day, 'd')}
                                 </div>
 
+                                {/* Completion Percentage */}
+                                {!isFuture && progress > 0 && (
+                                    <div className="completion-percent" style={{
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        color: progress === 100 ? 'var(--success)' : 'var(--text-primary)',
+                                        marginTop: '2px'
+                                    }}>
+                                        {progress}%
+                                    </div>
+                                )}
+
                                 {/* Status Icons */}
                                 {!isFuture && (
                                     <div style={{ fontSize: '0.5rem', marginTop: '2px' }}>

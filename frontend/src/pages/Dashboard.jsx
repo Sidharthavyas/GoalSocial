@@ -3,6 +3,7 @@ import api from '../utils/api';
 import Calendar from '../components/Calendar';
 import ActivityFeed from '../components/ActivityFeed';
 import StreakBadge from '../components/StreakBadge';
+import ProgressAnalytics from '../components/ProgressAnalytics';
 import { useSocket } from '../context/SocketContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { syncQueue, getPendingCount } from '../utils/offlineQueue';
@@ -250,6 +251,11 @@ const Dashboard = () => {
                         <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
                     </div>
                 </div>
+            </div>
+
+            {/* Progress Analytics */}
+            <div className="mb-lg">
+                <ProgressAnalytics />
             </div>
 
             {/* Main Content */}

@@ -1,6 +1,6 @@
 {
-  "appId": "com.goaltracker.app",
-  "appName": "GoalTracker",
+  "appId": "com.gosocial.app",
+  "appName": "GoSocial",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "plugins": {

@@ -4,7 +4,15 @@ import { Server } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import cron from "node-cron";
 import { setupSocketHandlers } from "./events/socketHandlers.js";
+import {
+    checkStreakRescue,
+    checkFutureSelfReminder,
+    checkAlmostThere,
+    checkSilentMiss,
+    checkConsistencyOverPerfection
+} from "./utils/notificationTriggers.js";
 
 // Routes
 import authRoutes from "./routes/auth.js";
@@ -17,6 +25,8 @@ import reactionRoutes from "./routes/reactions.js";
 import activityRoutes from "./routes/activity.js";
 import calendarRoutes from "./routes/calendar.js";
 import insightsRoutes from "./routes/insights.js";
+import analyticsRoutes from "./routes/analytics.js";
+import notificationRoutes from "./routes/notifications.js";
 
 // Middleware
 import { apiLimiter, loginLimiter, friendRequestLimiter } from "./middleware/rateLimiter.js";
@@ -110,6 +120,8 @@ app.use("/api/reactions", reactionRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/insights", insightsRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ============================
 // HEALTH CHECK
@@ -122,6 +134,66 @@ app.get("/health", (req, res) => {
 // SOCKET HANDLERS
 // ============================
 setupSocketHandlers(io);
+
+// ============================
+// CRON JOBS FOR NOTIFICATIONS
+// ============================
+// 6 AM - Consistency Over Perfection (broke streak yesterday)
+cron.schedule('0 6 * * *', async () => {
+    console.log('⏰ Running Consistency Over Perfection check...');
+    try {
+        const notifications = await checkConsistencyOverPerfection();
+        console.log(`✅ Created ${notifications.length} consistency notifications`);
+    } catch (error) {
+        console.error('❌ Consistency check error:', error);
+    }
+});
+
+// 2 PM - Almost There Nudge (60-80% completion)
+cron.schedule('0 14 * * *', async () => {
+    console.log('⏰ Running Almost There Nudge check...');
+    try {
+        const notifications = await checkAlmostThere();
+        console.log(`✅ Created ${notifications.length} almost there notifications`);
+    } catch (error) {
+        console.error('❌ Almost there check error:', error);
+    }
+});
+
+// 6 PM - Streak Rescue (< 6 hours left, no progress)
+cron.schedule('0 18 * * *', async () => {
+    console.log('⏰ Running Streak Rescue check...');
+    try {
+        const notifications = await checkStreakRescue();
+        console.log(`✅ Created ${notifications.length} streak rescue notifications`);
+    } catch (error) {
+        console.error('❌ Streak rescue check error:', error);
+    }
+});
+
+// 8 PM - Silent Miss Warning (scheduled goals, zero progress)
+cron.schedule('0 20 * * *', async () => {
+    console.log('⏰ Running Silent Miss Warning check...');
+    try {
+        const notifications = await checkSilentMiss();
+        console.log(`✅ Created ${notifications.length} silent miss notifications`);
+    } catch (error) {
+        console.error('❌ Silent miss check error:', error);
+    }
+});
+
+// Daily at midnight - Future Self Reminder (same goal missed 2 days)
+cron.schedule('0 0 * * *', async () => {
+    console.log('⏰ Running Future Self Reminder check...');
+    try {
+        const notifications = await checkFutureSelfReminder();
+        console.log(`✅ Created ${notifications.length} future self notifications`);
+    } catch (error) {
+        console.error('❌ Future self check error:', error);
+    }
+});
+
+console.log('✅ Notification cron jobs scheduled');
 
 // ============================
 // SERVER START

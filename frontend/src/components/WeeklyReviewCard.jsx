@@ -40,7 +40,11 @@ const WeeklyReviewCard = ({ onClose }) => {
     const getMotivationalMessage = () => {
         const { consistencyPercent, streakMaintained } = insights;
 
-        if (consistencyPercent >= 90) return "🌟 Outstanding! You're crushing it!";
+        if (consistencyPercent >= 90) return "🌟 Outstanding! You're";
+        /* ## Planning Phase
+        - [x] Review existing codebase structure
+        - [x] Create comprehensive implementation plan
+        - [x] Get user approval on plan */
         if (consistencyPercent >= 70) return "💪 Great work! Keep the momentum going!";
         if (consistencyPercent >= 50) return "👍 Good progress! You're on the right track!";
         if (streakMaintained) return "🔥 Streak maintained! Don't break it now!";
