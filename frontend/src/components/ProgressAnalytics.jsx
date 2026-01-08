@@ -32,6 +32,8 @@ const ProgressAnalytics = () => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // Reset data when switching tabs to prevent race conditions
+        setData(null);
         loadData();
     }, [activeTab]);
 
@@ -53,36 +55,44 @@ const ProgressAnalytics = () => {
 
         if (activeTab === 'weekly' || activeTab === 'monthly') {
             const days = data.days || [];
-            const total = days.reduce((sum, d) => sum + d.completionPercent, 0);
-            const avg = days.length > 0 ? Math.round(total / days.length) : 0;
-            const best = days.length > 0 ? Math.max(...days.map(d => d.completionPercent)) : 0;
+            if (days.length === 0) return null;
+
+            const total = days.reduce((sum, d) => sum + (d.completionPercent || 0), 0);
+            const avg = Math.round(total / days.length);
+            const best = Math.max(...days.map(d => d.completionPercent || 0));
             const perfectDays = days.filter(d => d.completionPercent === 100).length;
 
             return { avg, best, perfectDays, totalDays: days.length };
         } else if (activeTab === 'yearly') {
             const months = data.months || [];
-            const total = months.reduce((sum, m) => sum + m.avgCompletionPercent, 0);
-            const avg = months.length > 0 ? Math.round(total / months.length) : 0;
-            const best = months.length > 0 ? Math.max(...months.map(m => m.avgCompletionPercent)) : 0;
+            if (months.length === 0) return null;
+
+            const total = months.reduce((sum, m) => sum + (m.avgCompletionPercent || 0), 0);
+            const avg = Math.round(total / months.length);
+            const best = Math.max(...months.map(m => m.avgCompletionPercent || 0));
             const perfectMonths = months.filter(m => m.avgCompletionPercent === 100).length;
 
             return { avg, best, perfectMonths, totalMonths: months.length };
         }
+        return null;
     };
 
     const getChartData = () => {
         if (!data) return null;
 
         if (activeTab === 'weekly') {
+            const days = data.days;
+            if (!Array.isArray(days) || days.length === 0) return null;
+
             return {
-                labels: data.days.map(d => {
+                labels: days.map(d => {
                     const date = new Date(d.date);
                     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                 }),
                 datasets: [
                     {
                         label: 'Completion %',
-                        data: data.days.map(d => d.completionPercent),
+                        data: days.map(d => d.completionPercent || 0),
                         borderColor: 'rgb(124, 179, 138)',
                         backgroundColor: 'rgba(124, 179, 138, 0.15)',
                         fill: true,
@@ -96,15 +106,18 @@ const ProgressAnalytics = () => {
                 ]
             };
         } else if (activeTab === 'monthly') {
+            const days = data.days;
+            if (!Array.isArray(days) || days.length === 0) return null;
+
             return {
-                labels: data.days.map(d => {
+                labels: days.map(d => {
                     const date = new Date(d.date);
                     return date.getDate();
                 }),
                 datasets: [
                     {
                         label: 'Daily Completion %',
-                        data: data.days.map(d => d.completionPercent),
+                        data: days.map(d => d.completionPercent || 0),
                         borderColor: 'rgb(106, 159, 181)',
                         backgroundColor: 'rgba(106, 159, 181, 0.15)',
                         fill: true,
@@ -118,12 +131,15 @@ const ProgressAnalytics = () => {
                 ]
             };
         } else if (activeTab === 'yearly') {
+            const months = data.months;
+            if (!Array.isArray(months) || months.length === 0) return null;
+
             return {
-                labels: data.months.map(m => m.monthName),
+                labels: months.map(m => m.monthName || ''),
                 datasets: [
                     {
                         label: 'Monthly Avg %',
-                        data: data.months.map(m => m.avgCompletionPercent),
+                        data: months.map(m => m.avgCompletionPercent || 0),
                         borderColor: 'rgb(139, 92, 246)',
                         backgroundColor: 'rgba(139, 92, 246, 0.15)',
                         fill: true,
@@ -137,6 +153,7 @@ const ProgressAnalytics = () => {
                 ]
             };
         }
+        return null;
     };
 
     const chartOptions = {
