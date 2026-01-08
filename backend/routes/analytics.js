@@ -48,14 +48,26 @@ router.get('/weekly', authenticateToken, async (req, res) => {
 
             // Refined Filtering Logic - Count only goals that should be active on this specific day
             for (const goal of goals) {
+                // Check if goal was created on or before this day
+                const goalCreatedDate = new Date(goal.createdAt);
+                goalCreatedDate.setHours(0, 0, 0, 0);
+                if (goalCreatedDate > dateObj) {
+                    continue; // Goal wasn't created yet on this day
+                }
+
+                // Get tasks for this specific goal only
+                const goalTasks = await Task.find({
+                    userId: req.user._id,
+                    goalId: goal._id
+                });
+
                 // 1. Recurring goals count if they are active (checked by query above)
                 if (goal.type === 'recurring' || goal.type === 'series') {
                     activeGoalCount++;
                 }
                 // 2. One-time goals count only if they were NOT completed before this day
                 else if (goal.type === 'one-time') {
-                    const previouslyCompleted = allUserTasks.some(t =>
-                        t.goalId.toString() === goal._id.toString() &&
+                    const previouslyCompleted = goalTasks.some(t =>
                         t.date < dateStr && // Completed before this day
                         (t.completed || t.percentage === 100)
                     );
@@ -67,8 +79,7 @@ router.get('/weekly', authenticateToken, async (req, res) => {
                 // 3. Numeric/Percentage goals count if they haven't reached target
                 else if (goal.type === 'numeric' || goal.type === 'percentage') {
                     // Check if goal was completed before this day
-                    const completedBefore = allUserTasks.some(t =>
-                        t.goalId.toString() === goal._id.toString() &&
+                    const completedBefore = goalTasks.some(t =>
                         t.date < dateStr &&
                         (t.completed || t.percentage === 100 || (goal.targetValue && t.value >= goal.targetValue))
                     );
@@ -122,16 +133,13 @@ router.get('/monthly', authenticateToken, async (req, res) => {
                 date: dateStr
             });
 
-            // Get all tasks ever to check for previous completions of one-time goals
-            const allUserTasks = await Task.find({
-                userId: req.user._id,
-                completed: true
-            });
-
             // Filter relevant goals for this specific day
+            // Only count goals that were actually created on or before this day AND are active
             const goals = await Goal.find({
                 userId: req.user._id,
-                startDate: { $lte: dateObj }, // Started on or before today
+                createdAt: { $lte: new Date(dateObj.getTime() + 24 * 60 * 60 * 1000) }, // Created on or before this day
+                startDate: { $lte: dateObj }, // Started on or before this day
+                isActive: true, // Only active goals
                 $or: [
                     { endDate: null },
                     { endDate: { $gte: dateObj } } // Not ended yet
@@ -147,14 +155,26 @@ router.get('/monthly', authenticateToken, async (req, res) => {
 
             // Refined Filtering Logic - Count only goals that should be active on this specific day
             for (const goal of goals) {
+                // Check if goal was created on or before this day
+                const goalCreatedDate = new Date(goal.createdAt);
+                goalCreatedDate.setHours(0, 0, 0, 0);
+                if (goalCreatedDate > dateObj) {
+                    continue; // Goal wasn't created yet on this day
+                }
+
+                // Get tasks for this specific goal only
+                const goalTasks = await Task.find({
+                    userId: req.user._id,
+                    goalId: goal._id
+                });
+
                 // 1. Recurring goals count if they are active (checked by query above)
                 if (goal.type === 'recurring' || goal.type === 'series') {
                     activeGoalCount++;
                 }
                 // 2. One-time goals count only if they were NOT completed before this day
                 else if (goal.type === 'one-time') {
-                    const previouslyCompleted = allUserTasks.some(t =>
-                        t.goalId.toString() === goal._id.toString() &&
+                    const previouslyCompleted = goalTasks.some(t =>
                         t.date < dateStr && // Completed before this day
                         (t.completed || t.percentage === 100)
                     );
@@ -166,8 +186,7 @@ router.get('/monthly', authenticateToken, async (req, res) => {
                 // 3. Numeric/Percentage goals count if they haven't reached target
                 else if (goal.type === 'numeric' || goal.type === 'percentage') {
                     // Check if goal was completed before this day
-                    const completedBefore = allUserTasks.some(t =>
-                        t.goalId.toString() === goal._id.toString() &&
+                    const completedBefore = goalTasks.some(t =>
                         t.date < dateStr &&
                         (t.completed || t.percentage === 100 || (goal.targetValue && t.value >= goal.targetValue))
                     );
@@ -232,32 +251,39 @@ router.get('/yearly', authenticateToken, async (req, res) => {
                 const dayDateObj = new Date(dayDateStr);
 
                 // Count goals that were active on that day
+                // Only count goals that were actually created on or before this day
                 const goalsOnDay = await Goal.find({
                     userId: req.user._id,
+                    createdAt: { $lte: new Date(dayDateObj.getTime() + 24 * 60 * 60 * 1000) }, // Created on or before this day
                     startDate: { $lte: dayDateObj },
+                    isActive: true,
                     $or: [
                         { endDate: null },
                         { endDate: { $gte: dayDateObj } }
-                    ],
-                    isActive: true
+                    ]
                 });
 
                 const dayTasks = tasks.filter(t => t.date === dayDateStr);
-                
-                // Get all tasks to check for one-time goal completions
-                const allUserTasks = await Task.find({
-                    userId: req.user._id,
-                    completed: true
-                });
 
                 // Count active goals for this day (similar to weekly/monthly logic)
                 let activeGoalCount = 0;
                 for (const goal of goalsOnDay) {
+                    // Check if goal was created on or before this day
+                    const goalCreatedDate = new Date(goal.createdAt);
+                    goalCreatedDate.setHours(0, 0, 0, 0);
+                    if (goalCreatedDate > dayDateObj) {
+                        continue; // Goal wasn't created yet on this day
+                    }
+
+                    // Get tasks for this specific goal only
+                    const goalTasks = tasks.filter(t => 
+                        t.goalId.toString() === goal._id.toString()
+                    );
+
                     if (goal.type === 'recurring' || goal.type === 'series') {
                         activeGoalCount++;
                     } else if (goal.type === 'one-time') {
-                        const previouslyCompleted = allUserTasks.some(t =>
-                            t.goalId.toString() === goal._id.toString() &&
+                        const previouslyCompleted = goalTasks.some(t =>
                             t.date < dayDateStr &&
                             (t.completed || t.percentage === 100)
                         );
@@ -265,8 +291,7 @@ router.get('/yearly', authenticateToken, async (req, res) => {
                             activeGoalCount++;
                         }
                     } else if (goal.type === 'numeric' || goal.type === 'percentage') {
-                        const completedBefore = allUserTasks.some(t =>
-                            t.goalId.toString() === goal._id.toString() &&
+                        const completedBefore = goalTasks.some(t =>
                             t.date < dayDateStr &&
                             (t.completed || t.percentage === 100 || (goal.targetValue && t.value >= goal.targetValue))
                         );

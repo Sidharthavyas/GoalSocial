@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import api from '../utils/api';
 import { useSocket } from '../context/SocketContext';
+import { useTheme } from '../hooks/useTheme';
 
 // Register Chart.js components
 ChartJS.register(
@@ -31,6 +32,7 @@ const ProgressAnalytics = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const { events } = useSocket();
+    const { theme } = useTheme();
 
     // Load data on tab change
     useEffect(() => {
@@ -187,6 +189,14 @@ const ProgressAnalytics = () => {
         return null;
     };
 
+    // Get theme-aware colors
+    const isDark = theme === 'dark';
+    const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(26, 26, 26, 0.6)';
+    const textColorSecondary = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(26, 26, 26, 0.5)';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+    const tooltipBg = isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    const tooltipText = isDark ? '#fff' : '#1a1a1a';
+
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -197,11 +207,11 @@ const ProgressAnalytics = () => {
         plugins: {
             legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(10, 10, 10, 0.95)',
+                backgroundColor: tooltipBg,
                 padding: 12,
                 titleColor: 'rgb(124, 179, 138)',
                 titleFont: { size: 12, weight: 600 },
-                bodyColor: '#fff',
+                bodyColor: tooltipText,
                 bodyFont: { size: 11 },
                 borderColor: 'rgba(124, 179, 138, 0.3)',
                 borderWidth: 1,
@@ -217,26 +227,32 @@ const ProgressAnalytics = () => {
                 max: 100,
                 ticks: {
                     callback: (value) => value + '%',
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: textColor,
                     font: { size: 10 },
                     stepSize: 25
                 },
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
+                    color: gridColor,
                     drawBorder: false
                 },
-                border: { display: false }
+                border: { 
+                    display: true,
+                    color: textColor
+                }
             },
             x: {
                 ticks: {
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: textColorSecondary,
                     font: { size: 9 },
                     maxRotation: 0,
                     autoSkip: true,
                     maxTicksLimit: 7
                 },
                 grid: { display: false },
-                border: { display: false }
+                border: { 
+                    display: true,
+                    color: textColorSecondary
+                }
             }
         }
     };
