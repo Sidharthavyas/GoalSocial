@@ -56,12 +56,19 @@ const NotificationCenter = () => {
 
     const displayCount = unreadCount > 9 ? '9+' : unreadCount;
 
+    const handleBellClick = () => {
+        console.log('🔔 Notification bell clicked! Current isOpen:', isOpen);
+        setIsOpen(!isOpen);
+        console.log('🔔 Setting isOpen to:', !isOpen);
+    };
+
     return (
         <div className="notification-center" ref={dropdownRef}>
             <button
                 className="notification-bell"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={handleBellClick}
                 aria-label="Notifications"
+                style={{ position: 'relative', zIndex: 1001 }}
             >
                 🔔
                 {unreadCount > 0 && (

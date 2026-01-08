@@ -102,6 +102,14 @@ mongoose
     .catch((err) => console.error("❌ MongoDB error:", err));
 
 // ============================
+// SOCKET MIDDLEWARE - Attach io to requests
+// ============================
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+// ============================
 // ROUTES (with rate limiting)
 // ============================
 // Apply general API rate limiting to all routes
@@ -121,7 +129,7 @@ app.use("/api/activity", activityRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/insights", insightsRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/notifications", notificationRoutes);
+app.use("/api/notifications", notificationClient);
 
 // ============================
 // HEALTH CHECK
