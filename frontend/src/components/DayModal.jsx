@@ -252,17 +252,16 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                                     rows={3}
                                 />
                             </div>
-                            )}
-
-                            {/* Show comments and reactions for existing tasks */}
-                            {tasks.length > 0 && (
-                                <div className="mt-lg">
-                                    <h4>Comments & Reactions</h4>
-                                    <Comments targetType="task" targetId={tasks[0]._id} />
-                                    <Reactions targetType="task" targetId={tasks[0]._id} />
-                                </div>
-                            )}
                         </>
+                    )}
+
+                    {/* Show comments and reactions for existing tasks */}
+                    {tasks.length > 0 && (
+                        <div className="mt-lg">
+                            <h4>Comments & Reactions</h4>
+                            <Comments targetType="task" targetId={tasks[0]._id} />
+                            <Reactions targetType="task" targetId={tasks[0]._id} />
+                        </div>
                     )}
                 </div>
 
@@ -277,7 +276,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
