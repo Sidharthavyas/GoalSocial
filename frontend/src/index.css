@@ -643,6 +643,23 @@ textarea {
   }
 }
 
+@keyframes checkmark {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
 .loading {
   animation: pulse 2s cubic-bezier(0.4, 0, 6, 1) infinite;
 }
@@ -872,12 +889,15 @@ textarea {
   }
 
   .calendar-day {
-    font-size: 0.65rem;
-    min-height: 44px;
+    font-size: 0.75rem;
+    padding: 4px;
+    min-height: 60px;
+    border-radius: var(--border-radius-sm);
   }
 
-  .calendar-day .meta {
-    display: none;
+  .calendar-day-name {
+    font-size: 0.7rem;
+    padding: var(--space-xs);
   }
 
   /* Stack form buttons on mobile */

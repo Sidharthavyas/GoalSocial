@@ -1,18 +1,20 @@
-# GoalTracker - Real-Time Goal & Habit Tracking
+# GoalSocial - Real-Time Goal & Habit Tracking
 
-A **production-ready**, real-time, friend-based goal and habit tracking web application with offline-first architecture, WebSocket-powered live updates, MongoDB backend, premium UI/UX, and a Pomodoro timer for focused work sessions.
+A **production-ready**, real-time, friend-based goal and habit tracking application with offline-first architecture, WebSocket-powered live updates, MongoDB backend, premium UI/UX, and native mobile support via Capacitor.
 
 ## ✨ Features
 
 ### Core Features
-- **Real-time Updates**: WebSocket (Socket.IO) powered instant synchronization across all devices
-- **Friend System**: Add friends by username/UUID, mutual approval required
-- **Goal Types**: One-time, recurring, series, numeric, and percentage-based goals
-- **Goal Personalization**: Custom colors and emoji icons for each goal
-- **Interactive Calendar**: Monthly view with intelligent progress indicators and streak tracking
-- **Social Features**: Comments, emoji reactions, and real-time activity feed
-- **Privacy First**: All data private by default, friends get read-only access
-- **Pomodoro Timer**: Built-in focus timer with task management and progress tracking
+- **📱 Native Mobile App**: Android app with Capacitor - install as APK or PWA
+- **🔔 Push Notifications**: Smart reminders for streaks, milestones, and daily nudges
+- **⚡ Real-time Updates**: WebSocket (Socket.IO) powered instant synchronization across all devices
+- **👥 Friend System**: Add friends by username/UUID, mutual approval required
+- **🎯 Goal Types**: One-time, recurring, series, numeric, and percentage-based goals
+- **🎨 Goal Personalization**: Custom colors, emoji icons, and completion checkboxes
+- **📅 Interactive Calendar**: Monthly view with intelligent progress indicators and streak tracking
+- **💬 Social Features**: Comments, emoji reactions, and real-time activity feed
+- **🔒 Privacy First**: All data private by default, friends get read-only access
+- **⏱️ Pomodoro Timer**: Built-in focus timer with task management and progress tracking
 
 ### Premium UX (Phases 1-6)
 - **📱 Fully Responsive Design**: Mobile-first with hamburger menu, optimized touch targets (44px+), and adaptive layouts
@@ -60,6 +62,8 @@ A **production-ready**, real-time, friend-based goal and habit tracking web appl
 ### Frontend
 - React 18 with Hooks
 - Vite (fast build tool)
+- **Capacitor 8** (native mobile app framework)
+- **@capacitor/push-notifications** (mobile push notifications)
 - Socket.IO Client (real-time updates)
 - **react-hot-toast** (toast notifications)
 - **react-loading-skeleton** (loading states)
@@ -145,6 +149,49 @@ npm run dev
 ```
 
 Access the application at: http://localhost:5173
+
+### Mobile App (Android)
+
+**Prerequisites:**
+- Android Studio installed
+- JDK 17 or higher
+- Android SDK
+
+**Build and Run:**
+
+```bash
+cd frontend
+
+# Build the web app
+npm run build
+
+# Sync with Capacitor
+npm run cap:sync:android
+
+# Open in Android Studio
+npm run cap:open:android
+```
+
+In Android Studio:
+1. Wait for Gradle sync to complete
+2. Connect Android device or start emulator
+3. Click Run (green play button)
+4. App will install and launch on device
+
+**Build APK for Distribution:**
+
+In Android Studio:
+1. Go to `Build > Build Bundle(s) / APK(s) > Build APK(s)`
+2. APK will be generated in `android/app/build/outputs/apk/debug/`
+3. Transfer to phone and install
+
+**Environment Configuration:**
+
+Mobile app automatically uses production backend:
+- API: `https://goalsocial-1.onrender.com`
+- WebSocket: `https://goalsocial-1.onrender.com`
+
+For development, edit `frontend/src/utils/capacitorConfig.js`
 
 ## 📡 WebSocket Events
 
@@ -277,6 +324,14 @@ gt2/
 
 ## 🎯 Recent Enhancements (2026)
 
+### Latest Updates (January 2026)
+- ✅ **Mobile App Launch**: Native Android app with Capacitor 8
+- ✅ **Push Notifications**: Smart notifications for streaks, milestones, and daily progress
+- ✅ **API URL Fix**: Resolved double-slash 404 errors on authentication endpoints
+- ✅ **Goal Completion Checkboxes**: Individual tick marks for marking goals complete
+- ✅ **Motivational Loader**: Premium loading screen with motivational messages
+- ✅ **Notification Permissions**: Automatic push notification setup on mobile login
+
 ### Phase 1: Critical Fixes & Core UX
 - ✅ **Date Timezone Fix**: Tasks now save to correct day (string-based dates)
 - ✅ **Responsive Design**: Mobile-first with breakpoints for all devices
@@ -357,7 +412,30 @@ gt2/
 - ✅ **Mobile Menu**: Hamburger navigation with smooth animations
 - ✅ **Viewport Constraints**: max-width 1400px to prevent over-zooming
 
-## � Mobile Testing
+## 🔔 Push Notifications (Mobile Only)
+
+### Notification Types
+The app sends smart, context-aware notifications based on your progress:
+
+- **Consistency Over Perfection** (6 AM): Encouragement if you broke a streak yesterday
+- **Almost There Nudge** (2 PM): Reminder when you're 60-80% complete
+- **Streak Rescue** (6 PM): Alert if you have <6 hours left with no progress
+- **Silent Miss Warning** (8 PM): Reminder for scheduled goals with zero progress
+- **Future Self Reminder** (Midnight): Notification if you missed the same goal 2 days in a row
+
+### Setup
+1. Install the app on your Android device
+2. Log in or register
+3. Grant notification permission when prompted
+4. Notifications will appear automatically based on your progress
+
+### Technical Details
+- Powered by `@capacitor/push-notifications`
+- Permissions requested automatically on login
+- Works only on physical devices (not web browsers)
+- Notification token registered with backend for targeted messaging
+
+## 📱 Mobile Testing
 
 ### Recommended Test Viewports
 - **iPhone SE**: 375x667px

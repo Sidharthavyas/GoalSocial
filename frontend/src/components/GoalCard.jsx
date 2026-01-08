@@ -29,29 +29,42 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
                 <div className="flex items-center gap-md">
                     {!readOnly && (
                         <button
-                            onClick={() => {
-                                // Toggle completion - emit event to parent
-                                if (goal.onToggleComplete) {
-                                    goal.onToggleComplete(goal._id, !goal.completed);
-                                }
-                            }}
-                            className={`completion-checkbox ${goal.completed ? 'checked' : ''}`}
+                            onClick={() => onEdit && onEdit({ ...goal, completed: !goal.completed })}
+                            className="goal-checkbox"
                             style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: 'var(--border-radius-sm)',
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '6px',
                                 border: `2px solid ${goal.completed ? 'var(--success)' : 'var(--border-color)'}`,
                                 background: goal.completed ? 'var(--success)' : 'transparent',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
-                                transition: 'all var(--transition-base)',
-                                flexShrink: 0
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                flexShrink: 0,
+                                position: 'relative'
                             }}
                             title={goal.completed ? 'Mark as incomplete' : 'Mark as complete'}
+                            aria-label={goal.completed ? 'Mark as incomplete' : 'Mark as complete'}
                         >
-                            {goal.completed && <span style={{ color: '#0a0a0a', fontSize: '1.25rem', fontWeight: 'bold' }}>✓</span>}
+                            {goal.completed && (
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 14 14"
+                                    fill="none"
+                                    style={{ animation: 'checkmark 0.3s ease-in-out' }}
+                                >
+                                    <path
+                                        d="M2 7L5.5 10.5L12 3"
+                                        stroke="#0a0a0a"
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                            )}
                         </button>
                     )}
                     <span

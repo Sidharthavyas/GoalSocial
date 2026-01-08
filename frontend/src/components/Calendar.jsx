@@ -81,18 +81,22 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                                     position: 'relative',
                                     background: progress > 0
                                         ? `linear-gradient(135deg, rgba(99, 102, 241, ${progress / 300}) 0%, rgba(139, 92, 246, ${progress / 250}) 100%)`
-                                        : 'var(--bg-tertiary)'
+                                        : 'var(--bg-tertiary)',
+                                    minHeight: window.innerWidth < 768 ? '60px' : 'auto'
                                 }}
                                 title={dayTasks.length > 0 ? `${progress}% complete • ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}` : ''}
                             >
-                                <div className="date" style={{ fontSize: '0.875rem', fontWeight: isToday(day) ? 700 : 400 }}>
+                                <div className="date" style={{
+                                    fontSize: window.innerWidth < 768 ? '0.875rem' : '0.875rem',
+                                    fontWeight: isToday(day) ? 700 : 400
+                                }}>
                                     {format(day, 'd')}
                                 </div>
 
                                 {/* Completion Percentage */}
                                 {!isFuture && progress > 0 && (
                                     <div className="completion-percent" style={{
-                                        fontSize: '0.75rem',
+                                        fontSize: window.innerWidth < 768 ? '0.7rem' : '0.75rem',
                                         fontWeight: 600,
                                         color: progress === 100 ? 'var(--success)' : 'var(--text-primary)',
                                         marginTop: '2px'
@@ -103,14 +107,14 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
 
                                 {/* Status Icons */}
                                 {!isFuture && (
-                                    <div style={{ fontSize: '0.5rem', marginTop: '2px' }}>
+                                    <div style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.5rem', marginTop: '2px' }}>
                                         {isStreakDay && '🔥'}
                                         {isPerfectDay && '⭐'}
                                         {isMissedDay && '⚠️'}
                                     </div>
                                 )}
 
-                                {dayTasks.length > 0 && (
+                                {dayTasks.length > 0 && window.innerWidth >= 768 && (
                                     <div className="meta" style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                                         {dayTasks.length} task{dayTasks.length > 1 ? 's' : ''}
                                     </div>

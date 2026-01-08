@@ -33,7 +33,15 @@ const Goals = () => {
         }
     };
 
-    const handleEdit = (goal) => {
+    const handleEdit = async (goal) => {
+        // If only completion changed, just update that field
+        const originalGoal = goals.find(g => g._id === goal._id);
+        if (originalGoal && originalGoal.completed !== goal.completed) {
+            await handleToggleComplete(goal._id, goal.completed);
+            return;
+        }
+
+        // Otherwise, open the edit form
         setEditingGoal(goal);
         setShowForm(true);
     };
@@ -51,12 +59,20 @@ const Goals = () => {
     };
 
     const handleToggleComplete = async (goalId, completed) => {
+        // Optimistic update
+        setGoals(prev => prev.map(g =>
+            g._id === goalId ? { ...g, completed } : g
+        ));
+
         try {
             await api.put(`/goals/${goalId}`, { completed });
-            loadGoals();
         } catch (error) {
             console.error('Failed to update goal:', error);
-            alert('Failed to update goal');
+            // Rollback on error
+            setGoals(prev => prev.map(g =>
+                g._id === goalId ? { ...g, completed: !completed } : g
+            ));
+            alert('Failed to update goal. Please try again.');
         }
     };
 

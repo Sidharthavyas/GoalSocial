@@ -34,6 +34,23 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
+    const [showLoader, setShowLoader] = React.useState(true);
+    const { isAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        // Show loader for 2 seconds on initial load
+        const timer = setTimeout(() => {
+            setShowLoader(false);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Show loader while checking auth or during initial load
+    if (showLoader) {
+        return <MotivationalLoader maxDuration={2000} />;
+    }
+
     return (
         <NotificationProvider>
             <BrowserRouter>

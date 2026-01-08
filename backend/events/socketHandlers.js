@@ -7,6 +7,7 @@ import Task from '../models/Task.js';
 import Comment from '../models/Comment.js';
 import Reaction from '../models/Reaction.js';
 import User from '../models/User.js';
+import { notifyFriendOnline, createNotification } from '../services/notificationService.js';
 
 // Store online users: userId -> socketId
 const onlineUsers = new Map();
@@ -319,16 +320,36 @@ async function notifyFriends(io, userId, event, data) {
             ]
         });
 
-        friendships.forEach(friendship => {
+        const user = await User.findById(userId);
+        if (!user) return;
+
+        for (const friendship of friendships) {
             const friendId = friendship.requester.toString() === userId.toString()
                 ? friendship.recipient.toString()
                 : friendship.requester.toString();
 
             const friendSocketId = onlineUsers.get(friendId);
+
+            // Send real-time notification if friend is online
             if (friendSocketId) {
                 io.to(friendSocketId).emit(event, data);
             }
-        });
+
+            // For friend online events, create persistent notification
+            if (event === ServerEvents.USER_ONLINE) {
+                await notifyFriendOnline(friendId, userId.toString(), user.username || 'A friend');
+
+                // Also emit notification.new event
+                if (friendSocketId) {
+                    const notification = await createNotification(
+                        friendId,
+                        'friend_online',
+                        { friendId: userId.toString(), friendName: user.username || 'A friend' }
+                    );
+                    io.to(friendSocketId).emit('notification.new', { data: notification });
+                }
+            }
+        }
     } catch (error) {
         console.error('Notify friends error:', error);
     }
