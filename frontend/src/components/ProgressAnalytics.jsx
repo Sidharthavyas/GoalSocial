@@ -159,6 +159,14 @@ const ProgressAnalytics = () => {
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                left: window.innerWidth < 768 ? 5 : 10,
+                right: window.innerWidth < 768 ? 5 : 10,
+                top: 10,
+                bottom: window.innerWidth < 768 ? 5 : 10
+            }
+        },
         interaction: {
             mode: 'index',
             intersect: false,
@@ -195,11 +203,12 @@ const ProgressAnalytics = () => {
                 max: 100,
                 ticks: {
                     callback: (value) => value + '%',
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.7)',
                     font: {
-                        size: window.innerWidth < 768 ? 9 : 12
+                        size: window.innerWidth < 768 ? 10 : 12
                     },
-                    stepSize: 25
+                    stepSize: window.innerWidth < 768 ? 50 : 25,
+                    padding: window.innerWidth < 768 ? 4 : 8
                 },
                 grid: {
                     color: 'rgba(255, 255, 255, 0.05)',
@@ -213,12 +222,13 @@ const ProgressAnalytics = () => {
                 ticks: {
                     color: 'rgba(255, 255, 255, 0.6)',
                     font: {
-                        size: window.innerWidth < 768 ? 8 : 12
+                        size: window.innerWidth < 768 ? 9 : 12
                     },
                     maxRotation: window.innerWidth < 768 ? 45 : 0,
                     minRotation: window.innerWidth < 768 ? 45 : 0,
                     autoSkip: true,
-                    maxTicksLimit: window.innerWidth < 768 ? 6 : undefined
+                    maxTicksLimit: window.innerWidth < 768 ? 6 : undefined,
+                    padding: window.innerWidth < 768 ? 2 : 5
                 },
                 grid: {
                     display: false
