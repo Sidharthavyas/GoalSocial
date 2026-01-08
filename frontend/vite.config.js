@@ -16,8 +16,18 @@ export default defineConfig({
         outDir: 'dist',
         sourcemap: false,
         rollupOptions: {
+            external: [
+                '@capgo/capacitor-updater',
+                '@capacitor/core',
+                '@capacitor/push-notifications'
+            ],
             output: {
-                manualChunks: undefined
+                manualChunks: undefined,
+                globals: {
+                    '@capgo/capacitor-updater': 'CapacitorUpdater',
+                    '@capacitor/core': 'Capacitor',
+                    '@capacitor/push-notifications': 'PushNotifications'
+                }
             }
         }
     }

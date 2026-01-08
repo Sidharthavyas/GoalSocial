@@ -11,14 +11,6 @@ import FriendProfile from './pages/FriendProfile';
 import Navbar from './components/Navbar';
 import PomodoroTimer from './components/PomodoroTimer';
 import MotivationalLoader from './components/MotivationalLoader';
-import liveUpdates from './utils/liveUpdates';
-
-// Initialize live updates on app start
-if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-    liveUpdates.initialize().catch(err => {
-        console.error('Failed to initialize live updates:', err);
-    });
-}
 
 
 const ProtectedRoute = ({ children }) => {

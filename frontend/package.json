@@ -16,8 +16,7 @@
         "cap:open:android": "npx cap open android",
         "cap:open:ios": "npx cap open ios",
         "cap:run:android": "npm run cap:sync:android && npx cap open android",
-        "cap:run:ios": "npm run cap:sync:ios && npx cap open ios",
-        "deploy:live": "npm run build && npx @capgo/cli bundle upload"
+        "cap:run:ios": "npm run cap:sync:ios && npx cap open ios"
     },
     "dependencies": {
         "@capacitor/android": "^8.0.0",
@@ -37,7 +36,6 @@
         "socket.io-client": "^4.6.1"
     },
     "devDependencies": {
-        "@capgo/cli": "^7.67.0",
         "@types/react": "^18.2.45",
         "@types/react-dom": "^18.2.18",
         "@vitejs/plugin-react": "^4.2.1",
