@@ -152,13 +152,60 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                         <p className="text-secondary">No active goals. Create a goal first!</p>
                     ) : (
                         <>
+                            {/* Goal Selection with Checkboxes */}
                             <div className="form-group">
-                                <label>Goal</label>
-                                <select value={selectedGoalId} onChange={(e) => setSelectedGoalId(e.target.value)} disabled={readOnly}>
+                                <label style={{ marginBottom: 'var(--space-sm)' }}>Select Goal to Track</label>
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 'var(--space-sm)',
+                                    maxHeight: '200px',
+                                    overflowY: 'auto',
+                                    padding: 'var(--space-sm)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--border-radius-md)'
+                                }}>
                                     {goals.map(goal => (
-                                        <option key={goal._id} value={goal._id}>{goal.title}</option>
+                                        <label
+                                            key={goal._id}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 'var(--space-sm)',
+                                                cursor: readOnly ? 'default' : 'pointer',
+                                                padding: 'var(--space-xs)',
+                                                borderRadius: 'var(--border-radius-sm)',
+                                                background: selectedGoalId === goal._id ? 'var(--bg-tertiary)' : 'transparent'
+                                            }}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="goalSelection"
+                                                checked={selectedGoalId === goal._id}
+                                                onChange={() => setSelectedGoalId(goal._id)}
+                                                disabled={readOnly}
+                                                style={{
+                                                    width: '18px',
+                                                    height: '18px',
+                                                    cursor: readOnly ? 'default' : 'pointer',
+                                                    accentColor: 'var(--accent-primary)'
+                                                }}
+                                            />
+                                            <span style={{ flex: 1 }}>{goal.title}</span>
+                                            {goal.completed && (
+                                                <span style={{
+                                                    fontSize: '0.75rem',
+                                                    color: 'var(--success)',
+                                                    background: 'rgba(106, 191, 123, 0.15)',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '12px'
+                                                }}>
+                                                    ✓ Done
+                                                </span>
+                                            )}
+                                        </label>
                                     ))}
-                                </select>
+                                </div>
                             </div>
 
                             {selectedGoal && (
