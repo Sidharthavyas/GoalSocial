@@ -129,7 +129,7 @@ app.use("/api/activity", activityRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/insights", insightsRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/notifications", notificationClient);
+app.use("/api/notifications", notificationRoutes);
 
 // ============================
 // HEALTH CHECK

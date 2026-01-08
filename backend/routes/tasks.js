@@ -53,6 +53,22 @@ router.post('/', authenticateToken, async (req, res) => {
 
         await task.save();
 
+        // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
+        if (req.io) {
+            try {
+                req.io.emit('progress.updated', {
+                    userId: req.user._id,
+                    taskId: task._id,
+                    goalId: task.goalId,
+                    completed: task.completed,
+                    percentage: task.percentage
+                });
+                console.log('📡 Emitted progress.updated event for user:', req.user.username);
+            } catch (emitError) {
+                console.error('Failed to emit socket event:', emitError);
+            }
+        }
+
         // Notify friends if goal completed
         if (task.completed || task.percentage === 100) {
             try {
