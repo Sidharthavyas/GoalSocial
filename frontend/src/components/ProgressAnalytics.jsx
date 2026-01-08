@@ -42,8 +42,31 @@ const ProgressAnalytics = () => {
             setData(response.data);
         } catch (error) {
             console.error('Error loading analytics:', error);
+            setData(null);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const getSummaryStats = () => {
+        if (!data) return null;
+
+        if (activeTab === 'weekly' || activeTab === 'monthly') {
+            const days = data.days || [];
+            const total = days.reduce((sum, d) => sum + d.completionPercent, 0);
+            const avg = days.length > 0 ? Math.round(total / days.length) : 0;
+            const best = days.length > 0 ? Math.max(...days.map(d => d.completionPercent)) : 0;
+            const perfectDays = days.filter(d => d.completionPercent === 100).length;
+
+            return { avg, best, perfectDays, totalDays: days.length };
+        } else if (activeTab === 'yearly') {
+            const months = data.months || [];
+            const total = months.reduce((sum, m) => sum + m.avgCompletionPercent, 0);
+            const avg = months.length > 0 ? Math.round(total / months.length) : 0;
+            const best = months.length > 0 ? Math.max(...months.map(m => m.avgCompletionPercent)) : 0;
+            const perfectMonths = months.filter(m => m.avgCompletionPercent === 100).length;
+
+            return { avg, best, perfectMonths, totalMonths: months.length };
         }
     };
 
@@ -52,29 +75,45 @@ const ProgressAnalytics = () => {
 
         if (activeTab === 'weekly') {
             return {
-                labels: data.days.map(d => new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' })),
+                labels: data.days.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                }),
                 datasets: [
                     {
                         label: 'Completion %',
                         data: data.days.map(d => d.completionPercent),
-                        borderColor: 'rgb(99, 102, 241)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderColor: 'rgb(124, 179, 138)',
+                        backgroundColor: 'rgba(124, 179, 138, 0.15)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgb(124, 179, 138)',
+                        pointBorderColor: '#0a0a0a',
+                        pointBorderWidth: 2
                     }
                 ]
             };
         } else if (activeTab === 'monthly') {
             return {
-                labels: data.days.map(d => new Date(d.date).getDate()),
+                labels: data.days.map(d => {
+                    const date = new Date(d.date);
+                    return date.getDate();
+                }),
                 datasets: [
                     {
-                        label: 'Completion %',
+                        label: 'Daily Completion %',
                         data: data.days.map(d => d.completionPercent),
-                        borderColor: 'rgb(139, 92, 246)',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderColor: 'rgb(106, 159, 181)',
+                        backgroundColor: 'rgba(106, 159, 181, 0.15)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgb(106, 159, 181)',
+                        pointBorderColor: '#0a0a0a',
+                        pointBorderWidth: 2
                     }
                 ]
             };
@@ -83,12 +122,17 @@ const ProgressAnalytics = () => {
                 labels: data.months.map(m => m.monthName),
                 datasets: [
                     {
-                        label: 'Avg Completion %',
+                        label: 'Monthly Avg %',
                         data: data.months.map(m => m.avgCompletionPercent),
-                        borderColor: 'rgb(168, 85, 247)',
-                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        borderColor: 'rgb(139, 92, 246)',
+                        backgroundColor: 'rgba(139, 92, 246, 0.15)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: 'rgb(139, 92, 246)',
+                        pointBorderColor: '#0a0a0a',
+                        pointBorderWidth: 2
                     }
                 ]
             };
@@ -98,17 +142,34 @@ const ProgressAnalytics = () => {
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
         plugins: {
             legend: {
                 display: false
             },
             tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 12,
-                titleColor: '#fff',
+                backgroundColor: 'rgba(10, 10, 10, 0.95)',
+                padding: 16,
+                titleColor: 'rgb(124, 179, 138)',
+                titleFont: {
+                    size: 14,
+                    weight: 600
+                },
                 bodyColor: '#fff',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1
+                bodyFont: {
+                    size: 13
+                },
+                borderColor: 'rgba(124, 179, 138, 0.3)',
+                borderWidth: 1,
+                displayColors: false,
+                callbacks: {
+                    label: function (context) {
+                        return `Completion: ${context.parsed.y}%`;
+                    }
+                }
             }
         },
         scales: {
@@ -116,45 +177,116 @@ const ProgressAnalytics = () => {
                 beginAtZero: true,
                 max: 100,
                 ticks: {
-                    callback: (value) => value + '%'
+                    callback: (value) => value + '%',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    font: {
+                        size: 12
+                    },
+                    stepSize: 25
                 },
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.05)'
+                    color: 'rgba(255, 255, 255, 0.05)',
+                    drawBorder: false
+                },
+                border: {
+                    display: false
                 }
             },
             x: {
+                ticks: {
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    font: {
+                        size: window.innerWidth < 768 ? 10 : 12
+                    },
+                    maxRotation: 45,
+                    minRotation: 0
+                },
                 grid: {
+                    display: false
+                },
+                border: {
                     display: false
                 }
             }
         }
     };
 
+    const stats = getSummaryStats();
+
     return (
         <div className="card" style={{ padding: 'var(--space-lg)' }}>
-            <div className="flex items-center justify-between mb-md">
+            <div className="flex items-center justify-between mb-lg" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
                 <h3 style={{ margin: 0 }}>Progress Analytics</h3>
                 <div className="analytics-tabs">
                     <button
                         className={`analytics-tab ${activeTab === 'weekly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('weekly')}
                     >
-                        Weekly
+                        7 Days
                     </button>
                     <button
                         className={`analytics-tab ${activeTab === 'monthly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('monthly')}
                     >
-                        Monthly
+                        Month
                     </button>
                     <button
                         className={`analytics-tab ${activeTab === 'yearly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('yearly')}
                     >
-                        Yearly
+                        Year
                     </button>
                 </div>
             </div>
+
+            {/* Summary Stats */}
+            {stats && !loading && (
+                <div className="grid" style={{
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: 'var(--space-md)',
+                    marginBottom: 'var(--space-lg)'
+                }}>
+                    <div style={{
+                        padding: 'var(--space-md)',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--border-radius-md)',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Average
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                            {stats.avg}%
+                        </div>
+                    </div>
+                    <div style={{
+                        padding: 'var(--space-md)',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--border-radius-md)',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Best Day
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
+                            {stats.best}%
+                        </div>
+                    </div>
+                    <div style={{
+                        padding: 'var(--space-md)',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--border-radius-md)',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Perfect {activeTab === 'yearly' ? 'Months' : 'Days'}
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
+                            {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="analytics-chart-container" style={{ height: '300px' }}>
                 {loading ? (
@@ -162,8 +294,12 @@ const ProgressAnalytics = () => {
                 ) : data && getChartData() ? (
                     <Line data={getChartData()} options={chartOptions} />
                 ) : (
-                    <div className="text-center text-secondary" style={{ paddingTop: '100px' }}>
-                        No data available
+                    <div className="text-center text-secondary" style={{ paddingTop: '120px' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📊</div>
+                        <div>No analytics data yet</div>
+                        <div style={{ fontSize: '0.875rem', marginTop: 'var(--space-sm)' }}>
+                            Complete some goals to see your progress!
+                        </div>
                     </div>
                 )}
             </div>
