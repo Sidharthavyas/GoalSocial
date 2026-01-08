@@ -112,6 +112,7 @@
    ============================ */
 .notification-center {
     position: relative;
+    z-index: 1000;
 }
 
 .notification-bell {

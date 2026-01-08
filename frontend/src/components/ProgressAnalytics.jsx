@@ -12,6 +12,7 @@ import {
     Filler
 } from 'chart.js';
 import api from '../utils/api';
+import { useSocket } from '../context/SocketContext';
 
 // Register Chart.js components
 ChartJS.register(
@@ -29,11 +30,28 @@ const ProgressAnalytics = () => {
     const [activeTab, setActiveTab] = useState('weekly');
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const { events } = useSocket();
 
+    // Load data on tab change
     useEffect(() => {
         setData(null);
         loadData();
     }, [activeTab]);
+
+    // Refresh when goals/tasks are updated via socket
+    useEffect(() => {
+        const latestEvent = events[events.length - 1];
+        if (latestEvent && (
+            latestEvent.type === 'progress.updated' ||
+            latestEvent.type === 'progress.updated.success' ||
+            latestEvent.type === 'goal.created' ||
+            latestEvent.type === 'goal.created.success' ||
+            latestEvent.type === 'goal.updated.success'
+        )) {
+            loadData();
+        }
+    }, [events]);
+
 
     const loadData = async () => {
         setLoading(true);
