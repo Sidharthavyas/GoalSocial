@@ -142,6 +142,7 @@
     text-align: center;
 }
 
+/* Notification Dropdown Mobile */
 .notification-dropdown {
     position: absolute;
     right: 0;
@@ -157,6 +158,19 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+@media (max-width: 768px) {
+    .notification-dropdown {
+        position: fixed;
+        top: 60px;
+        /* Below navbar */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95vw;
+        max-width: 95vw;
+        right: auto;
+    }
 }
 
 .notification-header {

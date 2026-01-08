@@ -243,96 +243,69 @@ const ProgressAnalytics = () => {
     const stats = getSummaryStats();
 
     return (
-        <div className="card" style={{ padding: 'var(--space-lg)' }}>
+        <div className="card" style={{ padding: 'var(--space-md)' }}>
             <div className="flex items-center justify-between mb-lg" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
-                <h3 style={{ margin: 0 }}>Progress Analytics</h3>
-                <div className="analytics-tabs">
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Progress Analytics</h3>
+                <div className="analytics-tabs" style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '8px' }}>
                     <button
-                        className={`analytics-tab ${activeTab === 'weekly' ? 'active' : ''}`}
+                        className={`btn-tab ${activeTab === 'weekly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('weekly')}
+                        style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '6px', border: 'none', background: activeTab === 'weekly' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'weekly' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer' }}
                     >
-                        7 Days
+                        Week
                     </button>
                     <button
-                        className={`analytics-tab ${activeTab === 'monthly' ? 'active' : ''}`}
+                        className={`btn-tab ${activeTab === 'monthly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('monthly')}
+                        style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '6px', border: 'none', background: activeTab === 'monthly' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'monthly' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer' }}
                     >
                         Month
                     </button>
                     <button
-                        className={`analytics-tab ${activeTab === 'yearly' ? 'active' : ''}`}
+                        className={`btn-tab ${activeTab === 'yearly' ? 'active' : ''}`}
                         onClick={() => setActiveTab('yearly')}
+                        style={{ padding: '4px 12px', fontSize: '0.8rem', borderRadius: '6px', border: 'none', background: activeTab === 'yearly' ? 'var(--bg-card)' : 'transparent', color: activeTab === 'yearly' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer' }}
                     >
                         Year
                     </button>
                 </div>
             </div>
 
-            {/* Summary Stats */}
-            {stats && !loading && (
-                <div className="grid" style={{
-                    gridTemplateColumns: window.innerWidth < 480 ? 'repeat(3, 1fr)' : 'repeat(auto-fit, minmax(120px, 1fr))',
-                    gap: window.innerWidth < 768 ? '8px' : 'var(--space-md)',
-                    marginBottom: 'var(--space-lg)'
-                }}>
-                    <div style={{
-                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
-                        background: 'var(--bg-tertiary)',
-                        borderRadius: 'var(--border-radius-md)',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Avg
-                        </div>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
-                            {stats.avg}%
-                        </div>
-                    </div>
-                    <div style={{
-                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
-                        background: 'var(--bg-tertiary)',
-                        borderRadius: 'var(--border-radius-md)',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Best
-                        </div>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
-                            {stats.best}%
-                        </div>
-                    </div>
-                    <div style={{
-                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
-                        background: 'var(--bg-tertiary)',
-                        borderRadius: 'var(--border-radius-md)',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Perfect
-                        </div>
-                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
-                            {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
-                        </div>
-                    </div>
-                </div>
+            {stats.best}%
+        </div>
+                    </div >
+    <div style={{
+        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
+        background: 'var(--bg-tertiary)',
+        borderRadius: 'var(--border-radius-md)',
+        textAlign: 'center'
+    }}>
+        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+            Perfect
+        </div>
+        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
+            {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
+        </div>
+    </div>
+                </div >
             )}
 
-            <div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px' }}>
-                {loading ? (
-                    <Skeleton height={window.innerWidth < 768 ? 250 : 300} />
-                ) : data && getChartData() ? (
-                    <Line data={getChartData()} options={chartOptions} />
-                ) : (
-                    <div className="text-center text-secondary" style={{ paddingTop: window.innerWidth < 768 ? '80px' : '120px' }}>
-                        <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📊</div>
-                        <div>No analytics data yet</div>
-                        <div style={{ fontSize: '0.875rem', marginTop: 'var(--space-sm)' }}>
-                            Complete some goals to see your progress!
-                        </div>
-                    </div>
-                )}
+<div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px' }}>
+    {loading ? (
+        <Skeleton height={window.innerWidth < 768 ? 250 : 300} />
+    ) : data && getChartData() ? (
+        <Line data={getChartData()} options={chartOptions} />
+    ) : (
+        <div className="text-center text-secondary" style={{ paddingTop: window.innerWidth < 768 ? '80px' : '120px' }}>
+            <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📊</div>
+            <div>No analytics data yet</div>
+            <div style={{ fontSize: '0.875rem', marginTop: 'var(--space-sm)' }}>
+                Complete some goals to see your progress!
             </div>
         </div>
+    )}
+</div>
+        </div >
     );
 };
 
