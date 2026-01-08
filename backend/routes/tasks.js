@@ -20,10 +20,17 @@ router.post('/', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Goal not found' });
         }
 
-        // Ensure date is in YYYY-MM-DD format
-        const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-            ? date
-            : new Date(date).toISOString().split('T')[0];
+        // Ensure date is in YYYY-MM-DD format using local timezone
+        let dateString;
+        if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            dateString = date;
+        } else {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            dateString = `${year}-${month}-${day}`;
+        }
 
         // Find existing task or create new one
         let task = await Task.findOne({
@@ -151,10 +158,17 @@ router.get('/', authenticateToken, async (req, res) => {
         let query = { userId: req.user._id };
 
         if (date) {
-            // Convert to YYYY-MM-DD format for string comparison
-            const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-                ? date
-                : new Date(date).toISOString().split('T')[0];
+            // Convert to YYYY-MM-DD format using local timezone
+            let dateString;
+            if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                dateString = date;
+            } else {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                dateString = `${year}-${month}-${day}`;
+            }
 
             query.date = dateString;
         }
@@ -204,10 +218,17 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Date and goalIds array are required' });
         }
 
-        // Ensure date is in YYYY-MM-DD format
-        const dateString = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
-            ? date
-            : new Date(date).toISOString().split('T')[0];
+        // Ensure date is in YYYY-MM-DD format using local timezone
+        let dateString;
+        if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            dateString = date;
+        } else {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            dateString = `${year}-${month}-${day}`;
+        }
 
         const tasks = [];
 

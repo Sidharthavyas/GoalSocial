@@ -14,14 +14,22 @@ router.get('/weekly', authenticateToken, async (req, res) => {
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            const dateObj = new Date(dateStr);
+
+            // Format date in local timezone, not UTC
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            const dateObj = new Date(year, date.getMonth(), date.getDate());
 
             // Fetch tasks for this day to see what was done
             const tasksOnDay = await Task.find({
                 userId: req.user._id,
                 date: dateStr
             });
+
+            console.log(`📊 Analytics for ${dateStr}: Found ${tasksOnDay.length} tasks`);
 
             // Get all tasks ever to check for previous completions of one-time goals
             const allUserTasks = await Task.find({
@@ -121,8 +129,14 @@ router.get('/monthly', authenticateToken, async (req, res) => {
 
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
-            const dateStr = date.toISOString().split('T')[0];
-            const dateObj = new Date(dateStr);
+
+            // Format date in local timezone
+            const yearStr = date.getFullYear();
+            const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${yearStr}-${monthStr}-${dayStr}`;
+
+            const dateObj = new Date(year, month, day);
 
             // Don't fetch future dates
             if (date > today) break;
@@ -229,9 +243,10 @@ router.get('/yearly', authenticateToken, async (req, res) => {
             const monthStart = new Date(year, month, 1);
             const monthEnd = new Date(year, month + 1, 0);
 
-            // Get all tasks for this month
-            const monthStartStr = monthStart.toISOString().split('T')[0];
-            const monthEndStr = monthEnd.toISOString().split('T')[0];
+            // Get all tasks for this month - format dates in local timezone
+            const monthStartStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+            const monthEndDay = String(monthEnd.getDate()).padStart(2, '0');
+            const monthEndStr = `${year}-${String(month + 1).padStart(2, '0')}-${monthEndDay}`;
 
             const tasks = await Task.find({
                 userId: req.user._id,
@@ -247,8 +262,9 @@ router.get('/yearly', authenticateToken, async (req, res) => {
                 const dayDate = new Date(year, month, day);
                 if (dayDate > today) break;
 
-                const dayDateStr = dayDate.toISOString().split('T')[0];
-                const dayDateObj = new Date(dayDateStr);
+                // Format date in local timezone
+                const dayDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayDateObj = new Date(year, month, day);
 
                 // Count goals that were active on that day
                 // Only count goals that were actually created on or before this day
@@ -276,7 +292,7 @@ router.get('/yearly', authenticateToken, async (req, res) => {
                     }
 
                     // Get tasks for this specific goal only
-                    const goalTasks = tasks.filter(t => 
+                    const goalTasks = tasks.filter(t =>
                         t.goalId.toString() === goal._id.toString()
                     );
 

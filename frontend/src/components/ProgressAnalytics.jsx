@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -55,7 +55,7 @@ const ProgressAnalytics = () => {
     // Refresh when goals/tasks are updated via socket or HTTP
     useEffect(() => {
         if (events.length === 0) return;
-        
+
         const latestEvent = events[events.length - 1];
         const relevantEvents = [
             'progress.updated',
@@ -67,7 +67,7 @@ const ProgressAnalytics = () => {
             'goal.deleted',
             'goal.deleted.success'
         ];
-        
+
         if (latestEvent && relevantEvents.includes(latestEvent.type)) {
             console.log('📊 Progress analytics: Refreshing due to event:', latestEvent.type);
             // Small delay to ensure backend has processed the update
@@ -119,7 +119,8 @@ const ProgressAnalytics = () => {
         return null;
     };
 
-    const getChartData = () => {
+    // Memoize chart data to prevent unnecessary recalculations
+    const chartData = useMemo(() => {
         if (!data) return null;
 
         if (activeTab === 'weekly') {
@@ -128,7 +129,12 @@ const ProgressAnalytics = () => {
 
             return {
                 labels: days.map(d => {
-                    const date = new Date(d.date);
+                    // Parse date components explicitly for local timezone
+                    const parts = d.date.split('-');
+                    const year = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+                    const day = parseInt(parts[2], 10);
+                    const date = new Date(year, month, day);
                     return date.toLocaleDateString('en-US', { weekday: 'short' });
                 }),
                 datasets: [{
@@ -141,7 +147,7 @@ const ProgressAnalytics = () => {
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: 'rgb(124, 179, 138)',
-                    pointBorderColor: '#0a0a0a',
+                    pointBorderColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                     pointBorderWidth: 2
                 }]
             };
@@ -150,7 +156,10 @@ const ProgressAnalytics = () => {
             if (!Array.isArray(days) || days.length === 0) return null;
 
             return {
-                labels: days.map(d => new Date(d.date).getDate()),
+                labels: days.map(d => {
+                    // Parse day from date string directly to avoid timezone issues
+                    return parseInt(d.date.split('-')[2], 10);
+                }),
                 datasets: [{
                     label: 'Daily Completion %',
                     data: days.map(d => d.completionPercent || 0),
@@ -161,7 +170,7 @@ const ProgressAnalytics = () => {
                     pointRadius: 2,
                     pointHoverRadius: 5,
                     pointBackgroundColor: 'rgb(106, 159, 181)',
-                    pointBorderColor: '#0a0a0a',
+                    pointBorderColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                     pointBorderWidth: 1
                 }]
             };
@@ -181,84 +190,87 @@ const ProgressAnalytics = () => {
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: 'rgb(139, 92, 246)',
-                    pointBorderColor: '#0a0a0a',
+                    pointBorderColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                     pointBorderWidth: 2
                 }]
             };
         }
         return null;
-    };
+    }, [data, activeTab, theme]);
 
-    // Get theme-aware colors
-    const isDark = theme === 'dark';
-    const textColor = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(26, 26, 26, 0.6)';
-    const textColorSecondary = isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(26, 26, 26, 0.5)';
-    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-    const tooltipBg = isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-    const tooltipText = isDark ? '#fff' : '#1a1a1a';
+    // Memoize chart options with theme dependency to ensure proper re-render
+    const chartOptions = useMemo(() => {
+        const isDark = theme === 'dark';
+        const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 26, 26, 0.7)';
+        const textColorSecondary = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(26, 26, 26, 0.6)';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+        const tooltipBg = isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+        const tooltipText = isDark ? '#fff' : '#1a1a1a';
 
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            mode: 'index',
-            intersect: false,
-        },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: tooltipBg,
-                padding: 12,
-                titleColor: 'rgb(124, 179, 138)',
-                titleFont: { size: 12, weight: 600 },
-                bodyColor: tooltipText,
-                bodyFont: { size: 11 },
-                borderColor: 'rgba(124, 179, 138, 0.3)',
-                borderWidth: 1,
-                displayColors: false,
-                callbacks: {
-                    label: (context) => `${context.parsed.y}%`
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                ticks: {
-                    callback: (value) => value + '%',
-                    color: textColor,
-                    font: { size: 10 },
-                    stepSize: 25
-                },
-                grid: {
-                    color: gridColor,
-                    drawBorder: false
-                },
-                border: { 
-                    display: true,
-                    color: textColor
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    padding: 12,
+                    titleColor: 'rgb(124, 179, 138)',
+                    titleFont: { size: 12, weight: 600 },
+                    bodyColor: tooltipText,
+                    bodyFont: { size: 11 },
+                    borderColor: 'rgba(124, 179, 138, 0.3)',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: {
+                        label: (context) => `${context.parsed.y}%`
+                    }
                 }
             },
-            x: {
-                ticks: {
-                    color: textColorSecondary,
-                    font: { size: 9 },
-                    maxRotation: 0,
-                    autoSkip: true,
-                    maxTicksLimit: 7
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: (value) => value + '%',
+                        color: textColor,
+                        font: { size: 10 },
+                        stepSize: 25
+                    },
+                    grid: {
+                        color: gridColor,
+                        drawBorder: false
+                    },
+                    border: {
+                        display: true,
+                        color: textColor,
+                        width: 1
+                    }
                 },
-                grid: { display: false },
-                border: { 
-                    display: true,
-                    color: textColorSecondary
+                x: {
+                    ticks: {
+                        color: textColorSecondary,
+                        font: { size: 9 },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 7
+                    },
+                    grid: { display: false },
+                    border: {
+                        display: true,
+                        color: textColorSecondary,
+                        width: 1
+                    }
                 }
             }
-        }
-    };
+        };
+    }, [theme]);
 
     const stats = getSummaryStats();
-    const chartData = getChartData();
 
     return (
         <div className="card" style={{ padding: '12px', overflow: 'hidden' }}>
@@ -272,7 +284,7 @@ const ProgressAnalytics = () => {
                 gap: '8px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Progress</h3>
+                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Progress Analytics</h3>
                     <button
                         onClick={() => loadData()}
                         disabled={loading}
@@ -327,7 +339,7 @@ const ProgressAnalytics = () => {
             ) : !data || !chartData ? (
                 <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', flexDirection: 'column', gap: '8px' }}>
                     <span style={{ fontSize: '1.5rem' }}>📊</span>
-                    <span style={{ fontSize: '0.85rem' }}>No data yet</span>
+                    <span style={{ fontSize: '0.85rem' }}>No data yet. Start tracking your goals!</span>
                 </div>
             ) : (
                 <>
@@ -371,9 +383,13 @@ const ProgressAnalytics = () => {
                         </div>
                     )}
 
-                    {/* Chart */}
+                    {/* Chart - Key prop includes theme to force re-mount on theme change */}
                     <div style={{ height: '180px', width: '100%', position: 'relative' }}>
-                        <Line data={chartData} options={chartOptions} />
+                        <Line
+                            key={`chart-${activeTab}-${theme}`}
+                            data={chartData}
+                            options={chartOptions}
+                        />
                     </div>
                 </>
             )}
