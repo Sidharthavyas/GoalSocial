@@ -152,175 +152,106 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                         <p className="text-secondary">No active goals. Create a goal first!</p>
                     ) : (
                         <>
-                            {/* Goal Selection with Checkboxes */}
+                            {/* Goal Completion Checkboxes */}
                             <div className="form-group">
-                                <label style={{ marginBottom: 'var(--space-sm)' }}>Select Goal to Track</label>
+                                <label style={{ marginBottom: 'var(--space-sm)', fontWeight: 600 }}>Today's Goals</label>
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: 'var(--space-sm)',
-                                    maxHeight: '200px',
+                                    maxHeight: window.innerWidth < 768 ? '300px' : '400px',
                                     overflowY: 'auto',
                                     padding: 'var(--space-sm)',
                                     border: '1px solid var(--border-color)',
                                     borderRadius: 'var(--border-radius-md)'
                                 }}>
-                                    {goals.map(goal => (
-                                        <label
-                                            key={goal._id}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 'var(--space-sm)',
-                                                cursor: readOnly ? 'default' : 'pointer',
-                                                padding: 'var(--space-xs)',
-                                                borderRadius: 'var(--border-radius-sm)',
-                                                background: selectedGoalId === goal._id ? 'var(--bg-tertiary)' : 'transparent'
-                                            }}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="goalSelection"
-                                                checked={selectedGoalId === goal._id}
-                                                onChange={() => setSelectedGoalId(goal._id)}
-                                                disabled={readOnly}
+                                    {goals.map(goal => {
+                                        const goalTask = tasks.find(t => (t.goalId._id || t.goalId) === goal._id);
+                                        const isCompleted = goalTask?.completed || false;
+
+                                        return (
+                                            <label
+                                                key={goal._id}
                                                 style={{
-                                                    width: '18px',
-                                                    height: '18px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 'var(--space-sm)',
                                                     cursor: readOnly ? 'default' : 'pointer',
-                                                    accentColor: 'var(--accent-primary)'
+                                                    padding: 'var(--space-sm)',
+                                                    borderRadius: 'var(--border-radius-sm)',
+                                                    background: isCompleted ? 'rgba(106, 191, 123, 0.1)' : 'var(--bg-tertiary)',
+                                                    border: '1px solid ' + (isCompleted ? 'var(--success)' : 'transparent'),
+                                                    transition: 'all 0.2s ease'
                                                 }}
-                                            />
-                                            <span style={{ flex: 1 }}>{goal.title}</span>
-                                            {goal.completed && (
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isCompleted}
+                                                    onChange={async (e) => {
+                                                        if (readOnly) return;
+
+                                                        const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                                                        const dateString = localDate.toISOString().split('T')[0];
+
+                                                        try {
+                                                            await api.post('/tasks', {
+                                                                goalId: goal._id,
+                                                                date: dateString,
+                                                                completed: e.target.checked,
+                                                                value: 0,
+                                                                percentage: e.target.checked ? 100 : 0,
+                                                                notes: ''
+                                                            });
+                                                            onUpdate();
+                                                        } catch (error) {
+                                                            console.error('Failed to update goal:', error);
+                                                            alert('Failed to update goal');
+                                                        }
+                                                    }}
+                                                    disabled={readOnly}
+                                                    style={{
+                                                        width: '20px',
+                                                        height: '20px',
+                                                        cursor: readOnly ? 'default' : 'pointer',
+                                                        accentColor: 'var(--success)',
+                                                        flexShrink: 0
+                                                    }}
+                                                />
                                                 <span style={{
-                                                    fontSize: '0.75rem',
-                                                    color: 'var(--success)',
-                                                    background: 'rgba(106, 191, 123, 0.15)',
-                                                    padding: '2px 8px',
-                                                    borderRadius: '12px'
+                                                    flex: 1,
+                                                    textDecoration: isCompleted ? 'line-through' : 'none',
+                                                    opacity: isCompleted ? 0.7 : 1,
+                                                    fontSize: window.innerWidth < 768 ? '0.9rem' : '1rem'
                                                 }}>
-                                                    ✓ Done
+                                                    {goal.title}
                                                 </span>
-                                            )}
-                                        </label>
-                                    ))}
+                                                {isCompleted && (
+                                                    <span style={{
+                                                        fontSize: '0.75rem',
+                                                        color: 'var(--success)',
+                                                        fontWeight: 600,
+                                                        flexShrink: 0
+                                                    }}>
+                                                        ✓
+                                                    </span>
+                                                )}
+                                            </label>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
-                            {selectedGoal && (
-                                <>
-                                    {selectedGoal.type === 'one-time' || selectedGoal.type === 'recurring' ? (
-                                        <div className="form-group">
-                                            <label className="flex items-center gap-sm" style={{ cursor: readOnly ? 'default' : 'pointer' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={completed}
-                                                    onChange={(e) => setCompleted(e.target.checked)}
-                                                    disabled={readOnly}
-                                                />
-                                                <span>Completed</span>
-                                            </label>
-                                            {!readOnly && (
-                                                <div className="flex gap-sm mt-sm">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setCompleted(true)}
-                                                        className="btn btn-success btn-sm"
-                                                        disabled={completed}
-                                                    >
-                                                        ✓ Mark Done
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setCompleted(false)}
-                                                        className="btn btn-secondary btn-sm"
-                                                        disabled={!completed}
-                                                    >
-                                                        ↻ Undo
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : selectedGoal.type === 'numeric' ? (
-                                        <div className="form-group">
-                                            <label>Value {selectedGoal.unit && `(${selectedGoal.unit})`}</label>
-                                            <input
-                                                type="number"
-                                                value={value}
-                                                onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
-                                                step="0.01"
-                                                disabled={readOnly}
-                                            />
-                                            {selectedGoal.targetValue && (
-                                                <div className="text-sm text-tertiary mt-sm">
-                                                    Target: {selectedGoal.targetValue} {selectedGoal.unit}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : selectedGoal.type === 'percentage' ? (
-                                        <div className="form-group">
-                                            <label>Progress (%)</label>
-                                            <input
-                                                type="number"
-                                                value={percentage}
-                                                onChange={(e) => setPercentage(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                                                min="0"
-                                                max="100"
-                                                disabled={readOnly}
-                                            />
-                                            <div className="progress-bar mt-sm">
-                                                <div className="progress-fill" style={{ width: `${percentage}%` }}></div>
-                                            </div>
-                                            {!readOnly && (
-                                                <div className="flex gap-sm mt-sm">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPercentage(Math.min(100, percentage + 10))}
-                                                        className="btn btn-secondary btn-sm"
-                                                        disabled={percentage >= 100}
-                                                    >
-                                                        +10%
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPercentage(Math.min(100, percentage + 25))}
-                                                        className="btn btn-secondary btn-sm"
-                                                        disabled={percentage >= 100}
-                                                    >
-                                                        +25%
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPercentage(100)}
-                                                        className="btn btn-success btn-sm"
-                                                        disabled={percentage === 100}
-                                                    >
-                                                        ✓ Complete
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPercentage(0)}
-                                                        className="btn btn-secondary btn-sm"
-                                                        disabled={percentage === 0}
-                                                    >
-                                                        ↻ Reset
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : null}
-
-                                    <div className="form-group">
-                                        <label>Notes</label>
-                                        <textarea
-                                            value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
-                                            placeholder={readOnly ? "No notes" : "Add any notes or reflections..."}
-                                            disabled={readOnly}
-                                        />
-                                    </div>
-                                </>
+                            {/* Notes Section */}
+                            <div className="form-group">
+                                <label>Notes for Today</label>
+                                <textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder={readOnly ? "No notes" : "Add any notes or reflections for today..."}
+                                    disabled={readOnly}
+                                    rows={3}
+                                />
+                            </div>
                             )}
 
                             {/* Show comments and reactions for existing tasks */}
@@ -335,12 +266,9 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                     )}
                 </div>
 
-                {goals.length > 0 && !readOnly && (
+                {!readOnly && (
                     <div className="modal-footer">
-                        <button onClick={onClose} className="btn btn-secondary">Cancel</button>
-                        <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Progress'}
-                        </button>
+                        <button onClick={onClose} className="btn btn-primary" style={{ width: '100%' }}>Close</button>
                     </div>
                 )}
                 {readOnly && (
