@@ -271,41 +271,71 @@ const ProgressAnalytics = () => {
                 </div>
             </div>
 
-            {stats.best}%
-        </div>
-                    </div >
-    <div style={{
-        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
-        background: 'var(--bg-tertiary)',
-        borderRadius: 'var(--border-radius-md)',
-        textAlign: 'center'
-    }}>
-        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-            Perfect
-        </div>
-        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
-            {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
-        </div>
-    </div>
-                </div >
-            )}
+            {loading ? (
+                <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="loading-spinner"></div>
+                </div>
+            ) : !data ? (
+                <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)' }}>
+                    No data available
+                </div>
+            ) : (
+                <>
+                    {/* Summary Stats */}
+                    {stats && (
+                        <div className="grid" style={{
+                            gridTemplateColumns: window.innerWidth < 480 ? 'repeat(3, 1fr)' : 'repeat(auto-fit, minmax(120px, 1fr))',
+                            gap: window.innerWidth < 768 ? '8px' : 'var(--space-md)',
+                            marginBottom: 'var(--space-lg)'
+                        }}>
+                            <div style={{
+                                padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--border-radius-md)',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                                    Avg
+                                </div>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {stats.avg}%
+                                </div>
+                            </div>
+                            <div style={{
+                                padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--border-radius-md)',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                                    Best
+                                </div>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
+                                    {stats.best}%
+                                </div>
+                            </div>
+                            <div style={{
+                                padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--border-radius-md)',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                                    Perfect
+                                </div>
+                                <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                                    {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-<div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px' }}>
-    {loading ? (
-        <Skeleton height={window.innerWidth < 768 ? 250 : 300} />
-    ) : data && getChartData() ? (
-        <Line data={getChartData()} options={chartOptions} />
-    ) : (
-        <div className="text-center text-secondary" style={{ paddingTop: window.innerWidth < 768 ? '80px' : '120px' }}>
-            <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📊</div>
-            <div>No analytics data yet</div>
-            <div style={{ fontSize: '0.875rem', marginTop: 'var(--space-sm)' }}>
-                Complete some goals to see your progress!
-            </div>
+                    <div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px', width: '100%', position: 'relative' }}>
+                        <Line data={getChartData()} options={chartOptions} />
+                    </div>
+                </>
+            )}
         </div>
-    )}
-</div>
-        </div >
     );
 };
 
