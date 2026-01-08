@@ -162,14 +162,16 @@
 
 @media (max-width: 768px) {
     .notification-dropdown {
-        position: fixed;
-        top: 60px;
-        /* Below navbar */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 95vw;
-        max-width: 95vw;
-        right: auto;
+        position: fixed !important;
+        top: 70px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 94vw !important;
+        max-width: 400px !important;
+        max-height: calc(100vh - 100px) !important;
+        animation: none !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
     }
 }
 
