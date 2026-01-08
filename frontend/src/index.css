@@ -919,7 +919,7 @@ textarea {
 .nav-links.open {
   right: 0;
 }
-}
+
 
 /* Landscape orientation optimization */
 @media (max-height: 600px) and (orientation: landscape) {
