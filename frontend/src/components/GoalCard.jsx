@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, isSelected = false, onToggleSelect }) => {
+const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, onToggleComplete }) => {
     const getGoalTypeColor = (type) => {
         const colors = {
             'one-time': 'var(--info)',
@@ -25,21 +25,22 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, isSelected = false
 
     return (
         <div className="card" style={{
-            border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)'
+            opacity: goal.completed ? 0.7 : 1
         }}>
             <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center gap-md">
-                    {!readOnly && onToggleSelect && (
+                    {!readOnly && onToggleComplete && (
                         <input
                             type="checkbox"
-                            checked={isSelected}
-                            onChange={() => onToggleSelect(goal._id)}
+                            checked={goal.completed || false}
+                            onChange={() => onToggleComplete(goal._id, goal.completed)}
                             style={{
-                                width: '18px',
-                                height: '18px',
+                                width: '20px',
+                                height: '20px',
                                 cursor: 'pointer',
-                                accentColor: 'var(--accent-primary)'
+                                accentColor: 'var(--success)'
                             }}
+                            title={goal.completed ? "Mark as incomplete" : "Mark as complete"}
                         />
                     )}
                     <span
@@ -78,7 +79,7 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, isSelected = false
                 )}
             </div>
 
-            <h3 style={{ marginBottom: 'var(--space-sm)' }}>{goal.title}</h3>
+            <h3 style={{ marginBottom: 'var(--space-sm)', textDecoration: goal.completed ? 'line-through' : 'none' }}>{goal.title}</h3>
 
             {goal.description && (
                 <p className="text-secondary text-sm mb-md">{goal.description}</p>
