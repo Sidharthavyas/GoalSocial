@@ -32,6 +32,24 @@ router.post('/', authenticateToken, async (req, res) => {
 
         await goal.save();
 
+        // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
+        if (req.io) {
+            try {
+                const userId = req.user._id.toString();
+                req.io.to(`user:${userId}`).emit('goal.created', {
+                    userId: userId,
+                    goal: goal.toObject()
+                });
+                req.io.to(`user:${userId}`).emit('goal.created.success', {
+                    userId: userId,
+                    goal: goal.toObject()
+                });
+                console.log('📡 Emitted goal.created event for user:', req.user.username);
+            } catch (emitError) {
+                console.error('Failed to emit socket event:', emitError);
+            }
+        }
+
         // Notify friends about new goal
         try {
             const User = (await import('../models/User.js')).default;
@@ -130,6 +148,29 @@ router.put('/:goalId', authenticateToken, async (req, res) => {
 
         await goal.save();
 
+        // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
+        if (req.io) {
+            try {
+                const userId = req.user._id.toString();
+                req.io.to(`user:${userId}`).emit('goal.updated', {
+                    userId: userId,
+                    goalId: req.params.goalId,
+                    goal: goal.toObject()
+                });
+                req.io.to(`user:${userId}`).emit('goal.updated.success', {
+                    userId: userId,
+                    goalId: req.params.goalId,
+                    goal: goal.toObject()
+                });
+                req.io.to(`user:${userId}`).emit('progress.updated', {
+                    userId: userId
+                });
+                console.log('📡 Emitted goal.updated event for user:', req.user.username);
+            } catch (emitError) {
+                console.error('Failed to emit socket event:', emitError);
+            }
+        }
+
         res.json({ goal });
     } catch (error) {
         console.error('Update goal error:', error);
@@ -153,6 +194,27 @@ router.delete('/:goalId', authenticateToken, async (req, res) => {
 
         goal.isActive = false;
         await goal.save();
+
+        // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
+        if (req.io) {
+            try {
+                const userId = req.user._id.toString();
+                req.io.to(`user:${userId}`).emit('goal.deleted', {
+                    userId: userId,
+                    goalId: req.params.goalId
+                });
+                req.io.to(`user:${userId}`).emit('goal.deleted.success', {
+                    userId: userId,
+                    goalId: req.params.goalId
+                });
+                req.io.to(`user:${userId}`).emit('progress.updated', {
+                    userId: userId
+                });
+                console.log('📡 Emitted goal.deleted event for user:', req.user.username);
+            } catch (emitError) {
+                console.error('Failed to emit socket event:', emitError);
+            }
+        }
 
         res.json({ message: 'Goal deleted' });
     } catch (error) {

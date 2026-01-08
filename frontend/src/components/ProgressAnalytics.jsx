@@ -38,19 +38,43 @@ const ProgressAnalytics = () => {
         loadData();
     }, [activeTab]);
 
-    // Refresh when goals/tasks are updated via socket
+    // Refresh when page becomes visible (user returns to tab)
     useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                loadData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [activeTab]);
+
+    // Refresh when goals/tasks are updated via socket or HTTP
+    useEffect(() => {
+        if (events.length === 0) return;
+        
         const latestEvent = events[events.length - 1];
-        if (latestEvent && (
-            latestEvent.type === 'progress.updated' ||
-            latestEvent.type === 'progress.updated.success' ||
-            latestEvent.type === 'goal.created' ||
-            latestEvent.type === 'goal.created.success' ||
-            latestEvent.type === 'goal.updated.success'
-        )) {
-            loadData();
+        const relevantEvents = [
+            'progress.updated',
+            'progress.updated.success',
+            'goal.created',
+            'goal.created.success',
+            'goal.updated',
+            'goal.updated.success',
+            'goal.deleted',
+            'goal.deleted.success'
+        ];
+        
+        if (latestEvent && relevantEvents.includes(latestEvent.type)) {
+            console.log('📊 Progress analytics: Refreshing due to event:', latestEvent.type);
+            // Small delay to ensure backend has processed the update
+            const timeoutId = setTimeout(() => {
+                loadData();
+            }, 300);
+            return () => clearTimeout(timeoutId);
         }
-    }, [events]);
+    }, [events, activeTab]);
 
 
     const loadData = async () => {
@@ -231,7 +255,26 @@ const ProgressAnalytics = () => {
                 flexWrap: 'wrap',
                 gap: '8px'
             }}>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Progress</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Progress</h3>
+                    <button
+                        onClick={() => loadData()}
+                        disabled={loading}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            padding: '4px',
+                            fontSize: '0.875rem',
+                            color: 'var(--text-secondary)',
+                            opacity: loading ? 0.5 : 1,
+                            transition: 'transform 0.2s'
+                        }}
+                        title="Refresh analytics"
+                    >
+                        {loading ? '⏳' : '↻'}
+                    </button>
+                </div>
                 <div style={{
                     display: 'flex',
                     gap: '2px',

@@ -31,6 +31,9 @@ export const setupSocketHandlers = (io) => {
 
                 authenticatedUser = user;
                 onlineUsers.set(user._id.toString(), socket.id);
+                
+                // Join user's personal room for targeted events
+                socket.join(`user:${user._id.toString()}`);
 
                 socket.emit('authenticated', {
                     user: {

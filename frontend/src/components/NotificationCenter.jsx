@@ -8,7 +8,7 @@ const NotificationCenter = () => {
     const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
     const navigate = useNavigate();
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (works on both desktop and mobile)
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -16,8 +16,14 @@ const NotificationCenter = () => {
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        // Use both click and touchstart for better mobile support
+        document.addEventListener('click', handleClickOutside, true);
+        document.addEventListener('touchstart', handleClickOutside, true);
+        
+        return () => {
+            document.removeEventListener('click', handleClickOutside, true);
+            document.removeEventListener('touchstart', handleClickOutside, true);
+        };
     }, []);
 
     const getNotificationIcon = (type) => {
@@ -56,10 +62,13 @@ const NotificationCenter = () => {
 
     const displayCount = unreadCount > 9 ? '9+' : unreadCount;
 
-    const handleBellClick = () => {
+    const handleBellClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         console.log('🔔 Notification bell clicked! Current isOpen:', isOpen);
-        setIsOpen(!isOpen);
-        console.log('🔔 Setting isOpen to:', !isOpen);
+        const newState = !isOpen;
+        setIsOpen(newState);
+        console.log('🔔 Setting isOpen to:', newState);
     };
 
     return (
@@ -67,6 +76,10 @@ const NotificationCenter = () => {
             <button
                 className="notification-bell"
                 onClick={handleBellClick}
+                onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleBellClick(e);
+                }}
                 aria-label="Notifications"
                 style={{ position: 'relative', zIndex: 1001 }}
             >
@@ -77,7 +90,11 @@ const NotificationCenter = () => {
             </button>
 
             {isOpen && (
-                <div className="notification-dropdown">
+                <div 
+                    className="notification-dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                >
                     <div className="notification-header">
                         <h3>Notifications</h3>
                         {unreadCount > 0 && (

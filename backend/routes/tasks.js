@@ -56,12 +56,23 @@ router.post('/', authenticateToken, async (req, res) => {
         // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
         if (req.io) {
             try {
-                req.io.emit('progress.updated', {
-                    userId: req.user._id,
-                    taskId: task._id,
-                    goalId: task.goalId,
+                const userId = req.user._id.toString();
+                // Emit to user's personal room
+                req.io.to(`user:${userId}`).emit('progress.updated', {
+                    userId: userId,
+                    taskId: task._id.toString(),
+                    goalId: task.goalId.toString(),
                     completed: task.completed,
-                    percentage: task.percentage
+                    percentage: task.percentage,
+                    date: task.date
+                });
+                req.io.to(`user:${userId}`).emit('progress.updated.success', {
+                    userId: userId,
+                    taskId: task._id.toString(),
+                    goalId: task.goalId.toString(),
+                    completed: task.completed,
+                    percentage: task.percentage,
+                    date: task.date
                 });
                 console.log('📡 Emitted progress.updated event for user:', req.user.username);
             } catch (emitError) {
@@ -233,6 +244,26 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
 
             await task.save();
             tasks.push(task);
+        }
+
+        // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
+        if (req.io && tasks.length > 0) {
+            try {
+                const userId = req.user._id.toString();
+                req.io.to(`user:${userId}`).emit('progress.updated', {
+                    userId: userId,
+                    date: dateString,
+                    bulkUpdate: true
+                });
+                req.io.to(`user:${userId}`).emit('progress.updated.success', {
+                    userId: userId,
+                    date: dateString,
+                    bulkUpdate: true
+                });
+                console.log('📡 Emitted bulk progress.updated event for user:', req.user.username);
+            } catch (emitError) {
+                console.error('Failed to emit socket event:', emitError);
+            }
         }
 
         res.json({ tasks, message: `Completed ${tasks.length} goals` });
