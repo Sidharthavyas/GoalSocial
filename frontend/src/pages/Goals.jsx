@@ -1,123 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import api from '../utils/api';
-import GoalForm from '../components/GoalForm';
-import GoalCard from '../components/GoalCard';
-import { useSocket } from '../context/SocketContext';
+    import React, { useState, useEffect } from 'react';
+    import api from '../utils/api';
+    import GoalForm from '../components/GoalForm';
+    import GoalCard from '../components/GoalCard';
+    import { useSocket } from '../context/SocketContext';
 
-const Goals = () => {
-    const [goals, setGoals] = useState([]);
-    const [showForm, setShowForm] = useState(false);
-    const [editingGoal, setEditingGoal] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const { events } = useSocket();
+    const Goals = () => {
+        const [goals, setGoals] = useState([]);
+        const [showForm, setShowForm] = useState(false);
+        const [editingGoal, setEditingGoal] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const { events } = useSocket();
 
-    useEffect(() => {
-        loadGoals();
-    }, []);
-
-    useEffect(() => {
-        const latestEvent = events[events.length - 1];
-        if (latestEvent && ['goal.created', 'goal.updated', 'goal.deleted'].includes(latestEvent.type)) {
+        useEffect(() => {
             loadGoals();
-        }
-    }, [events]);
+        }, []);
 
-    const loadGoals = async () => {
-        try {
-            const response = await api.get('/goals');
-            setGoals(response.data.goals || []);
-        } catch (error) {
-            console.error('Failed to load goals:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        useEffect(() => {
+            const latestEvent = events[events.length - 1];
+            if (latestEvent && ['goal.created', 'goal.updated', 'goal.deleted'].includes(latestEvent.type)) {
+                loadGoals();
+            }
+        }, [events]);
 
-    const handleEdit = (goal) => {
-        setEditingGoal(goal);
-        setShowForm(true);
-    };
+        const loadGoals = async () => {
+            try {
+                const response = await api.get('/goals');
+                setGoals(response.data.goals || []);
+            } catch (error) {
+                console.error('Failed to load goals:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const handleDelete = async (goalId) => {
-        if (!confirm('Are you sure you want to delete this goal?')) return;
+        const handleEdit = (goal) => {
+            setEditingGoal(goal);
+            setShowForm(true);
+        };
 
-        try {
-            await api.delete(`/goals/${goalId}`);
+        const handleDelete = async (goalId) => {
+            if (!confirm('Are you sure you want to delete this goal?')) return;
+
+            try {
+                await api.delete(`/goals/${goalId}`);
+                loadGoals();
+            } catch (error) {
+                console.error('Failed to delete goal:', error);
+                alert('Failed to delete goal');
+            }
+        };
+
+        const handleFormClose = () => {
+            setShowForm(false);
+            setEditingGoal(null);
             loadGoals();
-        } catch (error) {
-            console.error('Failed to delete goal:', error);
-            alert('Failed to delete goal');
-        }
-    };
+        };
 
-    const handleFormClose = () => {
-        setShowForm(false);
-        setEditingGoal(null);
-        loadGoals();
-    };
+        const handleToggleComplete = async (goalId, currentStatus) => {
+            try {
+                await api.put(`/goals/${goalId}`, { completed: !currentStatus });
+                loadGoals();
+            } catch (error) {
+                console.error('Failed to update goal:', error);
+                alert('Failed to update goal');
+            }
+        };
 
-    const handleToggleComplete = async (goalId, currentStatus) => {
-        try {
-            await api.put(`/goals/${goalId}`, { completed: !currentStatus });
-            loadGoals();
-        } catch (error) {
-            console.error('Failed to update goal:', error);
-            alert('Failed to update goal');
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="container mt-lg">
-                <div className="loading text-center">Loading goals...</div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="container mt-lg mb-lg">
-            <div className="flex items-center justify-between mb-lg">
-                <div>
-                    <h1>My Goals</h1>
-                    <p className="text-secondary">Create and manage your goals and habits</p>
+        if (loading) {
+            return (
+                <div className="container mt-lg">
+                    <div className="loading text-center">Loading goals...</div>
                 </div>
-                <button onClick={() => setShowForm(true)} className="btn btn-primary">
-                    + New Goal
-                </button>
-            </div>
+            );
+        }
 
-
-
-            {goals.length === 0 ? (
-                <div className="card text-center">
-                    <h3>No goals yet</h3>
-                    <p className="text-secondary mb-lg">Create your first goal to get started!</p>
+        return (
+            <div className="container mt-lg mb-lg">
+                <div className="flex items-center justify-between mb-lg">
+                    <div>
+                        <h1>My Goals</h1>
+                        <p className="text-secondary">Create and manage your goals and habits</p>
+                    </div>
                     <button onClick={() => setShowForm(true)} className="btn btn-primary">
-                        Create Goal
+                        + New Goal
                     </button>
                 </div>
-            ) : (
-                <div className="grid grid-2">
-                    {goals.map(goal => (
-                        <GoalCard
-                            key={goal._id}
-                            goal={goal}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onToggleComplete={handleToggleComplete}
-                        />
-                    ))}
-                </div>
-            )}
 
-            {showForm && (
-                <GoalForm
-                    goal={editingGoal}
-                    onClose={handleFormClose}
-                />
-            )}
-        </div>
-    );
-};
 
-export default Goals;
+
+                {goals.length === 0 ? (
+                    <div className="card text-center">
+                        <h3>No goals yet</h3>
+                        <p className="text-secondary mb-lg">Create your first goal to get started!</p>
+                        <button onClick={() => setShowForm(true)} className="btn btn-primary">
+                            Create Goal
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-2">
+                        {goals.map(goal => (
+                            <GoalCard
+                                key={goal._id}
+                                goal={goal}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onToggleComplete={handleToggleComplete}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {showForm && (
+                    <GoalForm
+                        goal={editingGoal}
+                        onClose={handleFormClose}
+                    />
+                )}
+            </div>
+        );
+    };
+
+    export default Goals;

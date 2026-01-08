@@ -938,3 +938,59 @@ textarea {
     padding: var(--space-sm) var(--space-md);
   }
 }
+
+/* Ensure checkbox is always visible */
+.goal-checkbox {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border: 2px solid var(--text-tertiary, #6b7280) !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+}
+
+.goal-checkbox:checked {
+    background: var(--success, #22c55e) !important;
+    border-color: var(--success, #22c55e) !important;
+}
+
+.goal-checkbox:checked::after {
+    content: '✓' !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+}
+
+/* Mobile specific fixes */
+@media (max-width: 768px) {
+    .goal-checkbox {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+    
+    .goal-checkbox:checked::after {
+        font-size: 18px !important;
+    }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+    .goal-checkbox {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
+    }
+}
