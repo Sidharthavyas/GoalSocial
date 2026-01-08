@@ -13,8 +13,11 @@ const NOTIFICATION_MESSAGES = {
         { title: '✨ Make magic happen today!', message: 'Your goals are calling. Answer them!' }
     ],
     streakRescue: [
-        { title: '🔥 Don\'t lose your streak!', message: 'You\'re on a {{streak}}-day streak. Keep it alive!' },
-        { title: '⚠️ Streak at risk!', message: '{{streak}} days of progress. Don\'t break it now!' }
+        { title: '🔥 Don\'t lose your {{streak}}-day streak!', message: 'Just one small action keeps it alive!' },
+        { title: '⚠️ Your streak is at risk!', message: '{{streak}} days of progress. Don\'t break it now!' },
+        { title: '💔 Your streak needs you!', message: '{{streak}} days strong. Keep the momentum going!' },
+        { title: '🚨 Streak alert!', message: 'You\'ve worked {{streak}} days straight. Finish strong today!' },
+        { title: '⏰ Time is running out!', message: 'Save your {{streak}}-day streak before midnight!' }
     ],
     friendOnline: {
         title: '🟢 {{friendName}} is now online!',
