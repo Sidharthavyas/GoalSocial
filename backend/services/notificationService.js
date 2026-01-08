@@ -34,6 +34,27 @@ const NOTIFICATION_MESSAGES = {
     perfectDay: {
         title: '⭐ Perfect day incoming!',
         message: 'Complete {{remaining}} more goal(s) for a perfect day!'
+    },
+    // New friend notifications
+    friendCommented: {
+        title: '💬 New comment from {{friendName}}',
+        message: '{{friendName}} commented on your goal: "{{goalTitle}}"'
+    },
+    friendGoalCreated: {
+        title: '🆕 {{friendName}} set a new goal',
+        message: '{{friendName}} wants to achieve: "{{goalTitle}}". Cheer them on!'
+    },
+    friendGoalCompleted: {
+        title: '🎉 {{friendName}} completed a goal!',
+        message: '{{friendName}} just finished: "{{goalTitle}}". Send a reaction!'
+    },
+    friendStreakMilestone: {
+        title: '🔥 {{friendName}} is on fire!',
+        message: '{{friendName}} just hit a {{streak}}-day streak!'
+    },
+    friendReacted: {
+        title: '😍 {{friendName}} reacted to your update',
+        message: '{{friendName}} reacted with {{reaction}} to your progress'
     }
 };
 
@@ -81,6 +102,42 @@ export const createNotification = async (userId, type, metadata = {}) => {
             case 'perfect_day':
                 title = NOTIFICATION_MESSAGES.perfectDay.title;
                 message = NOTIFICATION_MESSAGES.perfectDay.message.replace('{{remaining}}', metadata.remaining || 0);
+                break;
+
+            // Friend Interaction Notifications
+            case 'friend_commented':
+                title = NOTIFICATION_MESSAGES.friendCommented.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendCommented.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{goalTitle}}', metadata.goalTitle);
+                break;
+
+            case 'friend_goal_created':
+                title = NOTIFICATION_MESSAGES.friendGoalCreated.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendGoalCreated.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{goalTitle}}', metadata.goalTitle);
+                break;
+
+            case 'friend_goal_completed':
+                title = NOTIFICATION_MESSAGES.friendGoalCompleted.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendGoalCompleted.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{goalTitle}}', metadata.goalTitle);
+                break;
+
+            case 'friend_streak_milestone':
+                title = NOTIFICATION_MESSAGES.friendStreakMilestone.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendStreakMilestone.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{streak}}', metadata.streak);
+                break;
+
+            case 'friend_reacted':
+                title = NOTIFICATION_MESSAGES.friendReacted.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendReacted.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{reaction}}', metadata.reaction);
                 break;
 
             default:

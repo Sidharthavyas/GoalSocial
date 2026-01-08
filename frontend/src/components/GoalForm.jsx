@@ -5,6 +5,7 @@ const GoalForm = ({ goal, onClose }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [type, setType] = useState('one-time');
+    const [priority, setPriority] = useState('medium');
     const [targetValue, setTargetValue] = useState('');
     const [unit, setUnit] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -15,6 +16,7 @@ const GoalForm = ({ goal, onClose }) => {
             setTitle(goal.title);
             setDescription(goal.description || '');
             setType(goal.type);
+            setPriority(goal.priority || 'medium');
             setTargetValue(goal.targetValue || '');
             setUnit(goal.unit || '');
             setEndDate(goal.endDate ? goal.endDate.split('T')[0] : '');
@@ -29,6 +31,7 @@ const GoalForm = ({ goal, onClose }) => {
             title,
             description,
             type,
+            priority,
             targetValue: targetValue ? parseFloat(targetValue) : null,
             unit,
             endDate: endDate || null
@@ -79,22 +82,43 @@ const GoalForm = ({ goal, onClose }) => {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label>Goal Type *</label>
-                            <select value={type} onChange={(e) => setType(e.target.value)} required>
-                                <option value="one-time">One-time Goal</option>
-                                <option value="recurring">Recurring Habit</option>
-                                <option value="series">Series / Chained Tasks</option>
-                                <option value="numeric">Numeric Goal (km, hours, etc.)</option>
-                                <option value="percentage">Percentage-based</option>
-                            </select>
-                            <div className="text-sm text-tertiary mt-sm">
-                                {type === 'one-time' && 'Complete once and mark as done'}
-                                {type === 'recurring' && 'Track daily or regularly'}
-                                {type === 'series' && 'Multiple related tasks to complete'}
-                                {type === 'numeric' && 'Track numbers like kilometers, hours, or count'}
-                                {type === 'percentage' && 'Track progress from 0-100%'}
+                        <div className="grid grid-2">
+                            <div className="form-group">
+                                <label>Goal Type *</label>
+                                <select value={type} onChange={(e) => setType(e.target.value)} required>
+                                    <option value="one-time">One-time Goal</option>
+                                    <option value="recurring">Recurring Habit</option>
+                                    <option value="series">Series / Chained Tasks</option>
+                                    <option value="numeric">Numeric Goal</option>
+                                    <option value="percentage">Percentage-based</option>
+                                </select>
                             </div>
+
+                            <div className="form-group">
+                                <label>Priority</label>
+                                <select
+                                    value={priority}
+                                    onChange={(e) => setPriority(e.target.value)}
+                                    style={{
+                                        borderLeft: `4px solid ${priority === 'high' ? 'var(--error)' :
+                                            priority === 'medium' ? 'var(--warning)' :
+                                                'var(--info)'
+                                            }`
+                                    }}
+                                >
+                                    <option value="high">🔴 High Priority</option>
+                                    <option value="medium">🟡 Medium Priority</option>
+                                    <option value="low">🔵 Low Priority</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="text-sm text-tertiary mb-md">
+                            {type === 'one-time' && 'Complete once and mark as done'}
+                            {type === 'recurring' && 'Track daily or regularly'}
+                            {type === 'series' && 'Multiple related tasks to complete'}
+                            {type === 'numeric' && 'Track numbers like kilometers, hours, or count'}
+                            {type === 'percentage' && 'Track progress from 0-100%'}
                         </div>
 
                         {(type === 'numeric' || type === 'percentage') && (

@@ -53,6 +53,37 @@ router.post('/', authenticateToken, async (req, res) => {
 
         await task.save();
 
+        await task.save();
+
+        // Notify friends if goal completed
+        if (task.completed || task.percentage === 100) {
+            try {
+                const Friend = (await import('../models/Friend.js')).default;
+                const notificationService = await import('../services/notificationService.js');
+
+                // Find all accepted friends
+                const friends = await Friend.find({
+                    $or: [{ requester: req.user._id }, { recipient: req.user._id }],
+                    status: 'accepted'
+                });
+
+                // Send notification to each friend
+                for (const friendship of friends) {
+                    const friendId = friendship.requester.toString() === req.user._id.toString()
+                        ? friendship.recipient
+                        : friendship.requester;
+
+                    await notificationService.createNotification(friendId, 'friend_goal_completed', {
+                        friendName: req.user.username,
+                        goalTitle: goal.title,
+                        goalId: goal._id
+                    });
+                }
+            } catch (error) {
+                console.error('Error sending completion notifications:', error);
+            }
+        }
+
         res.json({ task });
     } catch (error) {
         console.error('Create/update task error:', error);

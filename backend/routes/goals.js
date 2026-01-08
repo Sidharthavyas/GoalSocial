@@ -23,6 +23,7 @@ router.post('/', authenticateToken, async (req, res) => {
             title,
             description,
             type,
+            priority: req.body.priority || 'medium', // Save priority
             targetValue,
             unit,
             startDate,
@@ -30,6 +31,34 @@ router.post('/', authenticateToken, async (req, res) => {
         });
 
         await goal.save();
+
+        // Notify friends about new goal
+        try {
+            const User = (await import('../models/User.js')).default;
+            const Friend = (await import('../models/Friend.js')).default;
+            const notificationService = await import('../services/notificationService.js');
+
+            // Find all accepted friends
+            const friends = await Friend.find({
+                $or: [{ requester: req.user._id }, { recipient: req.user._id }],
+                status: 'accepted'
+            });
+
+            // Send notification to each friend
+            for (const friendship of friends) {
+                const friendId = friendship.requester.toString() === req.user._id.toString()
+                    ? friendship.recipient
+                    : friendship.requester;
+
+                await notificationService.createNotification(friendId, 'friend_goal_created', {
+                    friendName: req.user.username,
+                    goalTitle: title,
+                    goalId: goal._id
+                });
+            }
+        } catch (error) {
+            console.error('Error sending new goal notifications:', error);
+        }
 
         res.status(201).json({ goal });
     } catch (error) {
@@ -97,6 +126,7 @@ router.put('/:goalId', authenticateToken, async (req, res) => {
         if (unit !== undefined) goal.unit = unit;
         if (endDate !== undefined) goal.endDate = endDate;
         if (isActive !== undefined) goal.isActive = isActive;
+        if (req.body.priority) goal.priority = req.body.priority;
 
         await goal.save();
 

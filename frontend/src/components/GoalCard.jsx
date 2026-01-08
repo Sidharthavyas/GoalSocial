@@ -54,6 +54,30 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
                     >
                         {getGoalTypeLabel(goal.type)}
                     </span>
+
+                    {/* Priority Badge */}
+                    {goal.priority && (
+                        <span
+                            className="badge"
+                            style={{
+                                background: goal.priority === 'high' ? 'rgba(239, 68, 68, 0.15)' :
+                                    goal.priority === 'medium' ? 'rgba(234, 179, 8, 0.15)' :
+                                        'rgba(59, 130, 246, 0.15)',
+                                color: goal.priority === 'high' ? 'var(--error)' :
+                                    goal.priority === 'medium' ? 'var(--warning)' :
+                                        'var(--info)',
+                                padding: '4px 12px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600
+                            }}
+                        >
+                            {goal.priority === 'high' ? '🔥 High' :
+                                goal.priority === 'medium' ? '⚡ Med' :
+                                    '🧊 Low'}
+                        </span>
+                    )}
+
                     {goal.completed && (
                         <span
                             style={{

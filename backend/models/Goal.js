@@ -59,6 +59,11 @@ const goalSchema = new mongoose.Schema({
         default: '🎯',
         maxlength: 2
     },
+    priority: {
+        type: String,
+        enum: ['high', 'medium', 'low'],
+        default: 'medium'
+    },
     createdAt: {
         type: Date,
         default: Date.now

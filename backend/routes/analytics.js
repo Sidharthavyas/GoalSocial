@@ -15,14 +15,22 @@ router.get('/weekly', authenticateToken, async (req, res) => {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
             const dateStr = date.toISOString().split('T')[0];
+            const dateObj = new Date(dateStr);
 
-            const goals = await Goal.find({ userId: req.user._id });
+            // Only count goals that were created before or on this day
+            const goals = await Goal.find({
+                userId: req.user._id,
+                createdAt: { $lte: dateObj }
+            });
+
             const tasks = await Task.find({
                 userId: req.user._id,
                 date: dateStr
             });
 
             const totalGoals = goals.length;
+
+            // Get unique completed goal IDs
             const completedGoalIds = new Set(
                 tasks
                     .filter(t => t.completed || t.percentage === 100)
@@ -61,11 +69,17 @@ router.get('/monthly', authenticateToken, async (req, res) => {
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const dateStr = date.toISOString().split('T')[0];
+            const dateObj = new Date(dateStr);
 
             // Don't fetch future dates
             if (date > today) break;
 
-            const goals = await Goal.find({ userId: req.user._id });
+            // Only count goals that were created before or on this day
+            const goals = await Goal.find({
+                userId: req.user._id,
+                createdAt: { $lte: dateObj }
+            });
+
             const tasks = await Task.find({
                 userId: req.user._id,
                 date: dateStr
@@ -114,7 +128,6 @@ router.get('/yearly', authenticateToken, async (req, res) => {
             const monthStartStr = monthStart.toISOString().split('T')[0];
             const monthEndStr = monthEnd.toISOString().split('T')[0];
 
-            const goals = await Goal.find({ userId: req.user._id });
             const tasks = await Task.find({
                 userId: req.user._id,
                 date: { $gte: monthStartStr, $lte: monthEndStr }
@@ -130,16 +143,24 @@ router.get('/yearly', authenticateToken, async (req, res) => {
                 if (dayDate > today) break;
 
                 const dayDateStr = dayDate.toISOString().split('T')[0];
+                const dayDateObj = new Date(dayDateStr);
+
+                // Only count goals that existed on that day
+                const goalsOnDay = await Goal.find({
+                    userId: req.user._id,
+                    createdAt: { $lte: dayDateObj }
+                });
+
                 const dayTasks = tasks.filter(t => t.date === dayDateStr);
 
-                if (goals.length > 0) {
+                if (goalsOnDay.length > 0) {
                     const completedGoalIds = new Set(
                         dayTasks
                             .filter(t => t.completed || t.percentage === 100)
                             .map(t => t.goalId.toString())
                     );
 
-                    totalCompletion += (completedGoalIds.size / goals.length) * 100;
+                    totalCompletion += (completedGoalIds.size / goalsOnDay.length) * 100;
                     daysWithData++;
                 }
             }
