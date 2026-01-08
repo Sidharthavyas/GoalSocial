@@ -890,7 +890,7 @@ textarea {
 
   .calendar-day {
     font-size: 0.75rem;
-    padding: 4px;
+    padding: 6px;
     min-height: 60px;
     border-radius: var(--border-radius-sm);
   }
@@ -898,6 +898,14 @@ textarea {
   .calendar-day-name {
     font-size: 0.7rem;
     padding: var(--space-xs);
+  }
+
+  .calendar {
+    gap: 8px;
+  }
+
+  .calendar-grid {
+    gap: 6px;
   }
 
   /* Stack form buttons on mobile */

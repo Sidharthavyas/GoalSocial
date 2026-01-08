@@ -169,22 +169,22 @@ const ProgressAnalytics = () => {
             },
             tooltip: {
                 backgroundColor: 'rgba(10, 10, 10, 0.95)',
-                padding: 16,
+                padding: window.innerWidth < 768 ? 10 : 16,
                 titleColor: 'rgb(124, 179, 138)',
                 titleFont: {
-                    size: 14,
+                    size: window.innerWidth < 768 ? 11 : 14,
                     weight: 600
                 },
                 bodyColor: '#fff',
                 bodyFont: {
-                    size: 13
+                    size: window.innerWidth < 768 ? 10 : 13
                 },
                 borderColor: 'rgba(124, 179, 138, 0.3)',
                 borderWidth: 1,
                 displayColors: false,
                 callbacks: {
                     label: function (context) {
-                        return `Completion: ${context.parsed.y}%`;
+                        return `${context.parsed.y}%`;
                     }
                 }
             }
@@ -197,7 +197,7 @@ const ProgressAnalytics = () => {
                     callback: (value) => value + '%',
                     color: 'rgba(255, 255, 255, 0.6)',
                     font: {
-                        size: 12
+                        size: window.innerWidth < 768 ? 9 : 12
                     },
                     stepSize: 25
                 },
@@ -213,10 +213,12 @@ const ProgressAnalytics = () => {
                 ticks: {
                     color: 'rgba(255, 255, 255, 0.6)',
                     font: {
-                        size: window.innerWidth < 768 ? 10 : 12
+                        size: window.innerWidth < 768 ? 8 : 12
                     },
-                    maxRotation: 45,
-                    minRotation: 0
+                    maxRotation: window.innerWidth < 768 ? 45 : 0,
+                    minRotation: window.innerWidth < 768 ? 45 : 0,
+                    autoSkip: true,
+                    maxTicksLimit: window.innerWidth < 768 ? 6 : undefined
                 },
                 grid: {
                     display: false
@@ -259,59 +261,59 @@ const ProgressAnalytics = () => {
             {/* Summary Stats */}
             {stats && !loading && (
                 <div className="grid" style={{
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                    gap: 'var(--space-md)',
+                    gridTemplateColumns: window.innerWidth < 480 ? 'repeat(3, 1fr)' : 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: window.innerWidth < 768 ? '8px' : 'var(--space-md)',
                     marginBottom: 'var(--space-lg)'
                 }}>
                     <div style={{
-                        padding: 'var(--space-md)',
+                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
                         background: 'var(--bg-tertiary)',
                         borderRadius: 'var(--border-radius-md)',
                         textAlign: 'center'
                     }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Average
+                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Avg
                         </div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
                             {stats.avg}%
                         </div>
                     </div>
                     <div style={{
-                        padding: 'var(--space-md)',
+                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
                         background: 'var(--bg-tertiary)',
                         borderRadius: 'var(--border-radius-md)',
                         textAlign: 'center'
                     }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Best Day
+                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Best
                         </div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
+                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
                             {stats.best}%
                         </div>
                     </div>
                     <div style={{
-                        padding: 'var(--space-md)',
+                        padding: window.innerWidth < 480 ? '8px' : 'var(--space-md)',
                         background: 'var(--bg-tertiary)',
                         borderRadius: 'var(--border-radius-md)',
                         textAlign: 'center'
                     }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
-                            Perfect {activeTab === 'yearly' ? 'Months' : 'Days'}
+                        <div style={{ fontSize: window.innerWidth < 480 ? '0.65rem' : '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Perfect
                         </div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
+                        <div style={{ fontSize: window.innerWidth < 480 ? '1.2rem' : '1.5rem', fontWeight: 700, color: 'var(--warning)' }}>
                             {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="analytics-chart-container" style={{ height: '300px' }}>
+            <div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px' }}>
                 {loading ? (
-                    <Skeleton height={300} />
+                    <Skeleton height={window.innerWidth < 768 ? 250 : 300} />
                 ) : data && getChartData() ? (
                     <Line data={getChartData()} options={chartOptions} />
                 ) : (
-                    <div className="text-center text-secondary" style={{ paddingTop: '120px' }}>
+                    <div className="text-center text-secondary" style={{ paddingTop: window.innerWidth < 768 ? '80px' : '120px' }}>
                         <div style={{ fontSize: '2rem', marginBottom: 'var(--space-md)' }}>📊</div>
                         <div>No analytics data yet</div>
                         <div style={{ fontSize: '0.875rem', marginTop: 'var(--space-sm)' }}>
