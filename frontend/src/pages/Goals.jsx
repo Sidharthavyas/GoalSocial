@@ -33,15 +33,7 @@ const Goals = () => {
         }
     };
 
-    const handleEdit = async (goal) => {
-        // If only completion changed, just update that field
-        const originalGoal = goals.find(g => g._id === goal._id);
-        if (originalGoal && originalGoal.completed !== goal.completed) {
-            await handleToggleComplete(goal._id, goal.completed);
-            return;
-        }
-
-        // Otherwise, open the edit form
+    const handleEdit = (goal) => {
         setEditingGoal(goal);
         setShowForm(true);
     };
@@ -55,24 +47,6 @@ const Goals = () => {
         } catch (error) {
             console.error('Failed to delete goal:', error);
             alert('Failed to delete goal');
-        }
-    };
-
-    const handleToggleComplete = async (goalId, completed) => {
-        // Optimistic update
-        setGoals(prev => prev.map(g =>
-            g._id === goalId ? { ...g, completed } : g
-        ));
-
-        try {
-            await api.put(`/goals/${goalId}`, { completed });
-        } catch (error) {
-            console.error('Failed to update goal:', error);
-            // Rollback on error
-            setGoals(prev => prev.map(g =>
-                g._id === goalId ? { ...g, completed: !completed } : g
-            ));
-            alert('Failed to update goal. Please try again.');
         }
     };
 
@@ -115,7 +89,7 @@ const Goals = () => {
                     {goals.map(goal => (
                         <GoalCard
                             key={goal._id}
-                            goal={{ ...goal, onToggleComplete: handleToggleComplete }}
+                            goal={goal}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                         />

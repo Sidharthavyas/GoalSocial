@@ -27,46 +27,6 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
         <div className="card">
             <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center gap-md">
-                    {!readOnly && (
-                        <button
-                            onClick={() => onEdit && onEdit({ ...goal, completed: !goal.completed })}
-                            className="goal-checkbox"
-                            style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '6px',
-                                border: `2px solid ${goal.completed ? 'var(--success)' : 'var(--border-color)'}`,
-                                background: goal.completed ? 'var(--success)' : 'transparent',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                flexShrink: 0,
-                                position: 'relative'
-                            }}
-                            title={goal.completed ? 'Mark as incomplete' : 'Mark as complete'}
-                            aria-label={goal.completed ? 'Mark as incomplete' : 'Mark as complete'}
-                        >
-                            {goal.completed && (
-                                <svg
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 14 14"
-                                    fill="none"
-                                    style={{ animation: 'checkmark 0.3s ease-in-out' }}
-                                >
-                                    <path
-                                        d="M2 7L5.5 10.5L12 3"
-                                        stroke="#0a0a0a"
-                                        strokeWidth="2.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                            )}
-                        </button>
-                    )}
                     <span
                         className="badge"
                         style={{
@@ -76,6 +36,20 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
                     >
                         {getGoalTypeLabel(goal.type)}
                     </span>
+                    {goal.completed && (
+                        <span
+                            className="badge badge-success"
+                            style={{
+                                background: 'rgba(106, 191, 123, 0.15)',
+                                color: 'var(--success)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            ✓ Completed
+                        </span>
+                    )}
                 </div>
                 {!readOnly && (
                     <div className="flex gap-sm">
