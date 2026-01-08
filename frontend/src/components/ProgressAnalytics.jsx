@@ -330,8 +330,24 @@ const ProgressAnalytics = () => {
                         </div>
                     )}
 
-                    <div className="analytics-chart-container" style={{ height: window.innerWidth < 768 ? '250px' : '300px', width: '100%', position: 'relative' }}>
-                        <Line data={getChartData()} options={chartOptions} />
+                    <div className="analytics-chart-container" style={{
+                        height: window.innerWidth < 768 ? '220px' : '300px',
+                        width: '100%',
+                        position: 'relative',
+                        marginTop: 'var(--space-md)'
+                    }}>
+                        <Line data={getChartData()} options={{
+                            ...chartOptions,
+                            maintainAspectRatio: false,
+                            layout: {
+                                padding: {
+                                    left: 0,
+                                    right: 0,
+                                    top: 10,
+                                    bottom: 0
+                                }
+                            }
+                        }} />
                     </div>
                 </>
             )}

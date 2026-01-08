@@ -17,34 +17,64 @@ router.get('/weekly', authenticateToken, async (req, res) => {
             const dateStr = date.toISOString().split('T')[0];
             const dateObj = new Date(dateStr);
 
-            // Only count goals that were created before or on this day
-            const goals = await Goal.find({
-                userId: req.user._id,
-                createdAt: { $lte: dateObj }
-            });
-
-            const tasks = await Task.find({
+            // Fetch tasks for this day to see what was done
+            const tasksOnDay = await Task.find({
                 userId: req.user._id,
                 date: dateStr
             });
 
-            const totalGoals = goals.length;
+            // Get all tasks ever to check for previous completions of one-time goals
+            const allUserTasks = await Task.find({
+                userId: req.user._id,
+                completed: true
+            });
 
-            // Get unique completed goal IDs
+            // Filter relevant goals for this specific day
+            const goals = await Goal.find({
+                userId: req.user._id,
+                startDate: { $lte: dateObj }, // Started on or before today
+                $or: [
+                    { endDate: null },
+                    { endDate: { $gte: dateObj } } // Not ended yet
+                ]
+            });
+
+            let activeGoalCount = 0;
             const completedGoalIds = new Set(
-                tasks
+                tasksOnDay
                     .filter(t => t.completed || t.percentage === 100)
                     .map(t => t.goalId.toString())
             );
 
-            const completionPercent = totalGoals > 0
-                ? Math.round((completedGoalIds.size / totalGoals) * 100)
+            // Refined Filtering Logic
+            for (const goal of goals) {
+                // 1. Recurring goals count if they are active (checked by query above)
+                if (goal.type === 'recurring') {
+                    activeGoalCount++;
+                }
+                // 2. One-time/Numeric goals count only if:
+                //    - They were NOT completed before this day
+                //    - OR they were completed ON this day
+                else {
+                    const previouslyCompleted = allUserTasks.some(t =>
+                        t.goalId.toString() === goal._id.toString() &&
+                        t.date < dateStr // Completed in the past
+                    );
+
+                    if (!previouslyCompleted) {
+                        activeGoalCount++;
+                    }
+                }
+            }
+
+            const completionPercent = activeGoalCount > 0
+                ? Math.round((completedGoalIds.size / activeGoalCount) * 100)
                 : 0;
 
             days.push({
                 date: dateStr,
-                completionPercent,
-                totalGoals,
+                completionPercent: Math.min(completionPercent, 100), // Cap at 100
+                totalGoals: activeGoalCount,
                 completedGoals: completedGoalIds.size
             });
         }
@@ -74,32 +104,64 @@ router.get('/monthly', authenticateToken, async (req, res) => {
             // Don't fetch future dates
             if (date > today) break;
 
-            // Only count goals that were created before or on this day
-            const goals = await Goal.find({
-                userId: req.user._id,
-                createdAt: { $lte: dateObj }
-            });
-
-            const tasks = await Task.find({
+            // Fetch tasks for this day to see what was done
+            const tasksOnDay = await Task.find({
                 userId: req.user._id,
                 date: dateStr
             });
 
-            const totalGoals = goals.length;
+            // Get all tasks ever to check for previous completions of one-time goals
+            const allUserTasks = await Task.find({
+                userId: req.user._id,
+                completed: true
+            });
+
+            // Filter relevant goals for this specific day
+            const goals = await Goal.find({
+                userId: req.user._id,
+                startDate: { $lte: dateObj }, // Started on or before today
+                $or: [
+                    { endDate: null },
+                    { endDate: { $gte: dateObj } } // Not ended yet
+                ]
+            });
+
+            let activeGoalCount = 0;
             const completedGoalIds = new Set(
-                tasks
+                tasksOnDay
                     .filter(t => t.completed || t.percentage === 100)
                     .map(t => t.goalId.toString())
             );
 
-            const completionPercent = totalGoals > 0
-                ? Math.round((completedGoalIds.size / totalGoals) * 100)
+            // Refined Filtering Logic
+            for (const goal of goals) {
+                // 1. Recurring goals count if they are active (checked by query above)
+                if (goal.type === 'recurring') {
+                    activeGoalCount++;
+                }
+                // 2. One-time/Numeric goals count only if:
+                //    - They were NOT completed before this day
+                //    - OR they were completed ON this day
+                else {
+                    const previouslyCompleted = allUserTasks.some(t =>
+                        t.goalId.toString() === goal._id.toString() &&
+                        t.date < dateStr // Completed in the past
+                    );
+
+                    if (!previouslyCompleted) {
+                        activeGoalCount++;
+                    }
+                }
+            }
+
+            const completionPercent = activeGoalCount > 0
+                ? Math.round((completedGoalIds.size / activeGoalCount) * 100)
                 : 0;
 
             days.push({
                 date: dateStr,
-                completionPercent,
-                totalGoals,
+                completionPercent: Math.min(completionPercent, 100), // Cap at 100,
+                totalGoals: activeGoalCount,
                 completedGoals: completedGoalIds.size
             });
         }
