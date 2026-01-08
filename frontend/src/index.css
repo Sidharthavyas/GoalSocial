@@ -82,15 +82,29 @@
 }
 
 html {
-  font-size: 15px;
+  font-size: 16px;
+  /* Increased from 15px for better mobile readability */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile-first font sizing */
+@media (max-width: 767px) {
+  html {
+    font-size: 16px;
+    /* Ensure readable text on mobile */
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 15px;
+  }
 }
 
 @media (min-width: 1441px) {
   html {
     font-size: 15px;
-    /* Prevent over-scaling on large desktops */
   }
 }
 
@@ -844,35 +858,13 @@ textarea {
   }
 
   .btn-sm {
-    min-height: 40px;
+    min-height: 44px;
+    /* Increased from 40px */
     padding: 10px 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  html {
-    font-size: 13px;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-  }
-
-  h3 {
-    font-size: 1.1rem;
-  }
-
-  .btn {
-    padding: 12px 16px;
-    font-size: 0.9rem;
   }
 
   .card {
-    padding: var(--space-md);
+    padding: var(--space-lg);
   }
 
   .modal-footer {
@@ -883,49 +875,50 @@ textarea {
   .modal-footer .btn {
     width: 100%;
   }
+}
 
-  .calendar-header h3 {
-    font-size: 0.95rem;
-  }
+.calendar-header h3 {
+  font-size: 0.95rem;
+}
 
-  .calendar-day {
-    font-size: 0.75rem;
-    padding: 6px;
-    min-height: 60px;
-    border-radius: var(--border-radius-sm);
-  }
+.calendar-day {
+  font-size: 0.75rem;
+  padding: 6px;
+  min-height: 60px;
+  border-radius: var(--border-radius-sm);
+}
 
-  .calendar-day-name {
-    font-size: 0.7rem;
-    padding: var(--space-xs);
-  }
+.calendar-day-name {
+  font-size: 0.7rem;
+  padding: var(--space-xs);
+}
 
-  .calendar {
-    gap: 8px;
-  }
+.calendar {
+  gap: 8px;
+}
 
-  .calendar-grid {
-    gap: 6px;
-  }
+.calendar-grid {
+  gap: 6px;
+}
 
-  /* Stack form buttons on mobile */
-  .form-group {
-    margin-bottom: var(--space-md);
-  }
+/* Stack form buttons on mobile */
+.form-group {
+  margin-bottom: var(--space-md);
+}
 
-  /* Improve navbar on mobile */
-  .navbar {
-    padding: var(--space-sm) 0;
-  }
+/* Improve navbar on mobile */
+.navbar {
+  padding: var(--space-sm) 0;
+}
 
-  .nav-links {
-    width: 100%;
-    right: -100%;
-  }
+.nav-links {
+  width: 100%;
+  right: -100%;
+}
 
-  .nav-links.open {
-    right: 0;
-  }
+.nav-links.open {
+  right: 0;
+}
 }
 
 /* Landscape orientation optimization */
@@ -941,56 +934,56 @@ textarea {
 
 /* Ensure checkbox is always visible */
 .goal-checkbox {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    min-height: 28px !important;
-    border: 2px solid var(--text-tertiary, #6b7280) !important;
-    border-radius: 6px !important;
-    background: transparent !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    position: relative !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border: 2px solid var(--text-tertiary, #6b7280) !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
 }
 
 .goal-checkbox:checked {
-    background: var(--success, #22c55e) !important;
-    border-color: var(--success, #22c55e) !important;
+  background: var(--success, #22c55e) !important;
+  border-color: var(--success, #22c55e) !important;
 }
 
 .goal-checkbox:checked::after {
-    content: '✓' !important;
-    color: white !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
+  content: '✓' !important;
+  color: white !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
 }
 
 /* Mobile specific fixes */
 @media (max-width: 768px) {
-    .goal-checkbox {
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        min-height: 32px !important;
-    }
-    
-    .goal-checkbox:checked::after {
-        font-size: 18px !important;
-    }
+  .goal-checkbox {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+
+  .goal-checkbox:checked::after {
+    font-size: 18px !important;
+  }
 }
 
 /* Touch device improvements */
 @media (hover: none) and (pointer: coarse) {
-    .goal-checkbox {
-        width: 40px !important;
-        height: 40px !important;
-        min-width: 40px !important;
-        min-height: 40px !important;
-    }
+  .goal-checkbox {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
 }

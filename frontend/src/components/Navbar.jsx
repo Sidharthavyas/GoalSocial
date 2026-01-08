@@ -33,96 +33,238 @@ const Navbar = () => {
         <nav className="navbar">
             <div className="container">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-lg">
-                        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-                            <h1 style={{
-                                margin: 0,
-                                background: 'var(--accent-gradient)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                fontSize: '1.5rem'
-                            }}>
-                                GoalTracker
-                            </h1>
-                        </Link>
-                        <ul className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
-                            <li>
-                                <Link to="/dashboard" className="nav-link" onClick={closeMobileMenu}>Dashboard</Link>
-                            </li>
-                            <li>
-                                <Link to="/goals" className="nav-link" onClick={closeMobileMenu}>Goals</Link>
-                            </li>
-                            <li>
-                                <Link to="/friends" className="nav-link" onClick={closeMobileMenu}>Friends</Link>
-                            </li>
-                            <li>
-                                <Link to="/pomodoro" className="nav-link" onClick={closeMobileMenu}>
-                                    ⏱️ Focus
-                                </Link>
-                            </li>
-                            {/* Mobile only actions */}
-                            <li style={{ borderTop: '1px solid var(--border-color)', paddingTop: 'var(--space-md)', marginTop: 'var(--space-md)' }} className="mobile-only">
-                                <button
-                                    onClick={() => { toggleTheme(); closeMobileMenu(); }}
-                                    className="btn btn-secondary"
-                                    style={{ width: '100%', justifyContent: 'center' }}
-                                >
-                                    {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
-                                </button>
-                            </li>
-                            <li className="mobile-only">
-                                <button
-                                    onClick={() => { handleLogout(); closeMobileMenu(); }}
-                                    className="btn btn-secondary"
-                                    style={{ width: '100%', justifyContent: 'center' }}
-                                >
-                                    Logout ({user?.username})
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="flex items-center gap-md desktop-only">
+                    {/* Logo */}
+                    <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                        <h1 style={{
+                            margin: 0,
+                            background: 'var(--accent-gradient)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontSize: '1.5rem'
+                        }}>
+                            GoalTracker
+                        </h1>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <ul className="nav-links desktop-only">
+                        <li>
+                            <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                        </li>
+                        <li>
+                            <Link to="/goals" className="nav-link">Goals</Link>
+                        </li>
+                        <li>
+                            <Link to="/friends" className="nav-link">Friends</Link>
+                        </li>
+                        <li>
+                            <Link to="/pomodoro" className="nav-link">
+                                ⏱️ Focus
+                            </Link>
+                        </li>
+                    </ul>
+
+                    {/* Right Side - Always Visible */}
+                    <div className="flex items-center gap-md">
+                        {/* Notifications - Always Visible */}
                         <NotificationCenter />
+
+                        {/* Theme Toggle - Desktop Only */}
                         <button
                             onClick={toggleTheme}
-                            className="btn btn-secondary btn-sm"
+                            className="btn btn-secondary btn-sm desktop-only"
                             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                            style={{ padding: '8px 12px' }}
+                            style={{
+                                padding: '8px 12px',
+                                minWidth: '44px',
+                                minHeight: '44px'
+                            }}
                         >
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
-                        <span className="text-secondary text-sm">
+
+                        {/* Username - Always Visible */}
+                        <span
+                            className="text-secondary text-sm"
+                            style={{
+                                display: 'none'
+                            }}
+                        >
                             {user?.username}
                         </span>
-                        <button onClick={handleLogout} className="btn btn-secondary btn-sm">
+
+                        {/* User Avatar/Initial - Always Visible */}
+                        <div
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background: 'var(--accent-gradient)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            title={user?.username}
+                        >
+                            {user?.username?.charAt(0).toUpperCase()}
+                        </div>
+
+                        {/* Logout - Desktop Only */}
+                        <button
+                            onClick={handleLogout}
+                            className="btn btn-secondary btn-sm desktop-only"
+                            style={{
+                                minWidth: '44px',
+                                minHeight: '44px'
+                            }}
+                        >
                             Logout
                         </button>
                     </div>
-                    <button
-                        className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        aria-label="Toggle menu"
-                    >
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
                 </div>
             </div>
-            {/* Mobile menu overlay */}
+
+            {/* Mobile Menu Dropdown */}
             {mobileMenuOpen && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        zIndex: 99
-                    }}
-                    onClick={closeMobileMenu}
-                />
+                <>
+                    {/* Overlay */}
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            zIndex: 99
+                        }}
+                        onClick={closeMobileMenu}
+                    />
+
+                    {/* Menu */}
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: '60px',
+                            right: '16px',
+                            background: 'var(--bg-primary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            zIndex: 100,
+                            minWidth: '200px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                        }}
+                    >
+                        {/* User Info */}
+                        <div style={{
+                            padding: '12px',
+                            borderBottom: '1px solid var(--border-color)',
+                            marginBottom: '12px'
+                        }}>
+                            <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                                {user?.username}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                                {user?.email}
+                            </div>
+                        </div>
+
+                        {/* Navigation Links */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <Link
+                                to="/dashboard"
+                                onClick={closeMobileMenu}
+                                style={{
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    color: 'var(--text-primary)',
+                                    background: location.pathname === '/dashboard' ? 'var(--bg-tertiary)' : 'transparent'
+                                }}
+                            >
+                                📊 Dashboard
+                            </Link>
+                            <Link
+                                to="/goals"
+                                onClick={closeMobileMenu}
+                                style={{
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    color: 'var(--text-primary)',
+                                    background: location.pathname === '/goals' ? 'var(--bg-tertiary)' : 'transparent'
+                                }}
+                            >
+                                🎯 Goals
+                            </Link>
+                            <Link
+                                to="/friends"
+                                onClick={closeMobileMenu}
+                                style={{
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    color: 'var(--text-primary)',
+                                    background: location.pathname === '/friends' ? 'var(--bg-tertiary)' : 'transparent'
+                                }}
+                            >
+                                👥 Friends
+                            </Link>
+                            <Link
+                                to="/pomodoro"
+                                onClick={closeMobileMenu}
+                                style={{
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    textDecoration: 'none',
+                                    color: 'var(--text-primary)',
+                                    background: location.pathname === '/pomodoro' ? 'var(--bg-tertiary)' : 'transparent'
+                                }}
+                            >
+                                ⏱️ Focus Mode
+                            </Link>
+                        </div>
+
+                        {/* Actions */}
+                        <div style={{
+                            borderTop: '1px solid var(--border-color)',
+                            marginTop: '12px',
+                            paddingTop: '12px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px'
+                        }}>
+                            <button
+                                onClick={() => { toggleTheme(); closeMobileMenu(); }}
+                                className="btn btn-secondary"
+                                style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    minHeight: '44px'
+                                }}
+                            >
+                                {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                            </button>
+                            <button
+                                onClick={() => { handleLogout(); closeMobileMenu(); }}
+                                className="btn btn-danger"
+                                style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    minHeight: '44px'
+                                }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </>
             )}
         </nav>
     );

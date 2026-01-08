@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, onToggleComplete }) => {
+const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
     const getGoalTypeColor = (type) => {
         const colors = {
             'one-time': 'var(--info)',
@@ -23,187 +23,164 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, onToggleComplete }
         return labels[type] || type;
     };
 
-    // Custom checkbox styles that WILL be visible
-    const checkboxContainerStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '28px',
-        height: '28px',
-        minWidth: '28px',
-        minHeight: '28px',
-        borderRadius: '6px',
-        border: goal.completed 
-            ? '2px solid var(--success, #22c55e)' 
-            : '2px solid var(--text-tertiary, #6b7280)',
-        backgroundColor: goal.completed 
-            ? 'var(--success, #22c55e)' 
-            : 'transparent',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        flexShrink: 0
-    };
-
-    const checkmarkStyle = {
-        color: 'white',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        lineHeight: 1
-    };
-
-    const handleCheckboxClick = (e) => {
-        e.stopPropagation();
-        if (onToggleComplete) {
-            onToggleComplete(goal._id, goal.completed);
-        }
-    };
-
     return (
-        <div 
-            className="card" 
+        <div
+            className="card"
             style={{
-                opacity: goal.completed ? 0.8 : 1,
-                position: 'relative',
+                opacity: goal.completed ? 0.7 : 1,
                 transition: 'opacity 0.2s ease'
             }}
         >
-            {/* Main Content Row */}
+            {/* Header with Type Badge and Actions */}
             <div style={{
                 display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                marginBottom: '12px'
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '12px',
+                flexWrap: 'wrap',
+                gap: '8px'
             }}>
-                {/* CHECKBOX - Always visible when not readOnly */}
-                {!readOnly && onToggleComplete && (
-                    <div
-                        onClick={handleCheckboxClick}
-                        style={checkboxContainerStyle}
-                        role="checkbox"
-                        aria-checked={goal.completed}
-                        aria-label={goal.completed ? "Mark as incomplete" : "Mark as complete"}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleCheckboxClick(e);
-                            }
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span
+                        className="badge"
+                        style={{
+                            background: `${getGoalTypeColor(goal.type)}20`,
+                            color: getGoalTypeColor(goal.type),
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600
                         }}
                     >
-                        {goal.completed && (
-                            <span style={checkmarkStyle}>✓</span>
-                        )}
+                        {getGoalTypeLabel(goal.type)}
+                    </span>
+                    {goal.completed && (
+                        <span
+                            style={{
+                                background: 'rgba(106, 191, 123, 0.15)',
+                                color: 'var(--success)',
+                                padding: '4px 12px',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            ✓ Completed
+                        </span>
+                    )}
+                </div>
+                {!readOnly && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={() => onEdit(goal)}
+                            className="btn btn-secondary btn-sm"
+                            style={{ minWidth: '44px', minHeight: '44px' }}
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={() => onDelete(goal._id)}
+                            className="btn btn-danger btn-sm"
+                            style={{ minWidth: '44px', minHeight: '44px' }}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Goal Title */}
+            <h3 style={{
+                margin: '0 0 8px 0',
+                fontSize: '1.125rem',
+                fontWeight: 600,
+                textDecoration: goal.completed ? 'line-through' : 'none'
+            }}>
+                {goal.title}
+            </h3>
+
+            {/* Goal Description */}
+            {goal.description && (
+                <p style={{
+                    margin: '0 0 12px 0',
+                    color: 'var(--text-secondary)',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5
+                }}>
+                    {goal.description}
+                </p>
+            )}
+
+            {/* Goal Details */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                gap: '12px',
+                marginTop: '12px'
+            }}>
+                {goal.type === 'numeric' && goal.targetValue && (
+                    <div style={{
+                        padding: '8px',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: '8px'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Target
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                            {goal.targetValue} {goal.unit}
+                        </div>
                     </div>
                 )}
 
-                {/* Goal Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Title */}
-                    <h3 style={{ 
-                        margin: '0 0 8px 0',
-                        textDecoration: goal.completed ? 'line-through' : 'none',
-                        color: goal.completed ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                        fontSize: '1.1rem',
-                        lineHeight: 1.3,
-                        wordBreak: 'break-word'
-                    }}>
-                        {goal.title}
-                    </h3>
-
-                    {/* Badges Row */}
+                {goal.frequency && (
                     <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '8px',
-                        marginBottom: '8px'
+                        padding: '8px',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: '8px'
                     }}>
-                        <span
-                            className="badge"
-                            style={{
-                                background: `${getGoalTypeColor(goal.type)}20`,
-                                color: getGoalTypeColor(goal.type),
-                                fontSize: '0.75rem',
-                                padding: '4px 8px'
-                            }}
-                        >
-                            {getGoalTypeLabel(goal.type)}
-                        </span>
-                        
-                        {goal.completed && (
-                            <span
-                                className="badge"
-                                style={{
-                                    background: 'rgba(34, 197, 94, 0.15)',
-                                    color: '#22c55e',
-                                    fontSize: '0.75rem',
-                                    padding: '4px 8px'
-                                }}
-                            >
-                                ✓ Done
-                            </span>
-                        )}
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Frequency
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'capitalize' }}>
+                            {goal.frequency}
+                        </div>
                     </div>
+                )}
 
-                    {/* Description */}
-                    {goal.description && (
-                        <p style={{
-                            margin: '0 0 8px 0',
-                            color: 'var(--text-secondary)',
-                            fontSize: '0.875rem',
-                            lineHeight: 1.5
-                        }}>
-                            {goal.description}
-                        </p>
-                    )}
-
-                    {/* Target Info */}
-                    {(goal.type === 'numeric' || goal.type === 'percentage') && goal.targetValue && (
-                        <div style={{
-                            fontSize: '0.875rem',
-                            color: 'var(--text-tertiary)'
-                        }}>
-                            🎯 Target: {goal.targetValue} {goal.unit}
+                {goal.startDate && (
+                    <div style={{
+                        padding: '8px',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: '8px'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            Start Date
                         </div>
-                    )}
-
-                    {/* Deadline */}
-                    {goal.endDate && (
-                        <div style={{
-                            fontSize: '0.875rem',
-                            color: 'var(--text-tertiary)',
-                            marginTop: '4px'
-                        }}>
-                            📅 {new Date(goal.endDate).toLocaleDateString()}
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                            {new Date(goal.startDate).toLocaleDateString()}
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
+
+                {goal.endDate && (
+                    <div style={{
+                        padding: '8px',
+                        background: 'var(--bg-tertiary)',
+                        borderRadius: '8px'
+                    }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>
+                            End Date
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                            {new Date(goal.endDate).toLocaleDateString()}
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Action Buttons */}
-            {!readOnly && (
-                <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    marginTop: '12px',
-                    paddingTop: '12px',
-                    borderTop: '1px solid var(--border-color, rgba(255,255,255,0.1))'
-                }}>
-                    <button 
-                        onClick={() => onEdit(goal)} 
-                        className="btn btn-secondary btn-sm"
-                        style={{ flex: 1 }}
-                    >
-                        ✏️ Edit
-                    </button>
-                    <button 
-                        onClick={() => onDelete(goal._id)} 
-                        className="btn btn-danger btn-sm"
-                        style={{ flex: 1 }}
-                    >
-                        🗑️ Delete
-                    </button>
-                </div>
-            )}
         </div>
     );
 };
