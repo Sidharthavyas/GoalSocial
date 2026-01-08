@@ -53,13 +53,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
         await task.save();
 
-        await task.save();
-
         // Notify friends if goal completed
         if (task.completed || task.percentage === 100) {
             try {
                 const Friend = (await import('../models/Friend.js')).default;
                 const notificationService = await import('../services/notificationService.js');
+                const streakCalculator = await import('../utils/streakCalculator.js');
 
                 // Find all accepted friends
                 const friends = await Friend.find({
@@ -67,7 +66,7 @@ router.post('/', authenticateToken, async (req, res) => {
                     status: 'accepted'
                 });
 
-                // Send notification to each friend
+                // Send completion notification
                 for (const friendship of friends) {
                     const friendId = friendship.requester.toString() === req.user._id.toString()
                         ? friendship.recipient
@@ -79,8 +78,34 @@ router.post('/', authenticateToken, async (req, res) => {
                         goalId: goal._id
                     });
                 }
+
+                // Check for streak milestone
+                // Get all tasks to calculate new streak accurately
+                const allTasks = await Task.find({ userId: req.user._id });
+                const streak = streakCalculator.calculateStreak(allTasks);
+
+                if ([3, 7, 30, 100, 365].includes(streak)) {
+                    // Notify user
+                    await notificationService.createNotification(req.user._id, 'streak_milestone', {
+                        streak,
+                        message: `You've hit a ${streak}-day streak! Keep it up! 🔥`
+                    });
+
+                    // Notify friends about streak
+                    for (const friendship of friends) {
+                        const friendId = friendship.requester.toString() === req.user._id.toString()
+                            ? friendship.recipient
+                            : friendship.requester;
+
+                        await notificationService.createNotification(friendId, 'friend_streak_milestone', {
+                            friendName: req.user.username,
+                            streak
+                        });
+                    }
+                }
+
             } catch (error) {
-                console.error('Error sending completion notifications:', error);
+                console.error('Error sending notifications:', error);
             }
         }
 

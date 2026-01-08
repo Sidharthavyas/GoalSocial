@@ -54,41 +54,6 @@ export const calculateStreak = (tasks) => {
         // Check if dates are consecutive
         if (prevDate.getTime() === expectedDate.getTime()) {
             streak++;
-            if ([3, 7, 30, 100, 365].includes(streak)) {
-                try {
-                    const notificationService = await import('../services/notificationService.js');
-                    const User = (await import('../models/User.js')).default;
-                    const user = await User.findById(userId);
-                    const Friend = (await import('../models/Friend.js')).default;
-
-                    if (user) {
-                        // Notify user
-                        await notificationService.createNotification(userId, 'streak_milestone', {
-                            streak,
-                            message: `You've hit a ${streak}-day streak! Keep it up! 🔥`
-                        });
-
-                        // Notify friends
-                        const friends = await Friend.find({
-                            $or: [{ requester: userId }, { recipient: userId }],
-                            status: 'accepted'
-                        });
-
-                        for (const friendship of friends) {
-                            const friendId = friendship.requester.toString() === userId.toString()
-                                ? friendship.recipient
-                                : friendship.requester;
-
-                            await notificationService.createNotification(friendId, 'friend_streak_milestone', {
-                                friendName: user.username,
-                                streak
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error sending streak notification:', error);
-                }
-            }
             currentDate = prevDate;
         } else {
             break; // Streak broken
