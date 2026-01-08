@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
+const GoalCard = ({ goal, onEdit, onDelete, readOnly = false, isSelected = false, onToggleSelect }) => {
     const getGoalTypeColor = (type) => {
         const colors = {
             'one-time': 'var(--info)',
@@ -24,9 +24,24 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
     };
 
     return (
-        <div className="card">
+        <div className="card" style={{
+            border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)'
+        }}>
             <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center gap-md">
+                    {!readOnly && onToggleSelect && (
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => onToggleSelect(goal._id)}
+                            style={{
+                                width: '18px',
+                                height: '18px',
+                                cursor: 'pointer',
+                                accentColor: 'var(--accent-primary)'
+                            }}
+                        />
+                    )}
                     <span
                         className="badge"
                         style={{

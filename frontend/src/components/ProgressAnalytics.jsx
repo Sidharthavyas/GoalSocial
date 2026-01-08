@@ -176,7 +176,7 @@ const ProgressAnalytics = () => {
                 display: false
             },
             tooltip: {
-                backgroundColor: 'rgba(10, 10, 10, 0.95)',
+                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || 'rgba(10, 10, 10, 0.95)',
                 padding: window.innerWidth < 768 ? 10 : 16,
                 titleColor: 'rgb(124, 179, 138)',
                 titleFont: {
@@ -203,7 +203,7 @@ const ProgressAnalytics = () => {
                 max: 100,
                 ticks: {
                     callback: (value) => value + '%',
-                    color: 'rgba(255, 255, 255, 0.7)',
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || 'rgba(255, 255, 255, 0.7)',
                     font: {
                         size: window.innerWidth < 768 ? 10 : 12
                     },
@@ -211,7 +211,7 @@ const ProgressAnalytics = () => {
                     padding: window.innerWidth < 768 ? 4 : 8
                 },
                 grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || 'rgba(255, 255, 255, 0.05)',
                     drawBorder: false
                 },
                 border: {
@@ -220,7 +220,7 @@ const ProgressAnalytics = () => {
             },
             x: {
                 ticks: {
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-tertiary').trim() || 'rgba(255, 255, 255, 0.6)',
                     font: {
                         size: window.innerWidth < 768 ? 9 : 12
                     },

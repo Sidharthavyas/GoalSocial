@@ -9,6 +9,7 @@ const Goals = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingGoal, setEditingGoal] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [selectedGoals, setSelectedGoals] = useState([]);
     const { events } = useSocket();
 
     useEffect(() => {
@@ -56,6 +57,44 @@ const Goals = () => {
         loadGoals();
     };
 
+    const handleToggleSelect = (goalId) => {
+        setSelectedGoals(prev =>
+            prev.includes(goalId)
+                ? prev.filter(id => id !== goalId)
+                : [...prev, goalId]
+        );
+    };
+
+    const handleSelectAll = () => {
+        setSelectedGoals(selectedGoals.length === goals.length ? [] : goals.map(g => g._id));
+    };
+
+    const handleBulkComplete = async () => {
+        if (selectedGoals.length === 0) return;
+        try {
+            await Promise.all(selectedGoals.map(id => api.put(`/goals/${id}`, { completed: true })));
+            setSelectedGoals([]);
+            loadGoals();
+        } catch (error) {
+            console.error('Failed to mark goals complete:', error);
+            alert('Failed to mark goals complete');
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedGoals.length === 0) return;
+        if (!confirm(`Delete ${selectedGoals.length} goal(s)?`)) return;
+
+        try {
+            await Promise.all(selectedGoals.map(id => api.delete(`/goals/${id}`)));
+            setSelectedGoals([]);
+            loadGoals();
+        } catch (error) {
+            console.error('Failed to delete goals:', error);
+            alert('Failed to delete goals');
+        }
+    };
+
     if (loading) {
         return (
             <div className="container mt-lg">
@@ -76,6 +115,32 @@ const Goals = () => {
                 </button>
             </div>
 
+            {goals.length > 0 && (
+                <div className="card mb-md" style={{ padding: 'var(--space-md)' }}>
+                    <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
+                        <label className="flex items-center gap-sm" style={{ cursor: 'pointer', margin: 0 }}>
+                            <input
+                                type="checkbox"
+                                checked={selectedGoals.length === goals.length}
+                                onChange={handleSelectAll}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            />
+                            <span>{selectedGoals.length > 0 ? `${selectedGoals.length} selected` : 'Select All'}</span>
+                        </label>
+                        {selectedGoals.length > 0 && (
+                            <div className="flex gap-sm">
+                                <button onClick={handleBulkComplete} className="btn btn-success btn-sm">
+                                    ✓ Complete
+                                </button>
+                                <button onClick={handleBulkDelete} className="btn btn-danger btn-sm">
+                                    🗑 Delete
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {goals.length === 0 ? (
                 <div className="card text-center">
                     <h3>No goals yet</h3>
@@ -92,6 +157,8 @@ const Goals = () => {
                             goal={goal}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            isSelected={selectedGoals.includes(goal._id)}
+                            onToggleSelect={handleToggleSelect}
                         />
                     ))}
                 </div>
