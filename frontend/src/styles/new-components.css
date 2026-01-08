@@ -7,44 +7,103 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 99999;
     animation: fadeIn 0.3s ease;
+    background-size: cover;
+    background-position: center;
+}
+
+.motivational-loader::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 1;
 }
 
 .motivational-loader-content {
+    position: relative;
+    z-index: 2;
     text-align: center;
     padding: var(--space-lg);
     animation: slideUp 0.4s ease;
 }
 
 .motivational-loader-icon {
-    font-size: 3.5rem;
+    font-size: 5rem;
     margin-bottom: var(--space-lg);
-    animation: pulse 2s ease-in-out infinite;
+    animation: bounce 1.5s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
 .motivational-loader-message {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    max-width: 500px;
-    line-height: 1.5;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: white;
+    max-width: 600px;
+    line-height: 1.3;
+    margin: 0 auto var(--space-xl);
+    text-shadow:
+        2px 2px 6px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(255, 255, 255, 0.3);
+    letter-spacing: 1px;
+    animation: pulse 2.5s ease-in-out infinite;
+}
+
+.motivational-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
     margin: 0 auto;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 768px) {
     .motivational-loader-icon {
-        font-size: 2.5rem;
+        font-size: 3.5rem;
         margin-bottom: var(--space-md);
     }
 
     .motivational-loader-message {
-        font-size: 1.125rem;
+        font-size: 1.25rem;
         max-width: 90%;
+        letter-spacing: 0.5px;
+    }
+
+    .motivational-spinner {
+        width: 40px;
+        height: 40px;
     }
 }
 
