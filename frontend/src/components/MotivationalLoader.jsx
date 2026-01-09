@@ -27,21 +27,53 @@ const MotivationalLoader = ({ maxDuration = 1000 }) => {
     if (!visible) return null;
 
     return (
-        <div
-            className="motivational-loader"
-            style={{
-                backgroundImage: `url(${background})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-            }}
-        >
-            <div className="motivational-loader-content">
-                <div className="motivational-loader-icon">🚀</div>
-                <p className="motivational-loader-message">{message}</p>
-                <div className="motivational-spinner"></div>
+
+        <div className="motivational-loader">
+            {/* Ambient Blurred Background */}
+            <div
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `url(${background})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(30px)',
+                    opacity: 0.6,
+                    transform: 'scale(1.1)', // Prevent blur edges
+                    zIndex: -1
+                }}
+            />
+
+            {/* Content Container */}
+            <div className="motivational-loader-content" style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1
+            }}>
+                {/* Main Image (Contained) */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        inset: '20px',
+                        backgroundImage: `url(${background})`,
+                        backgroundSize: 'contain',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        zIndex: -1
+                    }}
+                />
+
+                <div className="motivational-loader-icon" style={{ fontSize: '3rem', marginBottom: '1rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>🚀</div>
+                <div className="motivational-spinner" style={{ borderTopColor: 'var(--accent-primary)' }}></div>
             </div>
         </div>
     );
+
 };
 
 export default MotivationalLoader;
