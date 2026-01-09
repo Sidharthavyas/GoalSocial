@@ -407,15 +407,15 @@ textarea {
   gap: var(--space-lg);
 }
 
-/* Navigation */
+/* Navigation - Clean Solid Design */
 .navbar {
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--glass-border);
-  padding: var(--space-md) 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 0;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .hamburger {
@@ -459,15 +459,25 @@ textarea {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--border-radius-sm);
+  font-size: 0.9375rem;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-md);
   transition: all var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: var(--accent-primary);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+
 .nav-link.active {
   color: var(--accent-primary);
   background: var(--bg-hover);
+  font-weight: 600;
 }
 
 /* Modal */

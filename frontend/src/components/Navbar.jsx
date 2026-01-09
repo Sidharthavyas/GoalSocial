@@ -66,7 +66,8 @@ const Navbar = () => {
                             background: 'var(--accent-gradient)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            fontSize: '1.5rem'
+                            fontSize: '1.5rem',
+                            fontWeight: 700
                         }}>
                             GoalTracker
                         </h1>
@@ -75,24 +76,22 @@ const Navbar = () => {
                     {/* Desktop Navigation */}
                     <ul className="nav-links desktop-only">
                         <li>
-                            <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                            <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
                         </li>
                         <li>
-                            <Link to="/goals" className="nav-link">Goals</Link>
+                            <Link to="/goals" className="nav-link">🎯 Goals</Link>
                         </li>
                         <li>
-                            <Link to="/friends" className="nav-link">Friends</Link>
+                            <Link to="/friends" className="nav-link">👥 Friends</Link>
                         </li>
                         <li>
-                            <Link to="/pomodoro" className="nav-link">
-                                ⏱️ Focus
-                            </Link>
+                            <Link to="/pomodoro" className="nav-link">⏱️ Focus</Link>
                         </li>
                     </ul>
 
-                    {/* Right Side - Always Visible */}
+                    {/* Right Side */}
                     <div className="flex items-center gap-md">
-                        {/* Notifications - Always Visible */}
+                        {/* Notifications */}
                         <NotificationCenter />
 
                         {/* Theme Toggle - Desktop Only */}
@@ -101,7 +100,7 @@ const Navbar = () => {
                             className="btn btn-secondary btn-sm desktop-only"
                             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                             style={{
-                                padding: '8px 12px',
+                                padding: '10px 14px',
                                 minWidth: '44px',
                                 minHeight: '44px'
                             }}
@@ -109,17 +108,7 @@ const Navbar = () => {
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
 
-                        {/* Username - Always Visible */}
-                        <span
-                            className="text-secondary text-sm"
-                            style={{
-                                display: 'none'
-                            }}
-                        >
-                            {user?.username}
-                        </span>
-
-                        {/* User Avatar/Initial - Always Visible */}
+                        {/* User Avatar */}
                         <div
                             style={{
                                 width: '40px',
@@ -132,7 +121,8 @@ const Navbar = () => {
                                 color: 'white',
                                 fontWeight: 600,
                                 fontSize: '1rem',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 8px rgba(124, 179, 138, 0.3)'
                             }}
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             title={user?.username}
@@ -145,7 +135,7 @@ const Navbar = () => {
                             onClick={handleLogout}
                             className="btn btn-secondary btn-sm desktop-only"
                             style={{
-                                minWidth: '44px',
+                                minWidth: '80px',
                                 minHeight: '44px'
                             }}
                         >
@@ -178,13 +168,13 @@ const Navbar = () => {
                             position: 'fixed',
                             top: '60px',
                             right: '16px',
-                            background: 'var(--bg-primary)',
+                            background: 'var(--bg-secondary)',
                             border: '1px solid var(--border-color)',
                             borderRadius: '12px',
                             padding: '16px',
                             zIndex: 100,
-                            minWidth: '200px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                            minWidth: '220px',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
                         }}
                     >
                         {/* User Info */}

@@ -34,27 +34,6 @@ const ProtectedRoute = ({ children }) => {
     return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-const PublicRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
-
-    if (loading) {
-        return (
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100vh',
-                fontSize: '1.2rem',
-                color: 'var(--text-primary)'
-            }}>
-                Loading...
-            </div>
-        );
-    }
-
-    return !isAuthenticated ? children : <Navigate to="/dashboard" />;
-};
-
 const RootRedirect = () => {
     const { isAuthenticated, loading } = useAuth();
 
@@ -74,6 +53,27 @@ const RootRedirect = () => {
     }
 
     return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+};
+
+const PublicRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                fontSize: '1.2rem',
+                color: 'var(--text-primary)'
+            }}>
+                Loading...
+            </div>
+        );
+    }
+
+    return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
 function App() {
@@ -154,8 +154,8 @@ function App() {
                             </ProtectedRoute>
                         } />
 
-                        {/* Default Route - Smart redirect based on auth */}
-                        <Route path="/" element={<RootRedirect />} />
+                        {/* Default Route */}
+                        <Route path="/" element={<Navigate to="/dashboard" />} />
                     </Routes>
                 </div>
             </BrowserRouter>

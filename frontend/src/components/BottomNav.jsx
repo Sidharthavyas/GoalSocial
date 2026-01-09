@@ -17,16 +17,14 @@ const BottomNav = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            background: 'var(--glass-bg)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderTop: '1px solid var(--glass-border)',
+            background: 'var(--bg-secondary)',
+            borderTop: '1px solid var(--border-color)',
             padding: '8px 16px 24px 16px', // Extra bottom padding for safe area
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center',
             zIndex: 1000,
-            boxShadow: '0 -4px 20px rgba(0,0,0,0.2)'
+            boxShadow: '0 -2px 12px rgba(0,0,0,0.08)'
         }}>
             {navItems.map((item) => (
                 <NavLink
