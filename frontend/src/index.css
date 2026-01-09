@@ -1,44 +1,47 @@
 /* Modern Mobile-First CSS with Premium Design */
 
 :root {
-  /* Color Palette - Dark Mode (Black + Muted Light Green) */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #111111;
-  --bg-tertiary: #1a1a1a;
-  --bg-card: #161616;
-  --bg-hover: #222222;
+  /* Color Palette - Premium Dark Mode */
+  --bg-primary: #050505;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --bg-card: #0f0f0f;
+  --bg-hover: #1f1f1f;
 
-  /* Accent Colors - Muted Light Green */
-  --accent-primary: #7cb38a;
-  --accent-secondary: #9ac9a8;
-  --accent-gradient: linear-gradient(135deg, #7cb38a 0%, #9ac9a8 100%);
+  /* Accent Colors - Refined Muted Light Green */
+  --accent-primary: #86c295;
+  --accent-secondary: #a8d5b4;
+  --accent-gradient: linear-gradient(135deg, #7cb38a 0%, #a8d5b4 50%, #c4e6cd 100%);
+  --accent-glow: 0 0 20px rgba(124, 179, 138, 0.3);
+
   --success: #6abf7b;
   --warning: #d4a855;
   --error: #c75c5c;
   --info: #6a9fb5;
 
   /* Text Colors */
-  --text-primary: #f0f0f0;
-  --text-secondary: #b8b8b8;
-  --text-tertiary: #888888;
-  --text-muted: #5a5a5a;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-tertiary: #999999;
+  --text-muted: #666666;
 
   /* Borders */
-  --border-color: rgba(124, 179, 138, 0.12);
+  --border-color: rgba(255, 255, 255, 0.08);
   --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 24px;
+  --border-radius-md: 14px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 32px;
 
-  /* Shadows - Green tinted */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.55);
+  /* Shadows - Sophisticated & Deep */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.6);
 
-  /* Glassmorphism */
-  --glass-bg: rgba(22, 22, 22, 0.85);
-  --glass-border: rgba(124, 179, 138, 0.15);
+  /* Glassmorphism - Premium Frost */
+  --glass-bg: rgba(20, 20, 20, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.03);
 
   /* Spacing */
   --space-xs: 4px;
@@ -49,29 +52,29 @@
   --space-2xl: 48px;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-base: 300ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-slow: 500ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Light Theme - Soft Green Tints */
+/* Light Theme - Clean & Premium */
 [data-theme="light"] {
-  --bg-primary: #fafbfa;
-  --bg-secondary: #f3f6f4;
-  --bg-tertiary: #eaf0eb;
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f2f5;
   --bg-card: #ffffff;
   --bg-hover: rgba(124, 179, 138, 0.08);
-  --text-primary: #1a1a1a;
-  --text-secondary: #4a4a4a;
-  --text-tertiary: #6a6a6a;
-  --text-muted: #9a9a9a;
-  --border-color: rgba(124, 179, 138, 0.2);
-  --shadow-sm: 0 1px 3px rgba(124, 179, 138, 0.08);
-  --shadow-md: 0 4px 6px rgba(124, 179, 138, 0.06);
-  --shadow-lg: 0 10px 15px rgba(124, 179, 138, 0.1);
-  --shadow-xl: 0 20px 25px rgba(124, 179, 138, 0.12);
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(124, 179, 138, 0.15);
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #777777;
+  --text-muted: #999999;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
 }
 
 /* Reset & Base Styles */
@@ -111,9 +114,12 @@ html {
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: var(--bg-primary);
+  background-image: radial-gradient(circle at 50% 0%, var(--bg-secondary), var(--bg-primary));
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {

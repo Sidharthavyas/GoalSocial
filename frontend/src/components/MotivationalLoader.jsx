@@ -7,11 +7,11 @@ const MotivationalLoader = ({ maxDuration = 1000 }) => {
 
     // Array of motivational background images
     const backgrounds = [
-        '/images/motivational/bg1.png',
-        '/images/motivational/bg2.png',
-        '/images/motivational/bg3.png',
-        '/images/motivational/bg4.png',
-        '/images/motivational/bg5.png'
+        '/images/motivational/bg1.jpg',
+        '/images/motivational/bg2.jpg',
+        '/images/motivational/bg3.jpg',
+        '/images/motivational/bg4.jpg',
+        '/images/motivational/bg5.jpg'
     ];
 
     const [background] = useState(backgrounds[Math.floor(Math.random() * backgrounds.length)]);

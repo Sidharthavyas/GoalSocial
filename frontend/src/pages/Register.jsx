@@ -41,7 +41,14 @@ const Register = () => {
     };
 
     return (
-        <div className="flex items-center justify-center" style={{ minHeight: '100vh', padding: 'var(--space-lg)' }}>
+        <div className="flex items-center justify-center" style={{
+            minHeight: '100vh',
+            padding: 'var(--space-lg)',
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url("/images/motivational/bg2.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed'
+        }}>
             <div className="card card-glass" style={{ maxWidth: '400px', width: '100%' }}>
                 <div className="text-center mb-lg">
                     <h1 style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 'var(--space-sm)' }}>

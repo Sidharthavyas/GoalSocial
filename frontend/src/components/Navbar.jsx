@@ -1,10 +1,12 @@
 // components/Navbar.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import NotificationCenter from './NotificationCenter';
 import { useTheme } from '../hooks/useTheme';
+import api from '../utils/api';
+import { isNative } from '../utils/capacitorConfig';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -12,11 +14,34 @@ const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+    const [latestAndroidApkUrl, setLatestAndroidApkUrl] = useState(null);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    useEffect(() => {
+        if (!isNative) return;
+
+        let cancelled = false;
+
+        const loadUpdateInfo = async () => {
+            try {
+                const res = await api.get('/app/updates?platform=android');
+                const apkUrl = res?.data?.latest?.apkUrl || null;
+                if (!cancelled) setLatestAndroidApkUrl(apkUrl);
+            } catch {
+                if (!cancelled) setLatestAndroidApkUrl(null);
+            }
+        };
+
+        loadUpdateInfo();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const closeMobileMenu = () => {
         setMobileMenuOpen(false);
@@ -240,6 +265,22 @@ const Navbar = () => {
                             flexDirection: 'column',
                             gap: '8px'
                         }}>
+                            {isNative && latestAndroidApkUrl && (
+                                <button
+                                    onClick={() => {
+                                        window.open(latestAndroidApkUrl, '_blank', 'noopener,noreferrer');
+                                        closeMobileMenu();
+                                    }}
+                                    className="btn btn-primary"
+                                    style={{
+                                        width: '100%',
+                                        justifyContent: 'center',
+                                        minHeight: '44px'
+                                    }}
+                                >
+                                    Update App
+                                </button>
+                            )}
                             <button
                                 onClick={() => { toggleTheme(); closeMobileMenu(); }}
                                 className="btn btn-secondary"

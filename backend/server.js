@@ -131,6 +131,34 @@ app.use("/api/insights", insightsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationRoutes);
 
+app.get("/api/app/updates", (req, res) => {
+    const platform = (req.query.platform || "android").toString().toLowerCase();
+
+    if (platform !== "android") {
+        return res.json({ platform, latest: null });
+    }
+
+    const versionName = process.env.ANDROID_LATEST_VERSION_NAME || null;
+    const versionCodeRaw = process.env.ANDROID_LATEST_VERSION_CODE || null;
+    const minSupportedVersionCodeRaw = process.env.ANDROID_MIN_SUPPORTED_VERSION_CODE || null;
+    const apkUrl = process.env.ANDROID_LATEST_APK_URL || null;
+    const releaseNotes = process.env.ANDROID_LATEST_RELEASE_NOTES || null;
+
+    const versionCode = versionCodeRaw ? Number.parseInt(versionCodeRaw, 10) : null;
+    const minSupportedVersionCode = minSupportedVersionCodeRaw ? Number.parseInt(minSupportedVersionCodeRaw, 10) : null;
+
+    return res.json({
+        platform,
+        latest: {
+            versionName,
+            versionCode: Number.isFinite(versionCode) ? versionCode : null,
+            minSupportedVersionCode: Number.isFinite(minSupportedVersionCode) ? minSupportedVersionCode : null,
+            apkUrl,
+            releaseNotes
+        }
+    });
+});
+
 // ============================
 // HEALTH CHECK
 // ============================
