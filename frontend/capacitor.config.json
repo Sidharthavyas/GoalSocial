@@ -3,13 +3,6 @@
   "appName": "GoSocial",
   "webDir": "dist",
   "bundledWebRuntime": false,
-  "server": {
-    "url": "https://goal-social.vercel.app",
-    "allowNavigation": [
-      "goal-social.vercel.app",
-      "goalsocial-1.onrender.com"
-    ]
-  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,

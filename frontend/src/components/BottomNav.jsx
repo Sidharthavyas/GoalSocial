@@ -2,7 +2,6 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { hapticImpactLight } from '../utils/haptics';
-import { hapticImpactLight } from '../utils/haptics';
 
 const BottomNav = () => {
     const navItems = [
