@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -15,7 +15,6 @@ import api from '../utils/api';
 import { useSocket } from '../context/SocketContext';
 import { useTheme } from '../hooks/useTheme';
 
-// Register Chart.js components
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -31,28 +30,54 @@ const ProgressAnalytics = () => {
     const [activeTab, setActiveTab] = useState('weekly');
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const { events } = useSocket();
     const { theme } = useTheme();
+
+    const loadData = useCallback(async () => {
+        if (loading) return; // Prevent duplicate calls
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            console.log(`📊 Fetching /analytics/${activeTab}`);
+            const response = await api.get(`/analytics/${activeTab}`);
+            console.log(`📊 Response:`, response.data);
+
+            // Validate the response
+            if (response.data) {
+                setData(response.data);
+            } else {
+                setError('Invalid response format');
+            }
+        } catch (err) {
+            console.error('Error loading analytics:', err);
+            setError(err.message || 'Failed to load analytics');
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeTab]);
 
     // Load data on tab change
     useEffect(() => {
         setData(null);
         loadData();
-    }, [activeTab]);
+    }, [activeTab, loadData]);
 
-    // Refresh when page becomes visible (user returns to tab)
+    // Refresh when page becomes visible
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!document.hidden) {
                 loadData();
             }
         };
-
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [activeTab]);
+    }, [loadData]);
 
-    // Refresh when goals/tasks are updated via socket or HTTP
+    // Refresh on socket events
     useEffect(() => {
         if (events.length === 0) return;
 
@@ -69,28 +94,11 @@ const ProgressAnalytics = () => {
         ];
 
         if (latestEvent && relevantEvents.includes(latestEvent.type)) {
-            console.log('📊 Progress analytics: Refreshing due to event:', latestEvent.type);
-            // Small delay to ensure backend has processed the update
-            const timeoutId = setTimeout(() => {
-                loadData();
-            }, 300);
+            console.log('📊 Refreshing due to event:', latestEvent.type);
+            const timeoutId = setTimeout(loadData, 500);
             return () => clearTimeout(timeoutId);
         }
-    }, [events, activeTab]);
-
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const response = await api.get(`/analytics/${activeTab}`);
-            setData(response.data);
-        } catch (error) {
-            console.error('Error loading analytics:', error);
-            setData(null);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [events, loadData]);
 
     const getSummaryStats = () => {
         if (!data) return null;
@@ -99,8 +107,13 @@ const ProgressAnalytics = () => {
             const days = data.days || [];
             if (days.length === 0) return null;
 
-            const total = days.reduce((sum, d) => sum + (d.completionPercent || 0), 0);
-            const avg = Math.round(total / days.length);
+            const validDays = days.filter(d => d.totalGoals > 0);
+            if (validDays.length === 0) {
+                return { avg: 0, best: 0, perfectDays: 0, totalDays: days.length };
+            }
+
+            const total = validDays.reduce((sum, d) => sum + (d.completionPercent || 0), 0);
+            const avg = Math.round(total / validDays.length);
             const best = Math.max(...days.map(d => d.completionPercent || 0));
             const perfectDays = days.filter(d => d.completionPercent === 100).length;
 
@@ -119,22 +132,29 @@ const ProgressAnalytics = () => {
         return null;
     };
 
-    // Memoize chart data to prevent unnecessary recalculations
     const chartData = useMemo(() => {
-        if (!data) return null;
+        if (!data) {
+            console.log('📊 chartData: No data');
+            return null;
+        }
 
         if (activeTab === 'weekly') {
             const days = data.days;
-            if (!Array.isArray(days) || days.length === 0) return null;
+            if (!Array.isArray(days) || days.length === 0) {
+                console.log('📊 chartData: No weekly days');
+                return null;
+            }
+
+            console.log('📊 Building weekly chart with days:', days);
 
             return {
                 labels: days.map(d => {
-                    // Parse date components explicitly for local timezone
                     const parts = d.date.split('-');
-                    const year = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-                    const day = parseInt(parts[2], 10);
-                    const date = new Date(year, month, day);
+                    const date = new Date(
+                        parseInt(parts[0], 10),
+                        parseInt(parts[1], 10) - 1,
+                        parseInt(parts[2], 10)
+                    );
                     return date.toLocaleDateString('en-US', { weekday: 'short' });
                 }),
                 datasets: [{
@@ -144,9 +164,13 @@ const ProgressAnalytics = () => {
                     backgroundColor: 'rgba(124, 179, 138, 0.15)',
                     fill: true,
                     tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: 'rgb(124, 179, 138)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: days.map(d =>
+                        d.completionPercent === 100 ? 'rgb(34, 197, 94)' :
+                            d.completionPercent > 0 ? 'rgb(124, 179, 138)' :
+                                'rgb(156, 163, 175)'
+                    ),
                     pointBorderColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                     pointBorderWidth: 2
                 }]
@@ -156,10 +180,7 @@ const ProgressAnalytics = () => {
             if (!Array.isArray(days) || days.length === 0) return null;
 
             return {
-                labels: days.map(d => {
-                    // Parse day from date string directly to avoid timezone issues
-                    return parseInt(d.date.split('-')[2], 10);
-                }),
+                labels: days.map(d => parseInt(d.date.split('-')[2], 10)),
                 datasets: [{
                     label: 'Daily Completion %',
                     data: days.map(d => d.completionPercent || 0),
@@ -167,7 +188,7 @@ const ProgressAnalytics = () => {
                     backgroundColor: 'rgba(106, 159, 181, 0.15)',
                     fill: true,
                     tension: 0.3,
-                    pointRadius: 2,
+                    pointRadius: 3,
                     pointHoverRadius: 5,
                     pointBackgroundColor: 'rgb(106, 159, 181)',
                     pointBorderColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
@@ -198,14 +219,10 @@ const ProgressAnalytics = () => {
         return null;
     }, [data, activeTab, theme]);
 
-    // Memoize chart options with theme dependency to ensure proper re-render
     const chartOptions = useMemo(() => {
         const isDark = theme === 'dark';
         const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 26, 26, 0.7)';
-        const textColorSecondary = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(26, 26, 26, 0.6)';
         const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
-        const tooltipBg = isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-        const tooltipText = isDark ? '#fff' : '#1a1a1a';
 
         return {
             responsive: true,
@@ -217,17 +234,26 @@ const ProgressAnalytics = () => {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: tooltipBg,
+                    backgroundColor: isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                     padding: 12,
                     titleColor: 'rgb(124, 179, 138)',
-                    titleFont: { size: 12, weight: 600 },
-                    bodyColor: tooltipText,
-                    bodyFont: { size: 11 },
+                    bodyColor: isDark ? '#fff' : '#1a1a1a',
                     borderColor: 'rgba(124, 179, 138, 0.3)',
                     borderWidth: 1,
                     displayColors: false,
                     callbacks: {
-                        label: (context) => `${context.parsed.y}%`
+                        label: (context) => {
+                            const dataIndex = context.dataIndex;
+                            const days = data?.days;
+                            if (days && days[dataIndex]) {
+                                const day = days[dataIndex];
+                                return [
+                                    `Completion: ${context.parsed.y}%`,
+                                    `Completed: ${day.completedGoals}/${day.totalGoals} goals`
+                                ];
+                            }
+                            return `${context.parsed.y}%`;
+                        }
                     }
                 }
             },
@@ -244,31 +270,19 @@ const ProgressAnalytics = () => {
                     grid: {
                         color: gridColor,
                         drawBorder: false
-                    },
-                    border: {
-                        display: true,
-                        color: textColor,
-                        width: 1
                     }
                 },
                 x: {
                     ticks: {
-                        color: textColorSecondary,
+                        color: textColor,
                         font: { size: 9 },
-                        maxRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: 7
+                        maxRotation: 0
                     },
-                    grid: { display: false },
-                    border: {
-                        display: true,
-                        color: textColorSecondary,
-                        width: 1
-                    }
+                    grid: { display: false }
                 }
             }
         };
-    }, [theme]);
+    }, [theme, data]);
 
     const stats = getSummaryStats();
 
@@ -284,9 +298,11 @@ const ProgressAnalytics = () => {
                 gap: '8px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Progress Analytics</h3>
+                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>
+                        Progress Analytics
+                    </h3>
                     <button
-                        onClick={() => loadData()}
+                        onClick={loadData}
                         disabled={loading}
                         style={{
                             background: 'transparent',
@@ -295,8 +311,7 @@ const ProgressAnalytics = () => {
                             padding: '4px',
                             fontSize: '0.875rem',
                             color: 'var(--text-secondary)',
-                            opacity: loading ? 0.5 : 1,
-                            transition: 'transform 0.2s'
+                            opacity: loading ? 0.5 : 1
                         }}
                         title="Refresh analytics"
                     >
@@ -322,8 +337,7 @@ const ProgressAnalytics = () => {
                                 background: activeTab === tab ? 'var(--bg-card)' : 'transparent',
                                 color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-tertiary)',
                                 cursor: 'pointer',
-                                fontWeight: activeTab === tab ? 600 : 400,
-                                transition: 'all 0.2s'
+                                fontWeight: activeTab === tab ? 600 : 400
                             }}
                         >
                             {tab === 'weekly' ? '7D' : tab === 'monthly' ? '1M' : '1Y'}
@@ -332,12 +346,42 @@ const ProgressAnalytics = () => {
                 </div>
             </div>
 
+            {/* Content */}
             {loading ? (
                 <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div className="loading-spinner"></div>
                 </div>
-            ) : !data || !chartData ? (
-                <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', flexDirection: 'column', gap: '8px' }}>
+            ) : error ? (
+                <div style={{
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    color: 'var(--error)'
+                }}>
+                    <span>❌ {error}</span>
+                    <button onClick={loadData} style={{
+                        padding: '4px 12px',
+                        background: 'var(--bg-secondary)',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                    }}>
+                        Retry
+                    </button>
+                </div>
+            ) : !chartData ? (
+                <div style={{
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--text-tertiary)',
+                    flexDirection: 'column',
+                    gap: '8px'
+                }}>
                     <span style={{ fontSize: '1.5rem' }}>📊</span>
                     <span style={{ fontSize: '0.85rem' }}>No data yet. Start tracking your goals!</span>
                 </div>
@@ -357,8 +401,8 @@ const ProgressAnalytics = () => {
                                 borderRadius: '8px',
                                 textAlign: 'center'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Avg</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{stats.avg}%</div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Avg</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{stats.avg}%</div>
                             </div>
                             <div style={{
                                 padding: '8px',
@@ -366,7 +410,7 @@ const ProgressAnalytics = () => {
                                 borderRadius: '8px',
                                 textAlign: 'center'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Best</div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Best</div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)' }}>{stats.best}%</div>
                             </div>
                             <div style={{
@@ -375,7 +419,7 @@ const ProgressAnalytics = () => {
                                 borderRadius: '8px',
                                 textAlign: 'center'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', marginBottom: '2px' }}>Perfect</div>
+                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Perfect</div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
                                     {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
                                 </div>
@@ -383,14 +427,32 @@ const ProgressAnalytics = () => {
                         </div>
                     )}
 
-                    {/* Chart - Key prop includes theme to force re-mount on theme change */}
+                    {/* Chart */}
                     <div style={{ height: '180px', width: '100%', position: 'relative' }}>
                         <Line
-                            key={`chart-${activeTab}-${theme}`}
+                            key={`chart-${activeTab}-${theme}-${Date.now()}`}
                             data={chartData}
                             options={chartOptions}
                         />
                     </div>
+
+                    {/* Debug info - remove in production */}
+                    {process.env.NODE_ENV === 'development' && data?.days && (
+                        <div style={{
+                            marginTop: '8px',
+                            fontSize: '0.6rem',
+                            color: 'var(--text-tertiary)',
+                            background: 'var(--bg-secondary)',
+                            padding: '4px 8px',
+                            borderRadius: '4px'
+                        }}>
+                            {data.days.map(d => (
+                                <span key={d.date} style={{ marginRight: '8px' }}>
+                                    {d.date.slice(-2)}: {d.completedGoals}/{d.totalGoals}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </>
             )}
         </div>
