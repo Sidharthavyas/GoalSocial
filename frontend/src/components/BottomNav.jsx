@@ -1,9 +1,12 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { hapticImpactLight } from '../utils/haptics';
 
 const BottomNav = () => {
+    const navigate = useNavigate();
+    const [dragX, setDragX] = useState(0);
+
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/goals', label: 'Goals', icon: '🎯' },
@@ -11,21 +14,47 @@ const BottomNav = () => {
         { path: '/friends', label: 'Friends', icon: '👥' },
     ];
 
+    const handleDragEnd = (event, info) => {
+        const threshold = 50;
+        if (Math.abs(info.offset.x) > threshold) {
+            // Swipe detected
+            const currentIndex = navItems.findIndex(item => window.location.pathname === item.path);
+            if (info.offset.x > 0 && currentIndex > 0) {
+                // Swipe right - go to previous
+                navigate(navItems[currentIndex - 1].path);
+                hapticImpactLight();
+            } else if (info.offset.x < 0 && currentIndex < navItems.length - 1) {
+                // Swipe left - go to next
+                navigate(navItems[currentIndex + 1].path);
+                hapticImpactLight();
+            }
+        }
+        setDragX(0);
+    };
+
     return (
-        <nav className="bottom-nav mobile-only" style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'var(--bg-secondary)',
-            borderTop: '1px solid var(--border-color)',
-            padding: '8px 16px 24px 16px', // Extra bottom padding for safe area
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            zIndex: 1000,
-            boxShadow: '0 -2px 12px rgba(0,0,0,0.08)'
-        }}>
+        <motion.nav
+            className="bottom-nav mobile-only"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: 'var(--bg-secondary)',
+                borderTop: '1px solid var(--border-color)',
+                padding: '8px 16px 24px 16px',
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+                zIndex: 1000,
+                boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
+                cursor: 'grab'
+            }}
+        >
             {navItems.map((item) => (
                 <NavLink
                     key={item.path}
@@ -62,7 +91,7 @@ const BottomNav = () => {
                                     layoutId="bottomNavIndicator"
                                     style={{
                                         position: 'absolute',
-                                        bottom: '4px', // Position indicator
+                                        bottom: '4px',
                                         width: '4px',
                                         height: '4px',
                                         background: 'var(--accent-primary)',
@@ -74,7 +103,7 @@ const BottomNav = () => {
                     )}
                 </NavLink>
             ))}
-        </nav>
+        </motion.nav>
     );
 };
 

@@ -73,31 +73,15 @@ const Navbar = () => {
                         </h1>
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <ul className="nav-links desktop-only">
-                        <li>
-                            <Link to="/dashboard" className="nav-link">📊 Dashboard</Link>
-                        </li>
-                        <li>
-                            <Link to="/goals" className="nav-link">🎯 Goals</Link>
-                        </li>
-                        <li>
-                            <Link to="/friends" className="nav-link">👥 Friends</Link>
-                        </li>
-                        <li>
-                            <Link to="/pomodoro" className="nav-link">⏱️ Focus</Link>
-                        </li>
-                    </ul>
-
                     {/* Right Side */}
                     <div className="flex items-center gap-md">
                         {/* Notifications */}
                         <NotificationCenter />
 
-                        {/* Theme Toggle - Desktop Only */}
+                        {/* Theme Toggle */}
                         <button
                             onClick={toggleTheme}
-                            className="btn btn-secondary btn-sm desktop-only"
+                            className="btn btn-secondary btn-sm"
                             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                             style={{
                                 padding: '10px 14px',
@@ -108,44 +92,24 @@ const Navbar = () => {
                             {theme === 'dark' ? '☀️' : '🌙'}
                         </button>
 
-                        {/* User Avatar */}
-                        <div
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                background: 'var(--accent-gradient)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                fontWeight: 600,
-                                fontSize: '1rem',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 8px rgba(124, 179, 138, 0.3)'
-                            }}
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            title={user?.username}
-                        >
-                            {user?.username?.charAt(0).toUpperCase()}
-                        </div>
-
-                        {/* Logout - Desktop Only */}
+                        {/* Hamburger Menu Button */}
                         <button
-                            onClick={handleLogout}
-                            className="btn btn-secondary btn-sm desktop-only"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="btn btn-secondary btn-sm"
                             style={{
-                                minWidth: '80px',
+                                padding: '10px 14px',
+                                minWidth: '44px',
                                 minHeight: '44px'
                             }}
+                            aria-label="Menu"
                         >
-                            Logout
+                            {mobileMenuOpen ? '✕' : '☰'}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Menu Dropdown */}
+            {/* Hamburger Menu Dropdown - For All Devices */}
             {mobileMenuOpen && (
                 <>
                     {/* Overlay */}
@@ -174,6 +138,7 @@ const Navbar = () => {
                             padding: '16px',
                             zIndex: 100,
                             minWidth: '220px',
+                            maxWidth: '280px',
                             boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
                         }}
                     >
