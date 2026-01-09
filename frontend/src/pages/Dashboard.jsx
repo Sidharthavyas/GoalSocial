@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import api from '../utils/api';
 import Calendar from '../components/Calendar';
 import ActivityFeed from '../components/ActivityFeed';
@@ -10,6 +10,8 @@ import { syncQueue, getPendingCount } from '../utils/offlineQueue';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
+const DASHBOARD_WIDGETS_STORAGE_KEY = 'dashboard.widgets.v1';
+
 const Dashboard = () => {
     const [goals, setGoals] = useState([]);
     const [tasks, setTasks] = useState([]);
@@ -18,8 +20,48 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [widgetsOpen, setWidgetsOpen] = useState(false);
     const { connected, events } = useSocket();
     const isOnline = useOnlineStatus();
+
+    const defaultWidgetConfig = useMemo(() => ({
+        order: ['streak', 'todayProgress', 'stats', 'analytics', 'calendar', 'activity'],
+        enabled: {
+            streak: true,
+            todayProgress: true,
+            stats: true,
+            analytics: true,
+            calendar: true,
+            activity: true
+        }
+    }), []);
+
+    const [widgetConfig, setWidgetConfig] = useState(() => {
+        try {
+            const raw = localStorage.getItem(DASHBOARD_WIDGETS_STORAGE_KEY);
+            if (!raw) return defaultWidgetConfig;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !Array.isArray(parsed.order) || typeof parsed.enabled !== 'object' || parsed.enabled === null) {
+                return defaultWidgetConfig;
+            }
+            const knownIds = new Set(defaultWidgetConfig.order);
+            const normalizedOrder = parsed.order.filter(id => knownIds.has(id));
+            for (const id of defaultWidgetConfig.order) {
+                if (!normalizedOrder.includes(id)) normalizedOrder.push(id);
+            }
+            const normalizedEnabled = { ...defaultWidgetConfig.enabled };
+            for (const id of Object.keys(defaultWidgetConfig.enabled)) {
+                if (typeof parsed.enabled[id] === 'boolean') normalizedEnabled[id] = parsed.enabled[id];
+            }
+            return { order: normalizedOrder, enabled: normalizedEnabled };
+        } catch {
+            return defaultWidgetConfig;
+        }
+    });
+
+    useEffect(() => {
+        localStorage.setItem(DASHBOARD_WIDGETS_STORAGE_KEY, JSON.stringify(widgetConfig));
+    }, [widgetConfig]);
 
     useEffect(() => {
         loadData();
@@ -108,6 +150,43 @@ const Dashboard = () => {
         loadData();
     };
 
+    const widgetLabels = useMemo(() => ({
+        streak: 'Streak Badge',
+        todayProgress: "Today's Progress",
+        stats: 'Stats',
+        analytics: 'Progress Analytics',
+        calendar: 'Calendar',
+        activity: 'Activity Feed'
+    }), []);
+
+    const setWidgetEnabled = (id, enabled) => {
+        setWidgetConfig(prev => ({
+            ...prev,
+            enabled: {
+                ...prev.enabled,
+                [id]: enabled
+            }
+        }));
+    };
+
+    const moveWidget = (id, direction) => {
+        setWidgetConfig(prev => {
+            const index = prev.order.indexOf(id);
+            if (index === -1) return prev;
+            const nextIndex = direction === 'up' ? index - 1 : index + 1;
+            if (nextIndex < 0 || nextIndex >= prev.order.length) return prev;
+            const nextOrder = [...prev.order];
+            const tmp = nextOrder[index];
+            nextOrder[index] = nextOrder[nextIndex];
+            nextOrder[nextIndex] = tmp;
+            return { ...prev, order: nextOrder };
+        });
+    };
+
+    const resetWidgets = () => {
+        setWidgetConfig(defaultWidgetConfig);
+    };
+
     if (loading) {
         return (
             <div className="container mt-lg mb-lg">
@@ -162,6 +241,13 @@ const Dashboard = () => {
                     <p className="text-secondary" style={{ margin: 0 }}>Track your goals and monitor progress</p>
                 </div>
                 <div className="flex items-center gap-sm" style={{ flexWrap: 'wrap' }}>
+                    <button
+                        onClick={() => setWidgetsOpen(true)}
+                        className="btn btn-secondary btn-sm"
+                        title="Customize widgets"
+                    >
+                        ⚙
+                    </button>
                     {!isOnline && pendingCount > 0 && (
                         <button
                             onClick={handleSync}
@@ -191,82 +277,198 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Streak Badge */}
-            {streakDays >= 3 && (
-                <div className="mb-lg">
-                    <StreakBadge days={streakDays} />
+            {(() => {
+                const enabled = widgetConfig.enabled;
+                const calendarIndex = widgetConfig.order.indexOf('calendar');
+                const activityIndex = widgetConfig.order.indexOf('activity');
+                const renderCalendarActivityTogether = Boolean(enabled.calendar && enabled.activity);
+                const firstGridId = renderCalendarActivityTogether
+                    ? (calendarIndex < activityIndex ? 'calendar' : 'activity')
+                    : null;
+
+                return widgetConfig.order.map((id) => {
+                    if (!enabled[id]) return null;
+                    if (renderCalendarActivityTogether && id !== firstGridId && (id === 'calendar' || id === 'activity')) {
+                        return null;
+                    }
+
+                    if (id === 'streak') {
+                        if (streakDays < 3) return null;
+                        return (
+                            <div key={id} className="mb-lg">
+                                <StreakBadge days={streakDays} />
+                            </div>
+                        );
+                    }
+
+                    if (id === 'todayProgress') {
+                        return (
+                            <div key={id} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
+                                <div className="flex items-center justify-between mb-sm">
+                                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
+                                    <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
+                                        {stats.percentage}%
+                                    </span>
+                                </div>
+
+                                <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
+                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                </div>
+
+                                <div className="flex justify-between text-sm text-tertiary">
+                                    <span>{stats.completed} completed</span>
+                                    {stats.total === 0 ? (
+                                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                            Complete one task to start today's streak
+                                        </span>
+                                    ) : (
+                                        <span>{stats.total - stats.completed} remaining</span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (id === 'stats') {
+                        return (
+                            <div key={id} className="grid grid-3 mb-lg">
+                                <div className="card">
+                                    <div className="text-tertiary text-sm mb-sm">Active Goals</div>
+                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                        <span className="progress-number">{goals.length}</span>
+                                    </div>
+                                    {goals.length === 0 && (
+                                        <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
+                                            Create your first goal to get started
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="card">
+                                    <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
+                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                        <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
+                                    </div>
+                                </div>
+                                <div className="card">
+                                    <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
+                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                        <span className="progress-number">{stats.percentage}</span>%
+                                    </div>
+                                    <div className="progress-bar mt-sm">
+                                        <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (id === 'analytics') {
+                        return (
+                            <div key={id} className="mb-lg">
+                                <ProgressAnalytics />
+                            </div>
+                        );
+                    }
+
+                    if (renderCalendarActivityTogether && id === firstGridId) {
+                        return (
+                            <div key="calendarActivity" className="grid grid-2 mb-lg">
+                                <div>
+                                    <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
+                                </div>
+                                <div>
+                                    <ActivityFeed />
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    if (id === 'calendar') {
+                        return (
+                            <div key={id} className="mb-lg">
+                                <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
+                            </div>
+                        );
+                    }
+
+                    if (id === 'activity') {
+                        return (
+                            <div key={id} className="mb-lg">
+                                <ActivityFeed />
+                            </div>
+                        );
+                    }
+
+                    return null;
+                });
+            })()}
+
+            {widgetsOpen && (
+                <div className="modal-overlay" onClick={() => setWidgetsOpen(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <h2 style={{ margin: 0 }}>Customize Widgets</h2>
+                                <p className="text-secondary text-sm" style={{ margin: 0 }}>Choose what appears on your Dashboard</p>
+                            </div>
+                            <button onClick={() => setWidgetsOpen(false)} className="btn btn-secondary btn-sm">✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                                {widgetConfig.order.map((id, index) => (
+                                    <div
+                                        key={id}
+                                        className="card"
+                                        style={{
+                                            padding: 'var(--space-md)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: 'var(--space-md)'
+                                        }}
+                                    >
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', cursor: 'pointer', flex: 1 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={Boolean(widgetConfig.enabled[id])}
+                                                onChange={(e) => setWidgetEnabled(id, e.target.checked)}
+                                                style={{ width: '18px', height: '18px' }}
+                                            />
+                                            <span style={{ fontWeight: 600 }}>{widgetLabels[id] || id}</span>
+                                        </label>
+                                        <div className="flex items-center gap-sm">
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => moveWidget(id, 'up')}
+                                                disabled={index === 0}
+                                                title="Move up"
+                                            >
+                                                ↑
+                                            </button>
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => moveWidget(id, 'down')}
+                                                disabled={index === widgetConfig.order.length - 1}
+                                                title="Move down"
+                                            >
+                                                ↓
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)' }}>
+                            <button className="btn btn-secondary" onClick={resetWidgets}>
+                                Reset
+                            </button>
+                            <button className="btn btn-primary" onClick={() => setWidgetsOpen(false)}>
+                                Done
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
-
-            {/* Daily Progress Bar */}
-            <div className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
-                <div className="flex items-center justify-between mb-sm">
-                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
-                    <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
-                        {stats.percentage}%
-                    </span>
-                </div>
-
-                <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
-                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                </div>
-
-                <div className="flex justify-between text-sm text-tertiary">
-                    <span>{stats.completed} completed</span>
-                    {stats.total === 0 ? (
-                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                            Complete one task to start today's streak
-                        </span>
-                    ) : (
-                        <span>{stats.total - stats.completed} remaining</span>
-                    )}
-                </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-3 mb-lg">
-                <div className="card">
-                    <div className="text-tertiary text-sm mb-sm">Active Goals</div>
-                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                        <span className="progress-number">{goals.length}</span>
-                    </div>
-                    {goals.length === 0 && (
-                        <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
-                            Create your first goal to get started
-                        </p>
-                    )}
-                </div>
-                <div className="card">
-                    <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
-                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                        <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
-                    </div>
-                </div>
-                <div className="card">
-                    <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
-                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                        <span className="progress-number">{stats.percentage}</span>%
-                    </div>
-                    <div className="progress-bar mt-sm">
-                        <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Progress Analytics */}
-            <div className="mb-lg">
-                <ProgressAnalytics />
-            </div>
-
-            {/* Main Content */}
-            <div className="grid grid-2">
-                <div>
-                    <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
-                </div>
-                <div>
-                    <ActivityFeed />
-                </div>
-            </div>
         </div>
     );
 };
