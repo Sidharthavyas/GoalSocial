@@ -196,6 +196,27 @@ p {
   transition: all var(--transition-base);
   text-decoration: none;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  transform-origin: center;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .btn-primary {
@@ -205,12 +226,12 @@ p {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 6px 20px rgba(124, 179, 138, 0.35);
 }
 
 .btn-primary:active {
-  transform: translateY(0) scale(0.96);
+  transform: translateY(0) scale(0.98);
 }
 
 /* Button press feedback for all buttons */
@@ -222,11 +243,13 @@ p {
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
+  transition: all var(--transition-base);
 }
 
 .btn-secondary:hover {
   background: var(--bg-hover);
   border-color: var(--accent-primary);
+  transform: translateY(-1px);
 }
 
 .btn-success {
@@ -234,9 +257,19 @@ p {
   color: #0a0a0a;
 }
 
+.btn-success:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 16px rgba(106, 191, 123, 0.3);
+}
+
 .btn-danger {
   background: var(--error);
   color: white;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 16px rgba(199, 92, 92, 0.3);
 }
 
 .btn-sm {
@@ -287,7 +320,9 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(124, 179, 138, 0.15);
+  background: var(--bg-secondary);
+  box-shadow: 0 0 0 3px rgba(124, 179, 138, 0.15), 0 0 20px rgba(124, 179, 138, 0.1);
+  transform: translateY(-1px);
 }
 
 textarea {
@@ -308,6 +343,8 @@ textarea {
 /* Subtle card hover */
 .card:hover {
   border-color: rgba(124, 179, 138, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .card-glass {
@@ -653,6 +690,42 @@ textarea {
   }
 }
 
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @keyframes pulse {
 
   0%,
@@ -662,6 +735,16 @@ textarea {
 
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
   }
 }
 

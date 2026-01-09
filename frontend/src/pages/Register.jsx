@@ -42,7 +42,13 @@ const Register = () => {
 
     return (
         <div className="flex items-center justify-center" style={{ minHeight: '100vh', padding: 'var(--space-lg)' }}>
-            <div className="card card-glass" style={{ maxWidth: '400px', width: '100%' }}>
+            <motion.div
+                className="card card-glass"
+                style={{ maxWidth: '400px', width: '100%' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+            >
                 <div className="text-center mb-lg">
                     <h1 style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 'var(--space-sm)' }}>
                         Join GoalTracker
@@ -117,7 +123,7 @@ const Register = () => {
                         </Link>
                     </p>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };
