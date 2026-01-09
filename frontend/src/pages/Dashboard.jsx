@@ -460,6 +460,7 @@ const Dashboard = () => {
                                                 onClick={() => moveWidget(id, 'up')}
                                                 disabled={index === 0}
                                                 title="Move up"
+                                                style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
                                             >
                                                 ↑
                                             </button>
@@ -468,6 +469,7 @@ const Dashboard = () => {
                                                 onClick={() => moveWidget(id, 'down')}
                                                 disabled={index === widgetConfig.order.length - 1}
                                                 title="Move down"
+                                                style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
                                             >
                                                 ↓
                                             </button>

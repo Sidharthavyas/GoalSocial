@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { hapticImpactLight } from '../utils/haptics';
 
 const BottomNav = () => {
     const navItems = [
@@ -31,6 +32,7 @@ const BottomNav = () => {
                 <NavLink
                     key={item.path}
                     to={item.path}
+                    onClick={hapticImpactLight}
                     style={({ isActive }) => ({
                         display: 'flex',
                         flexDirection: 'column',

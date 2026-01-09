@@ -1,6 +1,25 @@
-import React from 'react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { hapticImpactMedium, hapticSuccess } from '../utils/haptics';
 
 const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
+    const x = useMotionValue(0);
+    const background_opacity = useTransform(x, [-100, 0, 100], [1, 0, 1]);
+    const background_color = useTransform(x, [-100, 0, 100], ['var(--error)', 'transparent', 'var(--success)']);
+    
+    const handleDragEnd = (event, info) => {
+        if (readOnly) return;
+        
+        if (info.offset.x > 100) {
+            // Swiped Right - Complete
+            hapticSuccess();
+            onEdit({ ...goal, completed: !goal.completed });
+        } else if (info.offset.x < -100) {
+            // Swiped Left - Delete
+            hapticImpactMedium();
+            onDelete(goal._id);
+        }
+    };
+
     const getGoalTypeColor = (type) => {
         const colors = {
             'one-time': 'var(--info)',
@@ -24,13 +43,42 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
     };
 
     return (
-        <div
-            className="card"
-            style={{
-                opacity: goal.completed ? 0.7 : 1,
-                transition: 'opacity 0.2s ease'
-            }}
-        >
+        <div style={{ position: 'relative', borderRadius: 'var(--border-radius-lg)', overflow: 'hidden' }}>
+            {/* Background Actions */}
+            <motion.div
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: background_color,
+                    opacity: background_opacity,
+                    zIndex: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0 24px',
+                    borderRadius: 'var(--border-radius-lg)'
+                }}
+            >
+                <span style={{ color: 'white', fontWeight: 'bold' }}>Delete 🗑️</span>
+                <span style={{ color: 'white', fontWeight: 'bold' }}>{goal.completed ? 'Undo ↩️' : 'Complete ✅'}</span>
+            </motion.div>
+
+            {/* Foreground Card */}
+            <motion.div
+                className="card"
+                drag={readOnly ? false : "x"}
+                dragConstraints={{ left: 0, right: 0 }}
+                style={{
+                    x,
+                    background: 'var(--bg-card)', // Ensure solid background
+                    position: 'relative',
+                    zIndex: 1,
+                    opacity: goal.completed ? 0.7 : 1,
+                    cursor: readOnly ? 'default' : 'grab'
+                }}
+                onDragEnd={handleDragEnd}
+                whileTap={{ cursor: 'grabbing' }}
+            >
             {/* Header with Type Badge and Actions */}
             <div style={{
                 display: 'flex',
@@ -205,6 +253,7 @@ const GoalCard = ({ goal, onEdit, onDelete, readOnly = false }) => {
                     </div>
                 )}
             </div>
+            </motion.div>
         </div>
     );
 };
