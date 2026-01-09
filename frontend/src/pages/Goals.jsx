@@ -67,10 +67,7 @@ const Goals = () => {
     return (
         <div className="container mt-lg mb-lg">
             <div className="flex items-center justify-between mb-lg">
-                <div>
-                    <h1>My Goals</h1>
-                    <p className="text-secondary">Create and manage your goals and habits</p>
-                </div>
+                <h1 style={{ margin: 0 }}>My Goals</h1>
                 <button onClick={() => setShowForm(true)} className="btn btn-primary">
                     + New Goal
                 </button>
