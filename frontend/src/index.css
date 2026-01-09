@@ -136,6 +136,8 @@ body {
 @media (max-width: 768px) {
   .app-main {
     padding: var(--space-md) var(--space-sm);
+    padding-bottom: 100px;
+    /* Space for Bottom Nav */
   }
 }
 
@@ -772,6 +774,11 @@ textarea {
   }
 
   .desktop-only {
+    display: none;
+  }
+
+  /* Hide specific desktop nav elements on mobile if they aren't covered by .desktop-only class yet */
+  .navbar .nav-links {
     display: none;
   }
 }

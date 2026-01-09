@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import Calendar from '../components/Calendar';
 import ActivityFeed from '../components/ActivityFeed';
@@ -277,131 +278,148 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {(() => {
-                const enabled = widgetConfig.enabled;
-                const calendarIndex = widgetConfig.order.indexOf('calendar');
-                const activityIndex = widgetConfig.order.indexOf('activity');
-                const renderCalendarActivityTogether = Boolean(enabled.calendar && enabled.activity);
-                const firstGridId = renderCalendarActivityTogether
-                    ? (calendarIndex < activityIndex ? 'calendar' : 'activity')
-                    : null;
+            <div className="dashboard-widgets">
+                {(() => {
+                    const enabled = widgetConfig.enabled;
+                    const calendarIndex = widgetConfig.order.indexOf('calendar');
+                    const activityIndex = widgetConfig.order.indexOf('activity');
+                    const renderCalendarActivityTogether = Boolean(enabled.calendar && enabled.activity);
+                    const firstGridId = renderCalendarActivityTogether
+                        ? (calendarIndex < activityIndex ? 'calendar' : 'activity')
+                        : null;
 
-                return widgetConfig.order.map((id) => {
-                    if (!enabled[id]) return null;
-                    if (renderCalendarActivityTogether && id !== firstGridId && (id === 'calendar' || id === 'activity')) {
-                        return null;
-                    }
+                    const itemVariants = {
+                        hidden: { y: 20, opacity: 0 },
+                        visible: { y: 0, opacity: 1 }
+                    };
 
-                    if (id === 'streak') {
-                        if (streakDays < 3) return null;
-                        return (
-                            <div key={id} className="mb-lg">
-                                <StreakBadge days={streakDays} />
-                            </div>
-                        );
-                    }
+                    return (
+                        <motion.div
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                                visible: { transition: { staggerChildren: 0.1 } }
+                            }}
+                        >
+                            {widgetConfig.order.map((id) => {
+                                if (!enabled[id]) return null;
+                                if (renderCalendarActivityTogether && id !== firstGridId && (id === 'calendar' || id === 'activity')) {
+                                    return null;
+                                }
 
-                    if (id === 'todayProgress') {
-                        return (
-                            <div key={id} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
-                                <div className="flex items-center justify-between mb-sm">
-                                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
-                                    <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
-                                        {stats.percentage}%
-                                    </span>
-                                </div>
+                                if (id === 'streak') {
+                                    if (streakDays < 3) return null;
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                            <StreakBadge days={streakDays} />
+                                        </motion.div>
+                                    );
+                                }
 
-                                <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
-                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                </div>
+                                if (id === 'todayProgress') {
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
+                                            <div className="flex items-center justify-between mb-sm">
+                                                <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
+                                                <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
+                                                    {stats.percentage}%
+                                                </span>
+                                            </div>
 
-                                <div className="flex justify-between text-sm text-tertiary">
-                                    <span>{stats.completed} completed</span>
-                                    {stats.total === 0 ? (
-                                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                            Complete one task to start today's streak
-                                        </span>
-                                    ) : (
-                                        <span>{stats.total - stats.completed} remaining</span>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    }
+                                            <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
+                                                <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                            </div>
 
-                    if (id === 'stats') {
-                        return (
-                            <div key={id} className="grid grid-3 mb-lg">
-                                <div className="card">
-                                    <div className="text-tertiary text-sm mb-sm">Active Goals</div>
-                                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                                        <span className="progress-number">{goals.length}</span>
-                                    </div>
-                                    {goals.length === 0 && (
-                                        <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
-                                            Create your first goal to get started
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="card">
-                                    <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
-                                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                                        <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
-                                    </div>
-                                </div>
-                                <div className="card">
-                                    <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
-                                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                                        <span className="progress-number">{stats.percentage}</span>%
-                                    </div>
-                                    <div className="progress-bar mt-sm">
-                                        <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
+                                            <div className="flex justify-between text-sm text-tertiary">
+                                                <span>{stats.completed} completed</span>
+                                                {stats.total === 0 ? (
+                                                    <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                                        Complete one task to start today's streak
+                                                    </span>
+                                                ) : (
+                                                    <span>{stats.total - stats.completed} remaining</span>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                }
 
-                    if (id === 'analytics') {
-                        return (
-                            <div key={id} className="mb-lg">
-                                <ProgressAnalytics />
-                            </div>
-                        );
-                    }
+                                if (id === 'stats') {
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="grid grid-3 mb-lg">
+                                            <div className="card">
+                                                <div className="text-tertiary text-sm mb-sm">Active Goals</div>
+                                                <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                    <span className="progress-number">{goals.length}</span>
+                                                </div>
+                                                {goals.length === 0 && (
+                                                    <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
+                                                        Create your first goal to get started
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="card">
+                                                <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
+                                                <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                    <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
+                                                </div>
+                                            </div>
+                                            <div className="card">
+                                                <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
+                                                <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                    <span className="progress-number">{stats.percentage}</span>%
+                                                </div>
+                                                <div className="progress-bar mt-sm">
+                                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                }
 
-                    if (renderCalendarActivityTogether && id === firstGridId) {
-                        return (
-                            <div key="calendarActivity" className="grid grid-2 mb-lg">
-                                <div>
-                                    <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
-                                </div>
-                                <div>
-                                    <ActivityFeed />
-                                </div>
-                            </div>
-                        );
-                    }
+                                if (id === 'analytics') {
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                            <ProgressAnalytics />
+                                        </motion.div>
+                                    );
+                                }
 
-                    if (id === 'calendar') {
-                        return (
-                            <div key={id} className="mb-lg">
-                                <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
-                            </div>
-                        );
-                    }
+                                if (renderCalendarActivityTogether && id === firstGridId) {
+                                    return (
+                                        <motion.div key="calendarActivity" variants={itemVariants} className="grid grid-2 mb-lg">
+                                            <div>
+                                                <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
+                                            </div>
+                                            <div>
+                                                <ActivityFeed />
+                                            </div>
+                                        </motion.div>
+                                    );
+                                }
 
-                    if (id === 'activity') {
-                        return (
-                            <div key={id} className="mb-lg">
-                                <ActivityFeed />
-                            </div>
-                        );
-                    }
+                                if (id === 'calendar') {
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                            <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
+                                        </motion.div>
+                                    );
+                                }
 
-                    return null;
-                });
-            })()}
+                                if (id === 'activity') {
+                                    return (
+                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                            <ActivityFeed />
+                                        </motion.div>
+                                    );
+                                }
+
+                                return null;
+                            })}
+                        </motion.div>
+                    );
+                })()}
+            </div>
 
             {widgetsOpen && (
                 <div className="modal-overlay" onClick={() => setWidgetsOpen(false)}>

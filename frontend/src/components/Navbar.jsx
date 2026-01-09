@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import NotificationCenter from './NotificationCenter';
+import BottomNav from './BottomNav';
 import { useTheme } from '../hooks/useTheme';
 import api from '../utils/api';
 import { isNative } from '../utils/capacitorConfig';
@@ -307,6 +308,8 @@ const Navbar = () => {
                     </div>
                 </>
             )}
+            {/* Mobile Bottom Navigation */}
+            <BottomNav />
         </nav>
     );
 };
