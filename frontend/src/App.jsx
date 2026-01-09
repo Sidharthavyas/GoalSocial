@@ -55,6 +55,27 @@ const PublicRoute = ({ children }) => {
     return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
+const RootRedirect = () => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                fontSize: '1.2rem',
+                color: 'var(--text-primary)'
+            }}>
+                Loading...
+            </div>
+        );
+    }
+
+    return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+};
+
 function App() {
     const [showLoader, setShowLoader] = React.useState(true);
     const { isAuthenticated } = useAuth();
@@ -133,8 +154,8 @@ function App() {
                             </ProtectedRoute>
                         } />
 
-                        {/* Default Route */}
-                        <Route path="/" element={<Navigate to="/dashboard" />} />
+                        {/* Default Route - Smart redirect based on auth */}
+                        <Route path="/" element={<RootRedirect />} />
                     </Routes>
                 </div>
             </BrowserRouter>
