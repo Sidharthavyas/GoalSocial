@@ -156,60 +156,101 @@ const Navbar = () => {
                             </div>
                         </div>
 
-                        {/* Navigation Links */}
+                        {/* Settings & Options - Desktop shows nav links, Mobile shows settings */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <Link
-                                to="/dashboard"
-                                onClick={closeMobileMenu}
-                                style={{
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    textDecoration: 'none',
-                                    color: 'var(--text-primary)',
-                                    background: location.pathname === '/dashboard' ? 'var(--bg-tertiary)' : 'transparent'
-                                }}
-                            >
-                                📊 Dashboard
-                            </Link>
-                            <Link
-                                to="/goals"
-                                onClick={closeMobileMenu}
-                                style={{
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    textDecoration: 'none',
-                                    color: 'var(--text-primary)',
-                                    background: location.pathname === '/goals' ? 'var(--bg-tertiary)' : 'transparent'
-                                }}
-                            >
-                                🎯 Goals
-                            </Link>
-                            <Link
-                                to="/friends"
-                                onClick={closeMobileMenu}
-                                style={{
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    textDecoration: 'none',
-                                    color: 'var(--text-primary)',
-                                    background: location.pathname === '/friends' ? 'var(--bg-tertiary)' : 'transparent'
-                                }}
-                            >
-                                👥 Friends
-                            </Link>
-                            <Link
-                                to="/pomodoro"
-                                onClick={closeMobileMenu}
-                                style={{
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    textDecoration: 'none',
-                                    color: 'var(--text-primary)',
-                                    background: location.pathname === '/pomodoro' ? 'var(--bg-tertiary)' : 'transparent'
-                                }}
-                            >
-                                ⏱️ Focus Mode
-                            </Link>
+                            {/* Desktop Navigation Links */}
+                            <div className="desktop-only">
+                                <Link
+                                    to="/dashboard"
+                                    onClick={closeMobileMenu}
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textDecoration: 'none',
+                                        color: 'var(--text-primary)',
+                                        background: location.pathname === '/dashboard' ? 'var(--bg-tertiary)' : 'transparent',
+                                        display: 'block'
+                                    }}
+                                >
+                                    📊 Dashboard
+                                </Link>
+                                <Link
+                                    to="/goals"
+                                    onClick={closeMobileMenu}
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textDecoration: 'none',
+                                        color: 'var(--text-primary)',
+                                        background: location.pathname === '/goals' ? 'var(--bg-tertiary)' : 'transparent',
+                                        display: 'block'
+                                    }}
+                                >
+                                    🎯 Goals
+                                </Link>
+                                <Link
+                                    to="/friends"
+                                    onClick={closeMobileMenu}
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textDecoration: 'none',
+                                        color: 'var(--text-primary)',
+                                        background: location.pathname === '/friends' ? 'var(--bg-tertiary)' : 'transparent',
+                                        display: 'block'
+                                    }}
+                                >
+                                    👥 Friends
+                                </Link>
+                                <Link
+                                    to="/pomodoro"
+                                    onClick={closeMobileMenu}
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        textDecoration: 'none',
+                                        color: 'var(--text-primary)',
+                                        background: location.pathname === '/pomodoro' ? 'var(--bg-tertiary)' : 'transparent',
+                                        display: 'block'
+                                    }}
+                                >
+                                    ⏱️ Focus Mode
+                                </Link>
+                            </div>
+
+                            {/* Mobile Settings Options */}
+                            <div className="mobile-only">
+                                <div
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '0.9375rem'
+                                    }}
+                                >
+                                    ⚙️ Settings
+                                </div>
+                                <div
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '0.9375rem'
+                                    }}
+                                >
+                                    👤 Profile
+                                </div>
+                                <div
+                                    style={{
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '0.9375rem'
+                                    }}
+                                >
+                                    📈 Statistics
+                                </div>
+                            </div>
                         </div>
 
                         {/* Actions */}

@@ -5,7 +5,8 @@ import { hapticImpactLight } from '../utils/haptics';
 
 const BottomNav = () => {
     const navigate = useNavigate();
-    const [dragX, setDragX] = useState(0);
+    const [touchStart, setTouchStart] = useState(0);
+    const [touchEnd, setTouchEnd] = useState(0);
 
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -14,31 +15,44 @@ const BottomNav = () => {
         { path: '/friends', label: 'Friends', icon: '👥' },
     ];
 
-    const handleDragEnd = (event, info) => {
+    const handleTouchStart = (e) => {
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+
+        const distance = touchStart - touchEnd;
         const threshold = 50;
-        if (Math.abs(info.offset.x) > threshold) {
-            // Swipe detected
+
+        if (Math.abs(distance) > threshold) {
             const currentIndex = navItems.findIndex(item => window.location.pathname === item.path);
-            if (info.offset.x > 0 && currentIndex > 0) {
-                // Swipe right - go to previous
-                navigate(navItems[currentIndex - 1].path);
-                hapticImpactLight();
-            } else if (info.offset.x < 0 && currentIndex < navItems.length - 1) {
+
+            if (distance > 0 && currentIndex < navItems.length - 1) {
                 // Swipe left - go to next
                 navigate(navItems[currentIndex + 1].path);
                 hapticImpactLight();
+            } else if (distance < 0 && currentIndex > 0) {
+                // Swipe right - go to previous
+                navigate(navItems[currentIndex - 1].path);
+                hapticImpactLight();
             }
         }
-        setDragX(0);
+
+        setTouchStart(0);
+        setTouchEnd(0);
     };
 
     return (
-        <motion.nav
+        <nav
             className="bottom-nav mobile-only"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={handleDragEnd}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             style={{
                 position: 'fixed',
                 bottom: 0,
@@ -52,7 +66,7 @@ const BottomNav = () => {
                 alignItems: 'center',
                 zIndex: 1000,
                 boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
-                cursor: 'grab'
+                touchAction: 'pan-x'
             }}
         >
             {navItems.map((item) => (
@@ -103,7 +117,7 @@ const BottomNav = () => {
                     )}
                 </NavLink>
             ))}
-        </motion.nav>
+        </nav>
     );
 };
 
