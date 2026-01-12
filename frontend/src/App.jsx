@@ -12,7 +12,6 @@ import Navbar from './components/Navbar';
 import PomodoroTimer from './components/PomodoroTimer';
 import MotivationalLoader from './components/MotivationalLoader';
 import Challenges from './pages/Challenges';
-import Routines from './pages/Routines';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -160,14 +159,6 @@ function App() {
                                 <Navbar />
                                 <main className="app-main">
                                     <Challenges />
-                                </main>
-                            </ProtectedRoute>
-                        } />
-                        <Route path="/routines" element={
-                            <ProtectedRoute>
-                                <Navbar />
-                                <main className="app-main">
-                                    <Routines />
                                 </main>
                             </ProtectedRoute>
                         } />

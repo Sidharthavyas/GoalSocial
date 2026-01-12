@@ -21,6 +21,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [challenges, setChallenges] = useState([]);
     const [widgetsOpen, setWidgetsOpen] = useState(false);
     const { connected, events } = useSocket();
     const isOnline = useOnlineStatus();
@@ -108,15 +109,17 @@ const Dashboard = () => {
             const day = String(now.getDate()).padStart(2, '0');
             const today = `${year}-${month}-${day}`;
 
-            const [goalsRes, tasksRes, dailySummary] = await Promise.all([
+            const [goalsRes, tasksRes, dailySummary, challengesRes] = await Promise.all([
                 api.get('/goals'),
                 api.get('/tasks'),
-                api.get(`/calendar/day/${today}`).catch(() => ({ data: { streakDays: 0 } }))
+                api.get(`/calendar/day/${today}`).catch(() => ({ data: { streakDays: 0 } })),
+                api.get('/challenges').catch(() => ({ data: [] }))
             ]);
 
             setGoals(goalsRes.data.goals || []);
             setTasks(tasksRes.data.tasks || []);
             setStreakDays(dailySummary.data.streakDays || 0);
+            setChallenges((challengesRes.data || []).slice(0, 3)); // Show top 3 challenges
 
 
 
@@ -376,6 +379,17 @@ const Dashboard = () => {
                                                 <div className="progress-bar mt-sm">
                                                     <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
                                                 </div>
+                                            </div>
+                                            <div className="card">
+                                                <div className="text-tertiary text-sm mb-sm">Active Challenges</div>
+                                                <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                    <span className="progress-number">{challenges.length}</span>
+                                                </div>
+                                                {challenges.length > 0 && (
+                                                    <div className="text-sm text-muted mt-sm">
+                                                        {challenges[0].title}
+                                                    </div>
+                                                )}
                                             </div>
                                         </motion.div>
                                     );
