@@ -118,7 +118,11 @@ const Dashboard = () => {
             setTasks(tasksRes.data.tasks || []);
             setStreakDays(dailySummary.data.streakDays || 0);
 
-           
+
+
+            // Use the same date string for filtering tasks
+            const todayStr = today;
+
             const todayTasks = (tasksRes.data.tasks || []).filter(t => {
                 return t.date === todayStr || t.date.startsWith(todayStr);
             });
