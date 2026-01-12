@@ -11,6 +11,8 @@ const BottomNav = () => {
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/goals', label: 'Goals', icon: '🎯' },
+        { path: '/challenges', label: 'Challenges', icon: '🏆' },
+        { path: '/routines', label: 'Routines', icon: '🔗' },
         { path: '/pomodoro', label: 'Focus', icon: '⏱️' },
         { path: '/friends', label: 'Friends', icon: '👥' },
     ];

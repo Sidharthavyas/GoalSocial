@@ -130,6 +130,8 @@ app.use("/api/calendar", calendarRoutes);
 app.use("/api/insights", insightsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/challenges", (await import("./routes/challenges.js")).default); // Dynamic import for CommonJS module
+app.use("/api/routines", (await import("./routes/routines.js")).default); // Dynamic import for CommonJS module
 
 app.get("/api/app/updates", (req, res) => {
     const platform = (req.query.platform || "android").toString().toLowerCase();
