@@ -118,12 +118,7 @@ const Dashboard = () => {
             setTasks(tasksRes.data.tasks || []);
             setStreakDays(dailySummary.data.streakDays || 0);
 
-            const todayDate = new Date();
-            const year = todayDate.getFullYear();
-            const month = String(todayDate.getMonth() + 1).padStart(2, '0');
-            const day = String(todayDate.getDate()).padStart(2, '0');
-            const todayStr = `${year}-${month}-${day}`;
-
+           
             const todayTasks = (tasksRes.data.tasks || []).filter(t => {
                 return t.date === todayStr || t.date.startsWith(todayStr);
             });
