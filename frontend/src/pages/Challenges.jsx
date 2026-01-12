@@ -3,8 +3,12 @@ import { motion } from 'framer-motion';
 import api from '../utils/api';
 import confetti from 'canvas-confetti';
 import { showConfirm, showSuccess, showError } from '../utils/modal';
+import { useAuth } from '../context/AuthContext';
 
 const Challenges = () => {
+    const { user } = useAuth();
+    const currentUserId = user?.id || user?._id;
+
     const [challenges, setChallenges] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedChallenge, setSelectedChallenge] = useState(null);
@@ -13,7 +17,6 @@ const Challenges = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingChallenge, setEditingChallenge] = useState(null);
     const [userProgress, setUserProgress] = useState({}); // Track user's progress per challenge
-    const [currentUserId, setCurrentUserId] = useState(null);
 
     // New Challenge Form State
     const [newTitle, setNewTitle] = useState('');
@@ -27,20 +30,9 @@ const Challenges = () => {
 
     useEffect(() => {
         loadChallenges();
-        loadCurrentUser();
     }, []);
 
-    const loadCurrentUser = async () => {
-        try {
-            const res = await api.get('/auth/me');
-            // API returns 'id' not '_id'
-            const userId = res.data.user.id || res.data.user._id;
-            console.log('Current user ID:', userId);
-            setCurrentUserId(userId);
-        } catch (error) {
-            console.error('Failed to load current user', error);
-        }
-    };
+
 
     const loadChallenges = async () => {
         try {
@@ -275,6 +267,14 @@ const Challenges = () => {
                                             if (isCreator) {
                                                 return (
                                                     <>
+                                                        {/* Creators can also complete today */}
+                                                        <button
+                                                            className={`btn btn-sm ${completedToday ? 'btn-secondary' : 'btn-success'}`}
+                                                            onClick={(e) => handleCompleteToday(challenge._id, e)}
+                                                            disabled={completedToday}
+                                                        >
+                                                            {completedToday ? '✓ Done Today' : 'Complete Today'}
+                                                        </button>
                                                         <button
                                                             className="btn btn-sm btn-secondary"
                                                             onClick={(e) => handleEdit(challenge, e)}

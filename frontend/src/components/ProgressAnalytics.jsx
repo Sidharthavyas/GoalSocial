@@ -14,6 +14,8 @@ import {
 import api from '../utils/api';
 import { useSocket } from '../context/SocketContext';
 import { useTheme } from '../hooks/useTheme';
+import CircularProgress from './CircularProgress';
+import AnimatedCounter from './AnimatedCounter';
 
 ChartJS.register(
     CategoryScale,
@@ -387,41 +389,80 @@ const ProgressAnalytics = () => {
                 </div>
             ) : (
                 <>
+                    {/* Today's Focus Ring (only show on weekly view or if we have today's data) */}
+                    {activeTab === 'weekly' && data?.days && data.days.length > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '24px',
+                            marginTop: '8px'
+                        }}>
+                            <div style={{ marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                Today's Focus
+                            </div>
+                            <CircularProgress
+                                value={data.days[data.days.length - 1].completionPercent || 0}
+                                size={140}
+                                strokeWidth={12}
+                                color="var(--accent-primary)"
+                                trackColor="var(--bg-tertiary)"
+                            >
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '2rem', fontWeight: 800 }}>
+                                        <AnimatedCounter to={data.days[data.days.length - 1].completionPercent || 0} />%
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                        {data.days[data.days.length - 1].completedGoals}/{data.days[data.days.length - 1].totalGoals} goals
+                                    </div>
+                                </div>
+                            </CircularProgress>
+                        </div>
+                    )}
+
                     {/* Stats Row */}
                     {stats && (
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(3, 1fr)',
                             gap: '8px',
-                            marginBottom: '12px'
+                            marginBottom: '16px'
                         }}>
                             <div style={{
-                                padding: '8px',
+                                padding: '12px 8px',
                                 background: 'var(--bg-secondary)',
-                                borderRadius: '8px',
-                                textAlign: 'center'
+                                borderRadius: '12px',
+                                textAlign: 'center',
+                                boxShadow: 'var(--shadow-sm)'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Avg</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{stats.avg}%</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Avg</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
+                                    <AnimatedCounter to={stats.avg} />%
+                                </div>
                             </div>
                             <div style={{
-                                padding: '8px',
+                                padding: '12px 8px',
                                 background: 'var(--bg-secondary)',
-                                borderRadius: '8px',
-                                textAlign: 'center'
+                                borderRadius: '12px',
+                                textAlign: 'center',
+                                boxShadow: 'var(--shadow-sm)'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Best</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)' }}>{stats.best}%</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Best</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--success)' }}>
+                                    <AnimatedCounter to={stats.best} />%
+                                </div>
                             </div>
                             <div style={{
-                                padding: '8px',
+                                padding: '12px 8px',
                                 background: 'var(--bg-secondary)',
-                                borderRadius: '8px',
-                                textAlign: 'center'
+                                borderRadius: '12px',
+                                textAlign: 'center',
+                                boxShadow: 'var(--shadow-sm)'
                             }}>
-                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>Perfect</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
-                                    {activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays}
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Perfect</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+                                    <AnimatedCounter to={activeTab === 'yearly' ? stats.perfectMonths : stats.perfectDays} />
                                 </div>
                             </div>
                         </div>

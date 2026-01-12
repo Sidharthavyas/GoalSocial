@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from 'date-fns';
 import DayModal from './DayModal';
 
-const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
+const Calendar = ({ goals, tasks, challenges = [], challengeCompletions = [], onUpdate, readOnly = false }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
 
@@ -19,6 +19,14 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
         const day = String(date.getDate()).padStart(2, '0');
         const dateString = `${year}-${month}-${day}`;
         return tasks.filter(task => task.date === dateString || task.date.startsWith(dateString));
+    };
+
+    const getChallengeCompletionsForDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        return challengeCompletions.filter(c => c.date === dateString || c.date.startsWith(dateString));
     };
 
     const getDayProgress = (date) => {
@@ -57,10 +65,12 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                     {days.map(day => {
                         const progress = getDayProgress(day);
                         const dayTasks = getTasksForDate(day);
+                        const dayChallengeCompletions = getChallengeCompletionsForDate(day);
                         const isCurrentMonth = day.getMonth() === currentDate.getMonth();
                         const isFuture = day > new Date();
                         const isPerfectDay = progress === 100 && dayTasks.length > 0;
                         const isMissedDay = dayTasks.length > 0 && progress === 0;
+                        const hasChallengeActivity = dayChallengeCompletions.length > 0;
 
                         // Calculate streak (simple version - 3+ consecutive days)
                         const yesterday = new Date(day);
@@ -83,10 +93,13 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                                     position: 'relative',
                                     background: progress > 0
                                         ? `linear-gradient(135deg, rgba(99, 102, 241, ${progress / 300}) 0%, rgba(139, 92, 246, ${progress / 250}) 100%)`
-                                        : 'var(--bg-tertiary)',
-                                    minHeight: window.innerWidth < 768 ? '60px' : 'auto'
+                                        : hasChallengeActivity && !isFuture
+                                            ? 'linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(244, 114, 182, 0.1) 100%)'
+                                            : 'var(--bg-tertiary)',
+                                    minHeight: window.innerWidth < 768 ? '60px' : 'auto',
+                                    borderLeft: hasChallengeActivity && !isFuture ? '3px solid var(--pink, #ec4899)' : 'none'
                                 }}
-                                title={dayTasks.length > 0 ? `${progress}% complete • ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}` : ''}
+                                title={`${dayTasks.length > 0 ? `${progress}% complete • ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}` : ''}${hasChallengeActivity ? ` • ${dayChallengeCompletions.length} challenge${dayChallengeCompletions.length > 1 ? 's' : ''}` : ''}`}
                             >
                                 <div className="date" style={{
                                     fontSize: window.innerWidth < 768 ? '0.875rem' : '0.875rem',
@@ -113,12 +126,15 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                                         {isStreakDay && '🔥'}
                                         {isPerfectDay && '⭐'}
                                         {isMissedDay && '⚠️'}
+                                        {hasChallengeActivity && '🏆'}
                                     </div>
                                 )}
 
-                                {dayTasks.length > 0 && window.innerWidth >= 768 && (
+                                {(dayTasks.length > 0 || hasChallengeActivity) && window.innerWidth >= 768 && (
                                     <div className="meta" style={{ fontSize: '0.625rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                                        {dayTasks.length} task{dayTasks.length > 1 ? 's' : ''}
+                                        {dayTasks.length > 0 && `${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}`}
+                                        {dayTasks.length > 0 && hasChallengeActivity && ' • '}
+                                        {hasChallengeActivity && `${dayChallengeCompletions.length} 🏆`}
                                     </div>
                                 )}
                             </div>
@@ -132,6 +148,8 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
                     date={selectedDate}
                     goals={goals}
                     tasks={getTasksForDate(selectedDate)}
+                    challenges={challenges}
+                    challengeCompletions={getChallengeCompletionsForDate(selectedDate)}
                     onClose={() => setSelectedDate(null)}
                     onUpdate={onUpdate}
                     readOnly={readOnly}
@@ -142,3 +160,4 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
 };
 
 export default Calendar;
+

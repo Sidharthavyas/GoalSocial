@@ -95,7 +95,7 @@ router.post('/:id/complete-today', auth, async (req, res) => {
             return res.status(404).json({ error: 'Challenge not found' });
         }
 
-        if (!challenge.participants.includes(req.user.id)) {
+        if (!challenge.participants.some(p => p.toString() === req.user._id.toString())) {
             return res.status(403).json({ error: 'You must join the challenge first' });
         }
 
@@ -103,7 +103,7 @@ router.post('/:id/complete-today', auth, async (req, res) => {
 
         // Check if already completed today
         const existingCompletion = challenge.dailyCompletions.find(
-            dc => dc.userId.toString() === req.user.id && dc.date === today
+            dc => dc.userId.toString() === req.user._id.toString() && dc.date === today
         );
 
         if (existingCompletion) {
@@ -112,7 +112,7 @@ router.post('/:id/complete-today', auth, async (req, res) => {
 
         // Add today's completion
         challenge.dailyCompletions.push({
-            userId: req.user.id,
+            userId: req.user._id,
             date: today,
             completed: true,
             completedAt: new Date()
@@ -139,7 +139,7 @@ router.get('/:id/my-progress', auth, async (req, res) => {
         }
 
         const userCompletions = challenge.dailyCompletions.filter(
-            dc => dc.userId.toString() === req.user.id
+            dc => dc.userId.toString() === req.user._id.toString()
         );
 
         const today = new Date().toISOString().split('T')[0];
@@ -147,12 +147,42 @@ router.get('/:id/my-progress', auth, async (req, res) => {
 
         res.json({
             challenge,
-            isParticipant: challenge.participants.includes(req.user.id),
+            isParticipant: challenge.participants.some(p => p.toString() === req.user._id.toString()),
             completions: userCompletions,
             completedToday,
             totalDays: userCompletions.length,
             streak: calculateStreak(userCompletions)
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all challenge completions for current user (for calendar)
+router.get('/my-completions', auth, async (req, res) => {
+    try {
+        // Find all challenges user participates in
+        const challenges = await Challenge.find({
+            participants: req.user._id
+        });
+
+        // Collect all completions for this user
+        const completions = [];
+        for (const challenge of challenges) {
+            const userCompletions = challenge.dailyCompletions.filter(
+                dc => dc.userId.toString() === req.user._id.toString()
+            );
+            for (const dc of userCompletions) {
+                completions.push({
+                    challengeId: challenge._id,
+                    challengeTitle: challenge.title,
+                    date: dc.date,
+                    completedAt: dc.completedAt
+                });
+            }
+        }
+
+        res.json(completions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -166,7 +196,7 @@ router.post('/:id/leave', auth, async (req, res) => {
             return res.status(404).json({ error: 'Challenge not found' });
         }
 
-        const index = challenge.participants.indexOf(req.user.id);
+        const index = challenge.participants.findIndex(p => p.toString() === req.user._id.toString());
         if (index === -1) {
             return res.status(400).json({ error: 'Not a participant' });
         }

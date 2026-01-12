@@ -10,6 +10,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { syncQueue, getPendingCount } from '../utils/offlineQueue';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import PullToRefresh from '../components/PullToRefresh';
 
 const DASHBOARD_WIDGETS_STORAGE_KEY = 'dashboard.widgets.v1';
 
@@ -22,6 +23,7 @@ const Dashboard = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
     const [challenges, setChallenges] = useState([]);
+    const [challengeCompletions, setChallengeCompletions] = useState([]);
     const [widgetsOpen, setWidgetsOpen] = useState(false);
     const { connected, events } = useSocket();
     const isOnline = useOnlineStatus();
@@ -109,17 +111,19 @@ const Dashboard = () => {
             const day = String(now.getDate()).padStart(2, '0');
             const today = `${year}-${month}-${day}`;
 
-            const [goalsRes, tasksRes, dailySummary, challengesRes] = await Promise.all([
+            const [goalsRes, tasksRes, dailySummary, challengesRes, challengeCompletionsRes] = await Promise.all([
                 api.get('/goals'),
                 api.get('/tasks'),
                 api.get(`/calendar/day/${today}`).catch(() => ({ data: { streakDays: 0 } })),
-                api.get('/challenges').catch(() => ({ data: [] }))
+                api.get('/challenges').catch(() => ({ data: [] })),
+                api.get('/challenges/my-completions').catch(() => ({ data: [] }))
             ]);
 
             setGoals(goalsRes.data.goals || []);
             setTasks(tasksRes.data.tasks || []);
             setStreakDays(dailySummary.data.streakDays || 0);
-            setChallenges((challengesRes.data || []).slice(0, 3)); // Show top 3 challenges
+            setChallenges(challengesRes.data || []);
+            setChallengeCompletions(challengeCompletionsRes.data || []);
 
 
 
@@ -242,272 +246,274 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="container mt-lg mb-lg">
-            <div className="flex items-center justify-between mb-lg" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
-                <div>
-                    <h1 style={{ marginBottom: 'var(--space-xs)' }}>Dashboard</h1>
-                    <p className="text-secondary" style={{ margin: 0 }}>Track your goals and monitor progress</p>
-                </div>
-                <div className="flex items-center gap-sm" style={{ flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => setWidgetsOpen(true)}
-                        className="btn btn-secondary btn-sm"
-                        title="Customize widgets"
-                    >
-                        ⚙
-                    </button>
-                    {!isOnline && pendingCount > 0 && (
+        <PullToRefresh onRefresh={() => loadData()}>
+            <div className="container mt-lg mb-lg">
+                <div className="flex items-center justify-between mb-lg" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+                    <div>
+                        <h1 style={{ marginBottom: 'var(--space-xs)' }}>Dashboard</h1>
+                        <p className="text-secondary" style={{ margin: 0 }}>Track your goals and monitor progress</p>
+                    </div>
+                    <div className="flex items-center gap-sm" style={{ flexWrap: 'wrap' }}>
                         <button
-                            onClick={handleSync}
+                            onClick={() => setWidgetsOpen(true)}
                             className="btn btn-secondary btn-sm"
-                            disabled
-                            title={`${pendingCount} actions pending sync`}
+                            title="Customize widgets"
                         >
-                            ⏳ {pendingCount}
+                            ⚙
                         </button>
-                    )}
-                    <button
-                        onClick={handleManualRefresh}
-                        className="btn btn-secondary btn-sm"
-                        disabled={refreshing}
-                        title="Refresh data"
-                    >
-                        {refreshing ? '🔄' : '↻'}
-                    </button>
-                    <span className={`badge ${isOnline ? 'badge-success' : 'badge-error'}`}>
-                        {isOnline ? '🟢 Online' : '🔴 Offline'}
-                    </span>
-                    {connected && (
-                        <span className="badge badge-success">
-                            ⚡ Live
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            <div className="dashboard-widgets">
-                {(() => {
-                    const enabled = widgetConfig.enabled;
-                    const calendarIndex = widgetConfig.order.indexOf('calendar');
-                    const activityIndex = widgetConfig.order.indexOf('activity');
-                    const renderCalendarActivityTogether = Boolean(enabled.calendar && enabled.activity);
-                    const firstGridId = renderCalendarActivityTogether
-                        ? (calendarIndex < activityIndex ? 'calendar' : 'activity')
-                        : null;
-
-                    const itemVariants = {
-                        hidden: { y: 20, opacity: 0 },
-                        visible: { y: 0, opacity: 1 }
-                    };
-
-                    return (
-                        <motion.div
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                                visible: { transition: { staggerChildren: 0.1 } }
-                            }}
+                        {!isOnline && pendingCount > 0 && (
+                            <button
+                                onClick={handleSync}
+                                className="btn btn-secondary btn-sm"
+                                disabled
+                                title={`${pendingCount} actions pending sync`}
+                            >
+                                ⏳ {pendingCount}
+                            </button>
+                        )}
+                        <button
+                            onClick={handleManualRefresh}
+                            className="btn btn-secondary btn-sm"
+                            disabled={refreshing}
+                            title="Refresh data"
                         >
-                            {widgetConfig.order.map((id) => {
-                                if (!enabled[id]) return null;
-                                if (renderCalendarActivityTogether && id !== firstGridId && (id === 'calendar' || id === 'activity')) {
-                                    return null;
-                                }
-
-                                if (id === 'streak') {
-                                    if (streakDays < 3) return null;
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
-                                            <StreakBadge days={streakDays} />
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (id === 'todayProgress') {
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
-                                            <div className="flex items-center justify-between mb-sm">
-                                                <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
-                                                <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
-                                                    {stats.percentage}%
-                                                </span>
-                                            </div>
-
-                                            <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
-                                                <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                            </div>
-
-                                            <div className="flex justify-between text-sm text-tertiary">
-                                                <span>{stats.completed} completed</span>
-                                                {stats.total === 0 ? (
-                                                    <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                                        Complete one task to start today's streak
-                                                    </span>
-                                                ) : (
-                                                    <span>{stats.total - stats.completed} remaining</span>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (id === 'stats') {
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="grid grid-3 mb-lg">
-                                            <div className="card">
-                                                <div className="text-tertiary text-sm mb-sm">Active Goals</div>
-                                                <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                    <span className="progress-number">{goals.length}</span>
-                                                </div>
-                                                {goals.length === 0 && (
-                                                    <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
-                                                        Create your first goal to get started
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="card">
-                                                <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
-                                                <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                    <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
-                                                </div>
-                                            </div>
-                                            <div className="card">
-                                                <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
-                                                <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                    <span className="progress-number">{stats.percentage}</span>%
-                                                </div>
-                                                <div className="progress-bar mt-sm">
-                                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                                </div>
-                                            </div>
-                                            <div className="card">
-                                                <div className="text-tertiary text-sm mb-sm">Active Challenges</div>
-                                                <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                    <span className="progress-number">{challenges.length}</span>
-                                                </div>
-                                                {challenges.length > 0 && (
-                                                    <div className="text-sm text-muted mt-sm">
-                                                        {challenges[0].title}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (id === 'analytics') {
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
-                                            <ProgressAnalytics />
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (renderCalendarActivityTogether && id === firstGridId) {
-                                    return (
-                                        <motion.div key="calendarActivity" variants={itemVariants} className="grid grid-2 mb-lg">
-                                            <div>
-                                                <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
-                                            </div>
-                                            <div>
-                                                <ActivityFeed />
-                                            </div>
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (id === 'calendar') {
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
-                                            <Calendar goals={goals} tasks={tasks} onUpdate={loadData} />
-                                        </motion.div>
-                                    );
-                                }
-
-                                if (id === 'activity') {
-                                    return (
-                                        <motion.div key={id} variants={itemVariants} className="mb-lg">
-                                            <ActivityFeed />
-                                        </motion.div>
-                                    );
-                                }
-
-                                return null;
-                            })}
-                        </motion.div>
-                    );
-                })()}
-            </div>
-
-            {widgetsOpen && (
-                <div className="modal-overlay" onClick={() => setWidgetsOpen(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div>
-                                <h2 style={{ margin: 0 }}>Customize Widgets</h2>
-                                <p className="text-secondary text-sm" style={{ margin: 0 }}>Choose what appears on your Dashboard</p>
-                            </div>
-                            <button onClick={() => setWidgetsOpen(false)} className="btn btn-secondary btn-sm">✕</button>
-                        </div>
-                        <div className="modal-body">
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                                {widgetConfig.order.map((id, index) => (
-                                    <div
-                                        key={id}
-                                        className="card"
-                                        style={{
-                                            padding: 'var(--space-md)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            gap: 'var(--space-md)'
-                                        }}
-                                    >
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', cursor: 'pointer', flex: 1 }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={Boolean(widgetConfig.enabled[id])}
-                                                onChange={(e) => setWidgetEnabled(id, e.target.checked)}
-                                                style={{ width: '18px', height: '18px' }}
-                                            />
-                                            <span style={{ fontWeight: 600 }}>{widgetLabels[id] || id}</span>
-                                        </label>
-                                        <div className="flex items-center gap-sm">
-                                            <button
-                                                className="btn btn-secondary btn-sm"
-                                                onClick={() => moveWidget(id, 'up')}
-                                                disabled={index === 0}
-                                                title="Move up"
-                                                style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
-                                            >
-                                                ↑
-                                            </button>
-                                            <button
-                                                className="btn btn-secondary btn-sm"
-                                                onClick={() => moveWidget(id, 'down')}
-                                                disabled={index === widgetConfig.order.length - 1}
-                                                title="Move down"
-                                                style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
-                                            >
-                                                ↓
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)' }}>
-                            <button className="btn btn-secondary" onClick={resetWidgets}>
-                                Reset
-                            </button>
-                            <button className="btn btn-primary" onClick={() => setWidgetsOpen(false)}>
-                                Done
-                            </button>
-                        </div>
+                            {refreshing ? '🔄' : '↻'}
+                        </button>
+                        <span className={`badge ${isOnline ? 'badge-success' : 'badge-error'}`}>
+                            {isOnline ? '🟢 Online' : '🔴 Offline'}
+                        </span>
+                        {connected && (
+                            <span className="badge badge-success">
+                                ⚡ Live
+                            </span>
+                        )}
                     </div>
                 </div>
-            )}
-        </div>
+
+                <div className="dashboard-widgets">
+                    {(() => {
+                        const enabled = widgetConfig.enabled;
+                        const calendarIndex = widgetConfig.order.indexOf('calendar');
+                        const activityIndex = widgetConfig.order.indexOf('activity');
+                        const renderCalendarActivityTogether = Boolean(enabled.calendar && enabled.activity);
+                        const firstGridId = renderCalendarActivityTogether
+                            ? (calendarIndex < activityIndex ? 'calendar' : 'activity')
+                            : null;
+
+                        const itemVariants = {
+                            hidden: { y: 20, opacity: 0 },
+                            visible: { y: 0, opacity: 1 }
+                        };
+
+                        return (
+                            <motion.div
+                                initial="hidden"
+                                animate="visible"
+                                variants={{
+                                    visible: { transition: { staggerChildren: 0.1 } }
+                                }}
+                            >
+                                {widgetConfig.order.map((id) => {
+                                    if (!enabled[id]) return null;
+                                    if (renderCalendarActivityTogether && id !== firstGridId && (id === 'calendar' || id === 'activity')) {
+                                        return null;
+                                    }
+
+                                    if (id === 'streak') {
+                                        if (streakDays < 3) return null;
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                                <StreakBadge days={streakDays} />
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (id === 'todayProgress') {
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
+                                                <div className="flex items-center justify-between mb-sm">
+                                                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
+                                                    <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
+                                                        {stats.percentage}%
+                                                    </span>
+                                                </div>
+
+                                                <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
+                                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                                </div>
+
+                                                <div className="flex justify-between text-sm text-tertiary">
+                                                    <span>{stats.completed} completed</span>
+                                                    {stats.total === 0 ? (
+                                                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                                            Complete one task to start today's streak
+                                                        </span>
+                                                    ) : (
+                                                        <span>{stats.total - stats.completed} remaining</span>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (id === 'stats') {
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="grid grid-3 mb-lg">
+                                                <div className="card">
+                                                    <div className="text-tertiary text-sm mb-sm">Active Goals</div>
+                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                        <span className="progress-number">{goals.length}</span>
+                                                    </div>
+                                                    {goals.length === 0 && (
+                                                        <p className="text-sm text-muted mt-sm" style={{ margin: 0 }}>
+                                                            Create your first goal to get started
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="card">
+                                                    <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
+                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                        <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="card">
+                                                    <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
+                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                        <span className="progress-number">{stats.percentage}</span>%
+                                                    </div>
+                                                    <div className="progress-bar mt-sm">
+                                                        <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
+                                                    </div>
+                                                </div>
+                                                <div className="card">
+                                                    <div className="text-tertiary text-sm mb-sm">Active Challenges</div>
+                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
+                                                        <span className="progress-number">{challenges.length}</span>
+                                                    </div>
+                                                    {challenges.length > 0 && (
+                                                        <div className="text-sm text-muted mt-sm">
+                                                            {challenges[0].title}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (id === 'analytics') {
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                                <ProgressAnalytics />
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (renderCalendarActivityTogether && id === firstGridId) {
+                                        return (
+                                            <motion.div key="calendarActivity" variants={itemVariants} className="grid grid-2 mb-lg">
+                                                <div>
+                                                    <Calendar goals={goals} tasks={tasks} challenges={challenges} challengeCompletions={challengeCompletions} onUpdate={loadData} />
+                                                </div>
+                                                <div>
+                                                    <ActivityFeed />
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (id === 'calendar') {
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                                <Calendar goals={goals} tasks={tasks} challenges={challenges} challengeCompletions={challengeCompletions} onUpdate={loadData} />
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    if (id === 'activity') {
+                                        return (
+                                            <motion.div key={id} variants={itemVariants} className="mb-lg">
+                                                <ActivityFeed />
+                                            </motion.div>
+                                        );
+                                    }
+
+                                    return null;
+                                })}
+                            </motion.div>
+                        );
+                    })()}
+                </div>
+
+                {widgetsOpen && (
+                    <div className="modal-overlay" onClick={() => setWidgetsOpen(false)}>
+                        <div className="modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <h2 style={{ margin: 0 }}>Customize Widgets</h2>
+                                    <p className="text-secondary text-sm" style={{ margin: 0 }}>Choose what appears on your Dashboard</p>
+                                </div>
+                                <button onClick={() => setWidgetsOpen(false)} className="btn btn-secondary btn-sm">✕</button>
+                            </div>
+                            <div className="modal-body">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                                    {widgetConfig.order.map((id, index) => (
+                                        <div
+                                            key={id}
+                                            className="card"
+                                            style={{
+                                                padding: 'var(--space-md)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 'var(--space-md)'
+                                            }}
+                                        >
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', cursor: 'pointer', flex: 1 }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Boolean(widgetConfig.enabled[id])}
+                                                    onChange={(e) => setWidgetEnabled(id, e.target.checked)}
+                                                    style={{ width: '18px', height: '18px' }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>{widgetLabels[id] || id}</span>
+                                            </label>
+                                            <div className="flex items-center gap-sm">
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => moveWidget(id, 'up')}
+                                                    disabled={index === 0}
+                                                    title="Move up"
+                                                    style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
+                                                >
+                                                    ↑
+                                                </button>
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => moveWidget(id, 'down')}
+                                                    disabled={index === widgetConfig.order.length - 1}
+                                                    title="Move down"
+                                                    style={{ minWidth: '44px', minHeight: '44px', padding: 0, justifyContent: 'center' }}
+                                                >
+                                                    ↓
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-sm)' }}>
+                                <button className="btn btn-secondary" onClick={resetWidgets}>
+                                    Reset
+                                </button>
+                                <button className="btn btn-primary" onClick={() => setWidgetsOpen(false)}>
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </PullToRefresh>
     );
 };
 

@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm, confirmText = 'OK', cancelText = 'Cancel', showCancel = false }) => {
+    const isMobile = useMediaQuery('(max-width: 768px)');
+
     const getIcon = () => {
         switch (type) {
             case 'success': return '✅';
@@ -15,6 +18,47 @@ const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm
     const handleConfirm = () => {
         if (onConfirm) onConfirm();
         onClose();
+    };
+
+    // Responsive Variants
+    const desktopVariants = {
+        initial: { opacity: 0, scale: 0.95, y: 30 },
+        animate: { opacity: 1, scale: 1, y: 0 },
+        exit: { opacity: 0, scale: 0.95, y: 30 }
+    };
+
+    const mobileVariants = {
+        initial: { y: '100%' },
+        animate: { y: 0 },
+        exit: { y: '100%' }
+    };
+
+    const desktopStyle = {
+        position: 'relative',
+        background: 'var(--bg-secondary)',
+        border: '2px solid var(--border-color)',
+        borderRadius: '16px',
+        padding: '28px 24px',
+        maxWidth: '420px',
+        width: '100%',
+        margin: 'auto',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+        boxSizing: 'border-box'
+    };
+
+    const mobileStyle = {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: 'var(--bg-card)',
+        borderTopLeftRadius: '24px',
+        borderTopRightRadius: '24px',
+        padding: '24px',
+        paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
+        boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
+        maxHeight: '85vh',
+        overflowY: 'auto'
     };
 
     return (
@@ -40,18 +84,18 @@ const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm
                             WebkitBackdropFilter: 'blur(8px)',
                             zIndex: 99999,
                             display: 'flex',
-                            alignItems: 'center',
+                            alignItems: isMobile ? 'flex-end' : 'center',
                             justifyContent: 'center',
-                            padding: '20px',
+                            padding: isMobile ? 0 : '20px',
                             boxSizing: 'border-box',
-                            overflow: 'auto'
+                            overflow: 'hidden'
                         }}
                     >
                         {/* Modal Content */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                            initial={isMobile ? mobileVariants.initial : desktopVariants.initial}
+                            animate={isMobile ? mobileVariants.animate : desktopVariants.animate}
+                            exit={isMobile ? mobileVariants.exit : desktopVariants.exit}
                             transition={{
                                 type: 'spring',
                                 damping: 30,
@@ -59,19 +103,9 @@ const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm
                                 mass: 0.8
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            style={{
-                                position: 'relative',
-                                background: 'var(--bg-secondary)',
-                                border: '2px solid var(--border-color)',
-                                borderRadius: '16px',
-                                padding: '28px 24px',
-                                maxWidth: '420px',
-                                width: '100%',
-                                margin: 'auto',
-                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                                boxSizing: 'border-box'
-                            }}
+                            style={isMobile ? mobileStyle : desktopStyle}
                         >
+                            {isMobile && <div className="bottom-sheet-handle" />}
                             {/* Icon and Content */}
                             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                                 <div style={{
