@@ -155,7 +155,7 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const { date, goalId } = req.query;
 
-        let query = { userId: req.user._id };
+        let query = { userId: req.user.id };
 
         if (date) {
             // Convert to YYYY-MM-DD format using local timezone
@@ -198,7 +198,7 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Task not found' });
         }
 
-        if (task.userId.toString() !== req.user._id.toString()) {
+        if (task.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'Not authorized' });
         }
 
