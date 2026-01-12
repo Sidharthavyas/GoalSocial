@@ -263,45 +263,58 @@ const Challenges = () => {
                                     </div>
                                     <div className="flex gap-sm" style={{ flexDirection: 'column' }}>
                                         {/* Show edit/delete for creators */}
-                                        {challenge.creator && currentUserId && challenge.creator.toString() === currentUserId.toString() ? (
-                                            <>
-                                                <button
-                                                    className="btn btn-sm btn-secondary"
-                                                    onClick={(e) => handleEdit(challenge, e)}
-                                                >
-                                                    ✏️ Edit
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={(e) => handleDelete(challenge._id, e)}
-                                                >
-                                                    🗑️ Delete
-                                                </button>
-                                            </>
-                                        ) : !isParticipant ? (
-                                            <button
-                                                className="btn btn-sm btn-primary"
-                                                onClick={(e) => handleJoin(challenge._id, e)}
-                                            >
-                                                Join
-                                            </button>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    className={`btn btn-sm ${completedToday ? 'btn-secondary' : 'btn-success'}`}
-                                                    onClick={(e) => handleCompleteToday(challenge._id, e)}
-                                                    disabled={completedToday}
-                                                >
-                                                    {completedToday ? '✓ Done Today' : 'Complete Today'}
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={(e) => handleLeave(challenge._id, e)}
-                                                >
-                                                    Leave
-                                                </button>
-                                            </>
-                                        )}
+                                        {(() => {
+                                            // Handle both populated (object with _id) and non-populated (just ObjectId) creator
+                                            const creatorId = challenge.creator?._id || challenge.creator;
+                                            const isCreator = creatorId && currentUserId &&
+                                                creatorId.toString() === currentUserId.toString();
+
+                                            if (isCreator) {
+                                                return (
+                                                    <>
+                                                        <button
+                                                            className="btn btn-sm btn-secondary"
+                                                            onClick={(e) => handleEdit(challenge, e)}
+                                                        >
+                                                            ✏️ Edit
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-danger"
+                                                            onClick={(e) => handleDelete(challenge._id, e)}
+                                                        >
+                                                            🗑️ Delete
+                                                        </button>
+                                                    </>
+                                                );
+                                            } else if (!isParticipant) {
+                                                return (
+                                                    <button
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={(e) => handleJoin(challenge._id, e)}
+                                                    >
+                                                        Join
+                                                    </button>
+                                                );
+                                            } else {
+                                                return (
+                                                    <>
+                                                        <button
+                                                            className={`btn btn-sm ${completedToday ? 'btn-secondary' : 'btn-success'}`}
+                                                            onClick={(e) => handleCompleteToday(challenge._id, e)}
+                                                            disabled={completedToday}
+                                                        >
+                                                            {completedToday ? '✓ Done Today' : 'Complete Today'}
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-danger"
+                                                            onClick={(e) => handleLeave(challenge._id, e)}
+                                                        >
+                                                            Leave
+                                                        </button>
+                                                    </>
+                                                );
+                                            }
+                                        })()}
                                     </div>
                                 </div>
                             </motion.div>
