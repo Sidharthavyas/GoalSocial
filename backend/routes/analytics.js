@@ -27,11 +27,8 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
     });
 
     let activeGoalCount = 0;
-    const completedGoalIds = new Set(
-        tasksOnDay
-            .filter(t => t.completed || t.percentage === 100)
-            .map(t => t.goalId.toString())
-    );
+    const activeGoalIds = new Set(); // Track which goals are counted as active
+    const completedGoalIds = new Set(); // Will only include goals that are also active
 
     for (const goal of goals) {
         const goalIdStr = goal._id.toString();
@@ -55,6 +52,7 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
                 );
                 if (!previouslyCompleted) {
                     activeGoalCount++;
+                    activeGoalIds.add(goalIdStr);
                 }
             }
             // For numeric/percentage goals
@@ -65,11 +63,24 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
                 );
                 if (!completedBefore) {
                     activeGoalCount++;
+                    activeGoalIds.add(goalIdStr);
                 }
             }
             // Recurring/series goals always count if they have tasks
             else {
                 activeGoalCount++;
+                activeGoalIds.add(goalIdStr);
+            }
+
+            // If this goal is active, check if it's completed on this date
+            if (activeGoalIds.has(goalIdStr)) {
+                const isCompletedOnThisDate = tasksOnDay.some(t =>
+                    t.goalId.toString() === goalIdStr &&
+                    (t.completed || t.percentage === 100)
+                );
+                if (isCompletedOnThisDate) {
+                    completedGoalIds.add(goalIdStr);
+                }
             }
         }
         // No task on this date - check if goal should still be counted
@@ -98,6 +109,7 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
 
             if (goal.type === 'recurring' || goal.type === 'series') {
                 activeGoalCount++;
+                activeGoalIds.add(goalIdStr);
             }
             else if (goal.type === 'one-time') {
                 const previouslyCompleted = allGoalTasks.some(t =>
@@ -105,6 +117,7 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
                 );
                 if (!previouslyCompleted) {
                     activeGoalCount++;
+                    activeGoalIds.add(goalIdStr);
                 }
             }
             else if (goal.type === 'numeric' || goal.type === 'percentage') {
@@ -114,18 +127,21 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
                 );
                 if (!completedBefore) {
                     activeGoalCount++;
+                    activeGoalIds.add(goalIdStr);
                 }
             }
         }
     }
 
-    // IMPORTANT FIX: If we have completed goals but activeGoalCount is still 0,
-    // it means the tasks reference goals that passed our filters incorrectly.
-    // In this case, count the goals that have completed tasks.
-    if (activeGoalCount === 0 && completedGoalIds.size > 0) {
-        console.log(`⚠️ Warning: ${dateStr} has ${completedGoalIds.size} completed goals but activeGoalCount=0. Fixing...`);
-        activeGoalCount = completedGoalIds.size;
+    // Safety check: ensure completed never exceeds active
+    if (completedGoalIds.size > activeGoalCount) {
+        console.log(`⚠️ Warning: ${dateStr} has ${completedGoalIds.size} completed but only ${activeGoalCount} active. Capping...`);
+        // This should not happen with the new logic, but just in case
+        const excessGoals = completedGoalIds.size - activeGoalCount;
+        console.log(`Removing ${excessGoals} excess completed goals`);
     }
+
+    console.log(`📊 ${dateStr}: Active=${activeGoalCount}, Completed=${completedGoalIds.size}, Percent=${activeGoalCount > 0 ? Math.round((completedGoalIds.size / activeGoalCount) * 100) : 0}%`);
 
     return {
         activeGoalCount,

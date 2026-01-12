@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register as registerApi } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
 
 const Register = () => {
     const [username, setUsername] = useState('');
