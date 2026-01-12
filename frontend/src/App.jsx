@@ -11,6 +11,7 @@ import FriendProfile from './pages/FriendProfile';
 import Navbar from './components/Navbar';
 import PomodoroTimer from './components/PomodoroTimer';
 import MotivationalLoader from './components/MotivationalLoader';
+import ModalProvider from './components/ModalProvider';
 import Challenges from './pages/Challenges';
 
 
@@ -97,6 +98,7 @@ function App() {
 
     return (
         <NotificationProvider>
+            <ModalProvider />
             <BrowserRouter>
                 <div className="app">
                     <Routes>
