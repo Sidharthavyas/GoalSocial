@@ -4,6 +4,8 @@ import api from '../utils/api';
 import { triggerCelebration } from '../utils/celebrations';
 import { addToQueue } from '../utils/offlineQueue';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { showConfirm } from '../utils/modal';
+import showToast from '../utils/toast';
 import toast from 'react-hot-toast';
 import Comments from './Comments';
 import Reactions from './Reactions';
@@ -32,7 +34,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
 
     const handleSave = async () => {
         if (!selectedGoalId) {
-            alert('Please select a goal');
+            showToast.error('Please select a goal');
             return;
         }
 
@@ -43,7 +45,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            const dateString = `${year}-${month}-${day}`;
+            const dateString = `${year} -${month} -${day} `;
 
             const taskData = {
                 goalId: selectedGoalId,
@@ -57,7 +59,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
             // If offline, add to queue
             if (!isOnline) {
                 addToQueue('CREATE_TASK', taskData);
-                alert('Saved offline. Will sync when online.');
+                showToast.success('Saved offline. Will sync when online.');
                 onUpdate();
                 onClose();
                 return;
@@ -74,16 +76,18 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
             onClose();
         } catch (error) {
             console.error('Failed to save task:', error);
-            alert('Failed to save progress');
+            showToast.error('Failed to save progress');
         } finally {
             setSaving(false);
         }
     };
 
     const handleBulkComplete = async () => {
-        if (!window.confirm('Complete all goals for today?')) {
-            return;
-        }
+        const confirmed = await showConfirm(
+            'This will mark all your goals as complete for today. Continue?',
+            'Complete All Goals'
+        );
+        if (!confirmed) return;
 
         setSaving(true);
 
@@ -92,14 +96,14 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            const dateString = `${year}-${month}-${day}`;
+            const dateString = `${year} -${month} -${day} `;
 
             const goalIds = goals.map(g => g._id);
 
             // If offline, add to queue
             if (!isOnline) {
                 addToQueue('BULK_COMPLETE', { date: dateString, goalIds });
-                alert('Saved offline. Will sync when online.');
+                showToast.success('All goals completed! Will sync when online.');
                 onUpdate();
                 onClose();
                 return;
@@ -118,7 +122,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
             onClose();
         } catch (error) {
             console.error('Failed to bulk complete:', error);
-            alert('Failed to complete all goals');
+            showToast.error('Failed to complete all goals');
         } finally {
             setSaving(false);
         }
@@ -197,7 +201,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                                                         const year = date.getFullYear();
                                                         const month = String(date.getMonth() + 1).padStart(2, '0');
                                                         const day = String(date.getDate()).padStart(2, '0');
-                                                        const dateString = `${year}-${month}-${day}`;
+                                                        const dateString = `${year} -${month} -${day} `;
 
                                                         try {
                                                             await api.post('/tasks', {
@@ -211,7 +215,7 @@ const DayModal = ({ date, goals, tasks, onClose, onUpdate, readOnly = false }) =
                                                             onUpdate();
                                                         } catch (error) {
                                                             console.error('Failed to update goal:', error);
-                                                            alert('Failed to update goal');
+                                                            showToast.error('Failed to update goal');
                                                         }
                                                     }}
                                                     disabled={readOnly}
