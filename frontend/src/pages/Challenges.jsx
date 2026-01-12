@@ -33,7 +33,10 @@ const Challenges = () => {
     const loadCurrentUser = async () => {
         try {
             const res = await api.get('/auth/me');
-            setCurrentUserId(res.data.user._id);
+            // API returns 'id' not '_id'
+            const userId = res.data.user.id || res.data.user._id;
+            console.log('Current user ID:', userId);
+            setCurrentUserId(userId);
         } catch (error) {
             console.error('Failed to load current user', error);
         }
