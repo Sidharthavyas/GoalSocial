@@ -9,7 +9,7 @@ const router = express.Router();
 async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
     // Get all goal IDs that have tasks on this date
     const goalIdsWithTasks = [...new Set(tasksOnDay.map(t => t.goalId.toString()))];
-    
+
     // Find goals that are active OR have tasks on this date
     const goals = await Goal.find({
         userId: userId,
@@ -35,10 +35,10 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
 
     for (const goal of goals) {
         const goalIdStr = goal._id.toString();
-        
+
         // Check if this goal has a task on this specific date
         const hasTaskOnThisDate = tasksOnDay.some(t => t.goalId.toString() === goalIdStr);
-        
+
         // If goal has a task on this date, it WAS being tracked on this date
         // So we should count it, regardless of createdAt
         if (hasTaskOnThisDate) {
@@ -77,7 +77,7 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
             // Check if goal was created on or before this day
             const goalCreatedDate = new Date(goal.createdAt);
             goalCreatedDate.setHours(0, 0, 0, 0);
-            
+
             if (goalCreatedDate > dateObj) {
                 continue; // Goal wasn't created yet on this day
             }
@@ -85,7 +85,7 @@ async function countActiveGoalsForDate(userId, dateStr, dateObj, tasksOnDay) {
             // Check goal start date
             const goalStartDate = new Date(goal.startDate);
             goalStartDate.setHours(0, 0, 0, 0);
-            
+
             if (goalStartDate > dateObj) {
                 continue; // Goal hadn't started yet
             }
@@ -139,19 +139,24 @@ router.get('/weekly', authenticateToken, async (req, res) => {
         console.log('🔍 Analytics /weekly called for user:', req.user.username, 'userId:', req.user._id);
 
         const days = [];
-        const today = new Date();
-        today.setHours(23, 59, 59, 999); // End of today
+
+        // Get current date in UTC to avoid timezone issues
+        const now = new Date();
 
         for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            date.setHours(0, 0, 0, 0);
+            // Calculate date by subtracting days from today
+            const date = new Date(now);
+            date.setDate(now.getDate() - i);
 
-            // Format date in local timezone
+            // Format date in YYYY-MM-DD using local date components
+            // This matches how the frontend sends dates
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day}`;
+
+            // Create a date object at midnight local time for comparison
+            const dateObj = new Date(year, date.getMonth(), date.getDate(), 0, 0, 0, 0);
 
             // Fetch tasks for this day
             const tasksOnDay = await Task.find({
@@ -193,19 +198,19 @@ router.get('/weekly', authenticateToken, async (req, res) => {
 // Get monthly analytics (current month's daily completion)
 router.get('/monthly', authenticateToken, async (req, res) => {
     try {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         const days = [];
 
         for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            date.setHours(0, 0, 0, 0);
+            // Create date object at midnight local time
+            const date = new Date(year, month, day, 0, 0, 0, 0);
 
             // Don't process future dates
-            if (date > today) break;
+            if (date > now) break;
 
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -244,10 +249,10 @@ router.get('/monthly', authenticateToken, async (req, res) => {
 router.get('/yearly', authenticateToken, async (req, res) => {
     try {
         const months = [];
-        const today = new Date();
+        const now = new Date();
 
         for (let i = 11; i >= 0; i--) {
-            const monthStart = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const year = monthStart.getFullYear();
             const month = monthStart.getMonth();
             const monthEnd = new Date(year, month + 1, 0);
@@ -257,8 +262,9 @@ router.get('/yearly', authenticateToken, async (req, res) => {
             let daysWithData = 0;
 
             for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month, day);
-                if (date > today) break;
+                // Create date object at midnight local time
+                const date = new Date(year, month, day, 0, 0, 0, 0);
+                if (date > now) break;
 
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
