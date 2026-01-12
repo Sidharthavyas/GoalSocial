@@ -10,16 +10,34 @@ const Challenges = () => {
     const [selectedChallenge, setSelectedChallenge] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingChallenge, setEditingChallenge] = useState(null);
     const [userProgress, setUserProgress] = useState({}); // Track user's progress per challenge
+    const [currentUserId, setCurrentUserId] = useState(null);
 
     // New Challenge Form State
     const [newTitle, setNewTitle] = useState('');
     const [newType, setNewType] = useState('streak');
     const [newTarget, setNewTarget] = useState(0);
 
+    // Edit Challenge Form State
+    const [editTitle, setEditTitle] = useState('');
+    const [editType, setEditType] = useState('streak');
+    const [editTarget, setEditTarget] = useState(0);
+
     useEffect(() => {
         loadChallenges();
+        loadCurrentUser();
     }, []);
+
+    const loadCurrentUser = async () => {
+        try {
+            const res = await api.get('/auth/me');
+            setCurrentUserId(res.data.user._id);
+        } catch (error) {
+            console.error('Failed to load current user', error);
+        }
+    };
 
     const loadChallenges = async () => {
         try {
@@ -103,6 +121,38 @@ const Challenges = () => {
         }
     };
 
+    const handleEdit = (challenge, e) => {
+        e.stopPropagation();
+        setEditingChallenge(challenge);
+        setEditTitle(challenge.title);
+        setEditType(challenge.type);
+        setEditTarget(challenge.targetValue || 0);
+        setShowEditModal(true);
+    };
+
+    const handleDelete = async (id, e) => {
+        e.stopPropagation();
+
+        const confirmed = await showConfirm(
+            'Are you sure you want to delete this challenge? All participant data will be lost. This action cannot be undone.',
+            'Delete Challenge',
+            'warning'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await api.delete(`/challenges/${id}`);
+            await showSuccess('Challenge deleted successfully');
+            loadChallenges();
+            if (selectedChallenge?._id === id) {
+                setSelectedChallenge(null);
+            }
+        } catch (error) {
+            await showError(error.response?.data?.error || 'Failed to delete challenge');
+        }
+    };
+
     const handleCompleteToday = async (id, e) => {
         e.stopPropagation();
 
@@ -146,6 +196,23 @@ const Challenges = () => {
             loadChallenges();
         } catch (error) {
             await showError('Failed to create challenge');
+        }
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/challenges/${editingChallenge._id}`, {
+                title: editTitle,
+                type: editType,
+                targetValue: editTarget
+            });
+            setShowEditModal(false);
+            setEditingChallenge(null);
+            await showSuccess('Challenge updated successfully!');
+            loadChallenges();
+        } catch (error) {
+            await showError(error.response?.data?.error || 'Failed to update challenge');
         }
     };
 
@@ -195,7 +262,23 @@ const Challenges = () => {
                                         )}
                                     </div>
                                     <div className="flex gap-sm" style={{ flexDirection: 'column' }}>
-                                        {!isParticipant ? (
+                                        {/* Show edit/delete for creators */}
+                                        {challenge.creator === currentUserId ? (
+                                            <>
+                                                <button
+                                                    className="btn btn-sm btn-secondary"
+                                                    onClick={(e) => handleEdit(challenge, e)}
+                                                >
+                                                    ✏️ Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-danger"
+                                                    onClick={(e) => handleDelete(challenge._id, e)}
+                                                >
+                                                    🗑️ Delete
+                                                </button>
+                                            </>
+                                        ) : !isParticipant ? (
                                             <button
                                                 className="btn btn-sm btn-primary"
                                                 onClick={(e) => handleJoin(challenge._id, e)}
@@ -275,6 +358,33 @@ const Challenges = () => {
                             <div className="modal-footer">
                                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-secondary">Cancel</button>
                                 <button type="submit" className="btn btn-primary">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <h2>Edit Challenge</h2>
+                        <form onSubmit={handleUpdate}>
+                            <div className="form-group">
+                                <label>Title</label>
+                                <input value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Type</label>
+                                <select value={editType} onChange={e => setEditType(e.target.value)}>
+                                    <option value="streak">Maintain Streak</option>
+                                    <option value="completion">Complete Tasks</option>
+                                    <option value="count">Reach Target Count</option>
+                                </select>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
+                                <button type="submit" className="btn btn-primary">Update</button>
                             </div>
                         </form>
                     </div>

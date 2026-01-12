@@ -180,6 +180,54 @@ router.post('/:id/leave', auth, async (req, res) => {
     }
 });
 
+// Update a challenge (creator only)
+router.put('/:id', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        // Only creator can update
+        if (challenge.creator.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Only the creator can update this challenge' });
+        }
+
+        const { title, description, type, targetValue, endDate } = req.body;
+
+        if (title) challenge.title = title;
+        if (description !== undefined) challenge.description = description;
+        if (type) challenge.type = type;
+        if (targetValue !== undefined) challenge.targetValue = targetValue;
+        if (endDate) challenge.endDate = endDate;
+
+        await challenge.save();
+        res.json(challenge);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete a challenge (creator only)
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        // Only creator can delete
+        if (challenge.creator.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Only the creator can delete this challenge' });
+        }
+
+        await Challenge.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Challenge deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get Leaderboard
 router.get('/:id/leaderboard', auth, async (req, res) => {
     try {

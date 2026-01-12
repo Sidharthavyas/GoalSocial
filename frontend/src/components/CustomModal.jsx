@@ -21,8 +21,8 @@ const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm
         <AnimatePresence>
             {isOpen && (
                 <>
+                    {/* Backdrop Overlay */}
                     <motion.div
-                        className="modal-overlay"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -33,85 +33,119 @@ const CustomModal = ({ isOpen, onClose, title, message, type = 'info', onConfirm
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            background: 'rgba(0, 0, 0, 0.5)',
-                            backdropFilter: 'blur(4px)',
-                            zIndex: 9999,
+                            width: '100vw',
+                            height: '100vh',
+                            background: 'rgba(0, 0, 0, 0.6)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)',
+                            zIndex: 99999,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                        }}
-                    />
-                    <motion.div
-                        className="custom-modal"
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            position: 'fixed',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: 'var(--radius-lg)',
-                            padding: 'var(--space-lg)',
-                            maxWidth: '400px',
-                            width: '90%',
-                            zIndex: 10000,
-                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+                            padding: '20px',
+                            boxSizing: 'border-box',
+                            overflow: 'auto'
                         }}
                     >
-                        <div style={{ textAlign: 'center', marginBottom: 'var(--space-md)' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>
-                                {getIcon()}
-                            </div>
-                            {title && (
-                                <h3 style={{
-                                    margin: 0,
-                                    marginBottom: 'var(--space-sm)',
-                                    color: 'var(--text-primary)',
-                                    fontSize: '1.25rem',
-                                    fontWeight: 600
+                        {/* Modal Content */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                            transition={{
+                                type: 'spring',
+                                damping: 30,
+                                stiffness: 400,
+                                mass: 0.8
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                position: 'relative',
+                                background: 'var(--bg-secondary)',
+                                border: '2px solid var(--border-color)',
+                                borderRadius: '16px',
+                                padding: '28px 24px',
+                                maxWidth: '420px',
+                                width: '100%',
+                                margin: 'auto',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                                boxSizing: 'border-box'
+                            }}
+                        >
+                            {/* Icon and Content */}
+                            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                                <div style={{
+                                    fontSize: '3.5rem',
+                                    marginBottom: '16px',
+                                    lineHeight: 1
                                 }}>
-                                    {title}
-                                </h3>
-                            )}
-                            <p style={{
-                                margin: 0,
-                                color: 'var(--text-secondary)',
-                                fontSize: '0.95rem',
-                                lineHeight: 1.5
-                            }}>
-                                {message}
-                            </p>
-                        </div>
+                                    {getIcon()}
+                                </div>
+                                {title && (
+                                    <h3 style={{
+                                        margin: '0 0 12px 0',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '1.35rem',
+                                        fontWeight: 700,
+                                        lineHeight: 1.3
+                                    }}>
+                                        {title}
+                                    </h3>
+                                )}
+                                <p style={{
+                                    margin: 0,
+                                    color: 'var(--text-secondary)',
+                                    fontSize: '0.95rem',
+                                    lineHeight: 1.6,
+                                    maxWidth: '90%',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto'
+                                }}>
+                                    {message}
+                                </p>
+                            </div>
 
-                        <div style={{
-                            display: 'flex',
-                            gap: 'var(--space-sm)',
-                            justifyContent: 'center',
-                            marginTop: 'var(--space-lg)'
-                        }}>
-                            {showCancel && (
+                            {/* Buttons */}
+                            <div style={{
+                                display: 'flex',
+                                gap: '12px',
+                                justifyContent: 'center',
+                                marginTop: '24px',
+                                flexWrap: 'wrap'
+                            }}>
+                                {showCancel && (
+                                    <button
+                                        onClick={onClose}
+                                        className="btn btn-secondary"
+                                        style={{
+                                            flex: '1 1 auto',
+                                            minWidth: '120px',
+                                            maxWidth: '160px',
+                                            padding: '12px 20px',
+                                            fontSize: '0.95rem',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        {cancelText}
+                                    </button>
+                                )}
                                 <button
-                                    onClick={onClose}
-                                    className="btn btn-secondary"
-                                    style={{ flex: 1, maxWidth: '150px' }}
+                                    onClick={handleConfirm}
+                                    className="btn btn-primary"
+                                    style={{
+                                        flex: '1 1 auto',
+                                        minWidth: '120px',
+                                        maxWidth: '160px',
+                                        padding: '12px 20px',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600
+                                    }}
+                                    autoFocus
                                 >
-                                    {cancelText}
+                                    {confirmText}
                                 </button>
-                            )}
-                            <button
-                                onClick={handleConfirm}
-                                className="btn btn-primary"
-                                style={{ flex: 1, maxWidth: '150px' }}
-                                autoFocus
-                            >
-                                {confirmText}
-                            </button>
-                        </div>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 </>
             )}
