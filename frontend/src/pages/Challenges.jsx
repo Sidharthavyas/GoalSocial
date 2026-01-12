@@ -263,7 +263,7 @@ const Challenges = () => {
                                     </div>
                                     <div className="flex gap-sm" style={{ flexDirection: 'column' }}>
                                         {/* Show edit/delete for creators */}
-                                        {challenge.creator === currentUserId ? (
+                                        {challenge.creator && currentUserId && challenge.creator.toString() === currentUserId.toString() ? (
                                             <>
                                                 <button
                                                     className="btn btn-sm btn-secondary"
