@@ -228,6 +228,43 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
+// Remove a participant from challenge (creator only)
+router.post('/:id/remove-participant', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        // Only creator can remove participants
+        if (challenge.creator.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'Only the creator can remove participants' });
+        }
+
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const index = challenge.participants.indexOf(userId);
+        if (index === -1) {
+            return res.status(400).json({ error: 'User is not a participant' });
+        }
+
+        challenge.participants.splice(index, 1);
+
+        // Also remove their daily completions
+        challenge.dailyCompletions = challenge.dailyCompletions.filter(
+            dc => dc.userId.toString() !== userId
+        );
+
+        await challenge.save();
+        res.json({ message: 'Participant removed successfully', challenge });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get Leaderboard
 router.get('/:id/leaderboard', auth, async (req, res) => {
     try {

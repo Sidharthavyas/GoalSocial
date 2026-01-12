@@ -382,6 +382,66 @@ const Challenges = () => {
                                     <option value="count">Reach Target Count</option>
                                 </select>
                             </div>
+
+                            {/* Participants List */}
+                            {editingChallenge && editingChallenge.participants && editingChallenge.participants.length > 0 && (
+                                <div className="form-group">
+                                    <label>Participants ({editingChallenge.participants.length})</label>
+                                    <div style={{
+                                        maxHeight: '200px',
+                                        overflowY: 'auto',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        padding: '8px'
+                                    }}>
+                                        {challenges.find(c => c._id === editingChallenge._id)?.participants.map((participantId, index) => {
+                                            const progress = userProgress[editingChallenge._id];
+                                            return (
+                                                <div key={participantId} style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    padding: '8px',
+                                                    borderBottom: index < editingChallenge.participants.length - 1 ? '1px solid var(--border-color)' : 'none'
+                                                }}>
+                                                    <span className="text-sm">Participant {index + 1}</span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={async () => {
+                                                            const confirmed = await showConfirm(
+                                                                'Remove this participant? Their progress will be deleted.',
+                                                                'Remove Participant',
+                                                                'warning'
+                                                            );
+                                                            if (confirmed) {
+                                                                try {
+                                                                    await api.post(`/challenges/${editingChallenge._id}/remove-participant`, {
+                                                                        userId: participantId
+                                                                    });
+                                                                    await showSuccess('Participant removed');
+                                                                    loadChallenges();
+                                                                    // Refresh the editing challenge data
+                                                                    const res = await api.get('/challenges');
+                                                                    const updated = res.data.find(c => c._id === editingChallenge._id);
+                                                                    if (updated) {
+                                                                        setEditingChallenge(updated);
+                                                                    }
+                                                                } catch (error) {
+                                                                    await showError('Failed to remove participant');
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="modal-footer">
                                 <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary">Cancel</button>
                                 <button type="submit" className="btn btn-primary">Update</button>
