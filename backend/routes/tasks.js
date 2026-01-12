@@ -16,7 +16,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
         // Verify goal exists and belongs to user
         const goal = await Goal.findById(goalId);
-        if (!goal || goal.userId.toString() !== req.user.id.toString()) {
+        if (!goal || goal.userId.toString() !== req.user._id.toString()) {
             return res.status(404).json({ error: 'Goal not found' });
         }
 
@@ -26,6 +26,10 @@ router.post('/', authenticateToken, async (req, res) => {
             dateString = date;
         } else {
             const d = new Date(date);
+            // Check for invalid date
+            if (isNaN(d.getTime())) {
+                return res.status(400).json({ error: 'Invalid date format' });
+            }
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
@@ -35,7 +39,7 @@ router.post('/', authenticateToken, async (req, res) => {
         // Find existing task or create new one
         let task = await Task.findOne({
             goalId,
-            userId: req.user.id,
+            userId: req.user._id,
             date: dateString
         });
 
@@ -49,7 +53,7 @@ router.post('/', authenticateToken, async (req, res) => {
             // Create new
             task = new Task({
                 goalId,
-                userId: req.user.id,
+                userId: req.user._id,
                 date: dateString,
                 completed: completed || false,
                 value: value || 0,
@@ -63,7 +67,7 @@ router.post('/', authenticateToken, async (req, res) => {
         // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
         if (req.io) {
             try {
-                const userId = req.user.id.toString();
+                const userId = req.user._id.toString();
                 // Emit to user's personal room
                 req.io.to(`user:${userId}`).emit('progress.updated', {
                     userId: userId,
@@ -96,13 +100,13 @@ router.post('/', authenticateToken, async (req, res) => {
 
                 // Find all accepted friends
                 const friends = await Friend.find({
-                    $or: [{ requester: req.user.id }, { recipient: req.user.id }],
+                    $or: [{ requester: req.user._id }, { recipient: req.user._id }],
                     status: 'accepted'
                 });
 
                 // Send completion notification
                 for (const friendship of friends) {
-                    const friendId = friendship.requester.toString() === req.user.id.toString()
+                    const friendId = friendship.requester.toString() === req.user._id.toString()
                         ? friendship.recipient
                         : friendship.requester;
 
@@ -115,19 +119,19 @@ router.post('/', authenticateToken, async (req, res) => {
 
                 // Check for streak milestone
                 // Get all tasks to calculate new streak accurately
-                const allTasks = await Task.find({ userId: req.user.id });
+                const allTasks = await Task.find({ userId: req.user._id });
                 const streak = streakCalculator.calculateStreak(allTasks);
 
                 if ([3, 7, 30, 100, 365].includes(streak)) {
                     // Notify user
-                    await notificationService.createNotification(req.user.id, 'streak_milestone', {
+                    await notificationService.createNotification(req.user._id, 'streak_milestone', {
                         streak,
                         message: `You've hit a ${streak}-day streak! Keep it up! 🔥`
                     });
 
                     // Notify friends about streak
                     for (const friendship of friends) {
-                        const friendId = friendship.requester.toString() === req.user.id.toString()
+                        const friendId = friendship.requester.toString() === req.user._id.toString()
                             ? friendship.recipient
                             : friendship.requester;
 
@@ -155,7 +159,7 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const { date, goalId } = req.query;
 
-        let query = { userId: req.user.id };
+        let query = { userId: req.user._id };
 
         if (date) {
             // Convert to YYYY-MM-DD format using local timezone
@@ -198,7 +202,7 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Task not found' });
         }
 
-        if (task.userId.toString() !== req.user.id.toString()) {
+        if (task.userId.toString() !== req.user._id.toString()) {
             return res.status(403).json({ error: 'Not authorized' });
         }
 
@@ -224,6 +228,10 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
             dateString = date;
         } else {
             const d = new Date(date);
+            // Check for invalid date
+            if (isNaN(d.getTime())) {
+                return res.status(400).json({ error: 'Invalid date format' });
+            }
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
@@ -235,14 +243,14 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
         for (const goalId of goalIds) {
             // Verify goal exists and belongs to user
             const goal = await Goal.findById(goalId);
-            if (!goal || goal.userId.toString() !== req.user.id.toString()) {
+            if (!goal || goal.userId.toString() !== req.user._id.toString()) {
                 continue; // Skip invalid goals
             }
 
             // Find existing task or create new one
             let task = await Task.findOne({
                 goalId,
-                userId: req.user.id,
+                userId: req.user._id,
                 date: dateString
             });
 
@@ -254,7 +262,7 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
                 // Create new
                 task = new Task({
                     goalId,
-                    userId: req.user.id,
+                    userId: req.user._id,
                     date: dateString,
                     completed: true,
                     value: 0,
@@ -270,7 +278,7 @@ router.post('/bulk-complete', authenticateToken, async (req, res) => {
         // ✅ EMIT SOCKET EVENT FOR REAL-TIME UPDATES
         if (req.io && tasks.length > 0) {
             try {
-                const userId = req.user.id.toString();
+                const userId = req.user._id.toString();
                 req.io.to(`user:${userId}`).emit('progress.updated', {
                     userId: userId,
                     date: dateString,
