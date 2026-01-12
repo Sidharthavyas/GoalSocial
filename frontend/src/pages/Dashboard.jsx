@@ -102,7 +102,11 @@ const Dashboard = () => {
         }
 
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
 
             const [goalsRes, tasksRes, dailySummary] = await Promise.all([
                 api.get('/goals'),
@@ -114,10 +118,11 @@ const Dashboard = () => {
             setTasks(tasksRes.data.tasks || []);
             setStreakDays(dailySummary.data.streakDays || 0);
 
-            // Calculate stats
             const todayDate = new Date();
-            const todayStr = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate())
-                .toISOString().split('T')[0];
+            const year = todayDate.getFullYear();
+            const month = String(todayDate.getMonth() + 1).padStart(2, '0');
+            const day = String(todayDate.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
 
             const todayTasks = (tasksRes.data.tasks || []).filter(t => {
                 return t.date === todayStr || t.date.startsWith(todayStr);
