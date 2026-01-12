@@ -4,11 +4,12 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { loginLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 // Register new user
-router.post('/register', async (req, res) => {
+router.post('/register', loginLimiter, async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -66,7 +67,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     try {
         const { usernameOrEmail, password } = req.body;
 

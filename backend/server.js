@@ -117,8 +117,8 @@ app.use((req, res, next) => {
 // Apply general API rate limiting to all routes
 app.use("/api/", apiLimiter);
 
-// Auth routes with strict login limiting
-app.use("/api/auth", loginLimiter, authRoutes);
+// Auth routes with strict login limiting applied inside the router
+app.use("/api/auth", authRoutes);
 
 // Other routes
 app.use("/api/users", userRoutes);

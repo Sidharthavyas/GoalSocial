@@ -29,10 +29,10 @@ const Dashboard = () => {
     const isOnline = useOnlineStatus();
 
     const defaultWidgetConfig = useMemo(() => ({
-        order: ['streak', 'todayProgress', 'stats', 'analytics', 'calendar', 'activity'],
+        order: ['streak', 'stats', 'analytics', 'calendar', 'activity'],
         enabled: {
             streak: true,
-            todayProgress: true,
+            streak: true,
             stats: true,
             analytics: true,
             calendar: true,
@@ -164,7 +164,6 @@ const Dashboard = () => {
 
     const widgetLabels = useMemo(() => ({
         streak: 'Streak Badge',
-        todayProgress: "Today's Progress",
         stats: 'Stats',
         analytics: 'Progress Analytics',
         calendar: 'Calendar',
@@ -328,37 +327,11 @@ const Dashboard = () => {
                                         );
                                     }
 
-                                    if (id === 'todayProgress') {
-                                        return (
-                                            <motion.div key={id} variants={itemVariants} className="card mb-lg" style={{ padding: 'var(--space-lg)' }}>
-                                                <div className="flex items-center justify-between mb-sm">
-                                                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Today's Progress</h3>
-                                                    <span className="progress-number text-xl" style={{ fontWeight: 700, color: stats.percentage === 100 ? 'var(--success)' : 'var(--text-primary)' }}>
-                                                        {stats.percentage}%
-                                                    </span>
-                                                </div>
 
-                                                <div className="progress-bar" style={{ height: '12px', marginBottom: 'var(--space-sm)' }}>
-                                                    <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                                </div>
-
-                                                <div className="flex justify-between text-sm text-tertiary">
-                                                    <span>{stats.completed} completed</span>
-                                                    {stats.total === 0 ? (
-                                                        <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                                                            Complete one task to start today's streak
-                                                        </span>
-                                                    ) : (
-                                                        <span>{stats.total - stats.completed} remaining</span>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    }
 
                                     if (id === 'stats') {
                                         return (
-                                            <motion.div key={id} variants={itemVariants} className="grid grid-3 mb-lg">
+                                            <motion.div key={id} variants={itemVariants} className="grid grid-2 mb-lg">
                                                 <div className="card">
                                                     <div className="text-tertiary text-sm mb-sm">Active Goals</div>
                                                     <div className="text-xl" style={{ fontWeight: 700 }}>
@@ -369,21 +342,6 @@ const Dashboard = () => {
                                                             Create your first goal to get started
                                                         </p>
                                                     )}
-                                                </div>
-                                                <div className="card">
-                                                    <div className="text-tertiary text-sm mb-sm">Today's Progress</div>
-                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                        <span className="progress-number">{stats.completed}</span> / <span className="progress-number">{stats.total}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="card">
-                                                    <div className="text-tertiary text-sm mb-sm">Completion Rate</div>
-                                                    <div className="text-xl" style={{ fontWeight: 700 }}>
-                                                        <span className="progress-number">{stats.percentage}</span>%
-                                                    </div>
-                                                    <div className="progress-bar mt-sm">
-                                                        <div className="progress-fill" style={{ width: `${stats.percentage}%` }}></div>
-                                                    </div>
                                                 </div>
                                                 <div className="card">
                                                     <div className="text-tertiary text-sm mb-sm">Active Challenges</div>
