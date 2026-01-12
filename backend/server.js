@@ -27,6 +27,8 @@ import calendarRoutes from "./routes/calendar.js";
 import insightsRoutes from "./routes/insights.js";
 import analyticsRoutes from "./routes/analytics.js";
 import notificationRoutes from "./routes/notifications.js";
+import challengeRoutes from "./routes/challenges.js";
+import routineRoutes from "./routes/routines.js";
 
 // Middleware
 import { apiLimiter, loginLimiter, friendRequestLimiter } from "./middleware/rateLimiter.js";
@@ -130,8 +132,8 @@ app.use("/api/calendar", calendarRoutes);
 app.use("/api/insights", insightsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/challenges", (await import("./routes/challenges.js")).default); // Dynamic import for CommonJS module
-app.use("/api/routines", (await import("./routes/routines.js")).default); // Dynamic import for CommonJS module
+app.use("/api/challenges", challengeRoutes);
+app.use("/api/routines", routineRoutes);
 
 app.get("/api/app/updates", (req, res) => {
     const platform = (req.query.platform || "android").toString().toLowerCase();

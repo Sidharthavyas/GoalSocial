@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import Challenge from '../models/Challenge.js';
+import User from '../models/User.js';
+import Task from '../models/Task.js';
+import Goal from '../models/Goal.js';
+import { authenticateToken as auth } from '../middleware/auth.js';
+
 const router = express.Router();
-const Challenge = require('../models/Challenge');
-const User = require('../models/User');
-const Task = require('../models/Task');
-const Goal = require('../models/Goal');
-const auth = require('../middleware/auth');
 
 // Get all public challenges
 router.get('/', auth, async (req, res) => {
@@ -114,4 +115,4 @@ router.get('/:id/leaderboard', auth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

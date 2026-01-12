@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import Routine from '../models/Routine.js';
+import { authenticateToken as auth } from '../middleware/auth.js';
+
 const router = express.Router();
-const Routine = require('../models/Routine');
-const auth = require('../middleware/auth');
 
 // Get all user routines
 router.get('/', auth, async (req, res) => {
@@ -62,4 +63,4 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

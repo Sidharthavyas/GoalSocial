@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const routineSchema = new mongoose.Schema({
     userId: {
@@ -37,4 +37,4 @@ const routineSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Routine', routineSchema);
+export default mongoose.model('Routine', routineSchema);
