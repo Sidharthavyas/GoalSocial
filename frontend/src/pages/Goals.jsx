@@ -3,6 +3,7 @@ import api from '../utils/api';
 import GoalForm from '../components/GoalForm';
 import GoalCard from '../components/GoalCard';
 import { useSocket } from '../context/SocketContext';
+import { showConfirm, showError, showSuccess } from '../utils/modal';
 
 const Goals = () => {
     const [goals, setGoals] = useState([]);
@@ -39,14 +40,21 @@ const Goals = () => {
     };
 
     const handleDelete = async (goalId) => {
-        if (!confirm('Are you sure you want to delete this goal?')) return;
+        const confirmed = await showConfirm(
+            'Are you sure you want to delete this goal? This action cannot be undone.',
+            'Delete Goal',
+            'warning'
+        );
+
+        if (!confirmed) return;
 
         try {
             await api.delete(`/goals/${goalId}`);
+            await showSuccess('Goal deleted successfully!');
             loadGoals();
         } catch (error) {
             console.error('Failed to delete goal:', error);
-            alert('Failed to delete goal');
+            await showError('Failed to delete goal. Please try again.');
         }
     };
 

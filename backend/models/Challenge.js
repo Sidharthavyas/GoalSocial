@@ -36,6 +36,25 @@ const challengeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
+    dailyCompletions: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        date: {
+            type: String, // Format: YYYY-MM-DD
+            required: true
+        },
+        completed: {
+            type: Boolean,
+            default: true
+        },
+        completedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     linkedGoalKeyword: {
         type: String,
         required: false,

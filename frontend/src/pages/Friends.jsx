@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useSocket } from '../context/SocketContext';
+import { showConfirm, showSuccess, showError } from '../utils/modal';
 
 const Friends = () => {
     const [friends, setFriends] = useState([]);
@@ -69,22 +70,38 @@ const Friends = () => {
     };
 
     const rejectRequest = async (requestId) => {
+        const confirmed = await showConfirm(
+            'Are you sure you want to reject this friend request?',
+            'Reject Friend Request',
+            'warning'
+        );
+
+        if (!confirmed) return;
+
         try {
             await api.post(`/friends/reject/${requestId}`);
+            await showSuccess('Friend request rejected');
             loadData();
         } catch (error) {
-            alert('Failed to reject request');
+            await showError('Failed to reject request');
         }
     };
 
     const removeFriend = async (friendshipId) => {
-        if (!confirm('Remove this friend?')) return;
+        const confirmed = await showConfirm(
+            'Are you sure you want to remove this friend? You will need to send a new friend request to reconnect.',
+            'Remove Friend',
+            'warning'
+        );
+
+        if (!confirmed) return;
 
         try {
             await api.delete(`/friends/${friendshipId}`);
+            await showSuccess('Friend removed successfully');
             loadData();
         } catch (error) {
-            alert('Failed to remove friend');
+            await showError('Failed to remove friend');
         }
     };
 

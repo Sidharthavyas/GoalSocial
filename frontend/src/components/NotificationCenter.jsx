@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNotifications } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import { showConfirm } from '../utils/modal';
 
 const NotificationCenter = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,16 @@ const NotificationCenter = () => {
 
     const handleDelete = async (e, notificationId) => {
         e.stopPropagation();
-        await deleteNotification(notificationId);
+
+        const confirmed = await showConfirm(
+            'Delete this notification?',
+            'Delete Notification',
+            'warning'
+        );
+
+        if (confirmed) {
+            await deleteNotification(notificationId);
+        }
     };
 
     const displayCount = unreadCount > 9 ? '9+' : unreadCount;

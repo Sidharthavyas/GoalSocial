@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import api from '../utils/api';
 import confetti from 'canvas-confetti';
+import { showConfirm, showSuccess, showError } from '../utils/modal';
 
 const Challenges = () => {
     const [challenges, setChallenges] = useState([]);
@@ -9,6 +10,7 @@ const Challenges = () => {
     const [selectedChallenge, setSelectedChallenge] = useState(null);
     const [leaderboard, setLeaderboard] = useState([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [userProgress, setUserProgress] = useState({}); // Track user's progress per challenge
 
     // New Challenge Form State
     const [newTitle, setNewTitle] = useState('');
@@ -23,10 +25,27 @@ const Challenges = () => {
         try {
             const res = await api.get('/challenges');
             setChallenges(res.data);
+
+            // Load progress for each challenge
+            for (const challenge of res.data) {
+                loadUserProgress(challenge._id);
+            }
         } catch (error) {
             console.error('Failed to load challenges', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadUserProgress = async (challengeId) => {
+        try {
+            const res = await api.get(`/challenges/${challengeId}/my-progress`);
+            setUserProgress(prev => ({
+                ...prev,
+                [challengeId]: res.data
+            }));
+        } catch (error) {
+            console.error('Failed to load progress', error);
         }
     };
 
@@ -41,6 +60,15 @@ const Challenges = () => {
 
     const handleJoin = async (id, e) => {
         e.stopPropagation();
+
+        const confirmed = await showConfirm(
+            'Join this challenge and compete with friends?',
+            'Join Challenge',
+            'confirm'
+        );
+
+        if (!confirmed) return;
+
         try {
             await api.post(`/challenges/${id}/join`);
             confetti({
@@ -48,9 +76,50 @@ const Challenges = () => {
                 spread: 70,
                 origin: { y: 0.6 }
             });
-            loadChallenges(); // Refresh to show joined status
+            await showSuccess('Successfully joined the challenge! 🎉');
+            loadChallenges();
         } catch (error) {
-            alert(error.response?.data?.error || 'Failed to join');
+            await showError(error.response?.data?.error || 'Failed to join challenge');
+        }
+    };
+
+    const handleLeave = async (id, e) => {
+        e.stopPropagation();
+
+        const confirmed = await showConfirm(
+            'Are you sure you want to leave this challenge? Your progress will be lost.',
+            'Leave Challenge',
+            'warning'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await api.post(`/challenges/${id}/leave`);
+            await showSuccess('Left the challenge');
+            loadChallenges();
+        } catch (error) {
+            await showError(error.response?.data?.error || 'Failed to leave challenge');
+        }
+    };
+
+    const handleCompleteToday = async (id, e) => {
+        e.stopPropagation();
+
+        try {
+            await api.post(`/challenges/${id}/complete-today`);
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+            await showSuccess('Daily task completed! Keep up the streak! 🔥');
+            loadUserProgress(id);
+            if (selectedChallenge?._id === id) {
+                loadLeaderboard(id);
+            }
+        } catch (error) {
+            await showError(error.response?.data?.error || 'Failed to complete task');
         }
     };
 
@@ -70,9 +139,13 @@ const Challenges = () => {
                 endDate
             });
             setShowCreateModal(false);
+            setNewTitle('');
+            setNewType('streak');
+            setNewTarget(0);
+            await showSuccess('Challenge created successfully!');
             loadChallenges();
         } catch (error) {
-            alert('Failed to create challenge');
+            await showError('Failed to create challenge');
         }
     };
 
@@ -88,33 +161,69 @@ const Challenges = () => {
             <div className="grid grid-2">
                 {/* Challenge List */}
                 <div className="challenges-list">
-                    {challenges.map(challenge => (
-                        <motion.div
-                            key={challenge._id}
-                            className={`card ${selectedChallenge?._id === challenge._id ? 'card-glass' : ''}`}
-                            onClick={() => {
-                                setSelectedChallenge(challenge);
-                                loadLeaderboard(challenge._id);
-                            }}
-                            whileHover={{ scale: 1.02 }}
-                            style={{ cursor: 'pointer', marginBottom: 'var(--space-md)' }}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h3>{challenge.title}</h3>
-                                    <p className="text-sm text-secondary">
-                                        {challenge.participants.length} participants • {challenge.type}
-                                    </p>
+                    {challenges.map(challenge => {
+                        const progress = userProgress[challenge._id];
+                        const isParticipant = progress?.isParticipant;
+                        const completedToday = progress?.completedToday;
+
+                        return (
+                            <motion.div
+                                key={challenge._id}
+                                className={`card ${selectedChallenge?._id === challenge._id ? 'card-glass' : ''}`}
+                                onClick={() => {
+                                    setSelectedChallenge(challenge);
+                                    loadLeaderboard(challenge._id);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                style={{ cursor: 'pointer', marginBottom: 'var(--space-md)' }}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3>{challenge.title}</h3>
+                                        <p className="text-sm text-secondary">
+                                            {challenge.participants.length} participants • {challenge.type}
+                                        </p>
+                                        {isParticipant && progress && (
+                                            <div className="mt-sm">
+                                                <span className="badge badge-success">
+                                                    🔥 {progress.streak} day streak
+                                                </span>
+                                                <span className="badge badge-info ml-sm">
+                                                    ✅ {progress.totalDays} days completed
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-sm" style={{ flexDirection: 'column' }}>
+                                        {!isParticipant ? (
+                                            <button
+                                                className="btn btn-sm btn-primary"
+                                                onClick={(e) => handleJoin(challenge._id, e)}
+                                            >
+                                                Join
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    className={`btn btn-sm ${completedToday ? 'btn-secondary' : 'btn-success'}`}
+                                                    onClick={(e) => handleCompleteToday(challenge._id, e)}
+                                                    disabled={completedToday}
+                                                >
+                                                    {completedToday ? '✓ Done Today' : 'Complete Today'}
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-danger"
+                                                    onClick={(e) => handleLeave(challenge._id, e)}
+                                                >
+                                                    Leave
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-                                <button
-                                    className="btn btn-sm btn-secondary"
-                                    onClick={(e) => handleJoin(challenge._id, e)}
-                                >
-                                    Join
-                                </button>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
 
                 {/* Leaderboard View */}
@@ -129,7 +238,10 @@ const Challenges = () => {
                                             <span className="text-xl font-bold">#{index + 1}</span>
                                             <span>{entry.user.username}</span>
                                         </div>
-                                        <span className="badge badge-success">{entry.score} pts</span>
+                                        <div className="flex gap-sm items-center">
+                                            <span className="badge badge-success">{entry.score} days</span>
+                                            <span className="badge badge-warning">🔥 {entry.streak}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -144,8 +256,8 @@ const Challenges = () => {
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
+                <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <h2>Create Challenge</h2>
                         <form onSubmit={handleCreate}>
                             <div className="form-group">
@@ -157,6 +269,7 @@ const Challenges = () => {
                                 <select value={newType} onChange={e => setNewType(e.target.value)}>
                                     <option value="streak">Maintain Streak</option>
                                     <option value="completion">Complete Tasks</option>
+                                    <option value="count">Reach Target Count</option>
                                 </select>
                             </div>
                             <div className="modal-footer">

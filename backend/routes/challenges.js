@@ -87,6 +87,99 @@ router.post('/:id/join', auth, async (req, res) => {
     }
 });
 
+// Complete today's challenge task
+router.post('/:id/complete-today', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        if (!challenge.participants.includes(req.user.id)) {
+            return res.status(403).json({ error: 'You must join the challenge first' });
+        }
+
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Check if already completed today
+        const existingCompletion = challenge.dailyCompletions.find(
+            dc => dc.userId.toString() === req.user.id && dc.date === today
+        );
+
+        if (existingCompletion) {
+            return res.status(400).json({ error: 'Already completed today' });
+        }
+
+        // Add today's completion
+        challenge.dailyCompletions.push({
+            userId: req.user.id,
+            date: today,
+            completed: true,
+            completedAt: new Date()
+        });
+
+        await challenge.save();
+
+        res.json({
+            message: 'Daily task completed!',
+            challenge,
+            todayCompleted: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get user's progress in a challenge
+router.get('/:id/my-progress', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        const userCompletions = challenge.dailyCompletions.filter(
+            dc => dc.userId.toString() === req.user.id
+        );
+
+        const today = new Date().toISOString().split('T')[0];
+        const completedToday = userCompletions.some(dc => dc.date === today);
+
+        res.json({
+            challenge,
+            isParticipant: challenge.participants.includes(req.user.id),
+            completions: userCompletions,
+            completedToday,
+            totalDays: userCompletions.length,
+            streak: calculateStreak(userCompletions)
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Leave a challenge
+router.post('/:id/leave', auth, async (req, res) => {
+    try {
+        const challenge = await Challenge.findById(req.params.id);
+        if (!challenge) {
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        const index = challenge.participants.indexOf(req.user.id);
+        if (index === -1) {
+            return res.status(400).json({ error: 'Not a participant' });
+        }
+
+        challenge.participants.splice(index, 1);
+        await challenge.save();
+
+        res.json({ message: 'Left challenge successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get Leaderboard
 router.get('/:id/leaderboard', auth, async (req, res) => {
     try {
@@ -97,28 +190,16 @@ router.get('/:id/leaderboard', auth, async (req, res) => {
             return res.status(404).json({ error: 'Challenge not found' });
         }
 
-        // Calculate progress for each participant
+        // Calculate progress for each participant based on dailyCompletions
         const leaderboard = [];
-        const start = new Date(challenge.startDate);
-        const end = new Date(challenge.endDate);
 
-        // This is a simplified calculation. Real-world would be more complex/optimized.
         for (const user of challenge.participants) {
-            // Find goals of this user that might match the challenge type
-            // For now, we'll just count ALL completed tasks within the date range as a robust baseline
-            // Ideally, we'd filter by linkedGoalKeyword if present
+            const userCompletions = challenge.dailyCompletions.filter(
+                dc => dc.userId.toString() === user._id.toString() && dc.completed
+            );
 
-            let query = {
-                userId: user._id,
-                date: {
-                    $gte: start.toISOString().split('T')[0],
-                    $lte: end.toISOString().split('T')[0]
-                },
-                completed: true
-            };
-
-            const tasks = await Task.find(query);
-            const score = tasks.length; // Simple count scoring
+            const score = userCompletions.length; // Number of days completed
+            const streak = calculateStreak(userCompletions);
 
             leaderboard.push({
                 user: {
@@ -126,7 +207,11 @@ router.get('/:id/leaderboard', auth, async (req, res) => {
                     username: user.username,
                     avatar: user.avatar
                 },
-                score
+                score,
+                streak,
+                lastCompleted: userCompletions.length > 0
+                    ? userCompletions[userCompletions.length - 1].date
+                    : null
             });
         }
 
@@ -138,5 +223,32 @@ router.get('/:id/leaderboard', auth, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Helper function to calculate streak
+function calculateStreak(completions) {
+    if (completions.length === 0) return 0;
+
+    // Sort by date descending
+    const sorted = completions
+        .map(c => c.date)
+        .sort((a, b) => new Date(b) - new Date(a));
+
+    let streak = 0;
+    const today = new Date();
+
+    for (let i = 0; i < sorted.length; i++) {
+        const expectedDate = new Date(today);
+        expectedDate.setDate(today.getDate() - i);
+        const expectedDateStr = expectedDate.toISOString().split('T')[0];
+
+        if (sorted[i] === expectedDateStr) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+
+    return streak;
+}
 
 export default router;
