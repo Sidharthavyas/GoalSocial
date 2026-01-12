@@ -30,14 +30,44 @@ const Calendar = ({ goals, tasks, challenges = [], challengeCompletions = [], on
     };
 
     const getDayProgress = (date) => {
-        const dayTasks = getTasksForDate(date);
-        if (dayTasks.length === 0) return 0;
+        // Normalize date to start of day for comparison
+        const checkDate = new Date(date);
+        checkDate.setHours(0, 0, 0, 0);
 
-        const totalProgress = dayTasks.reduce((sum, task) => {
-            return sum + (task.percentage || (task.completed ? 100 : 0));
+        // Find all goals that were active on this date
+        const activeGoalsForDate = goals.filter(goal => {
+            const startDate = new Date(goal.startDate);
+            startDate.setHours(0, 0, 0, 0);
+
+            // Not active if goal starts in future
+            if (startDate > checkDate) return false;
+
+            // Check end date if it exists
+            if (goal.endDate) {
+                const endDate = new Date(goal.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                if (endDate < checkDate) return false;
+            }
+
+            return true;
+        });
+
+        if (activeGoalsForDate.length === 0) return 0;
+
+        const dayTasks = getTasksForDate(date);
+
+        // Calculate total progress across ALL active goals
+        const totalProgress = activeGoalsForDate.reduce((sum, goal) => {
+            // Find task for this specific goal on this date
+            const task = dayTasks.find(t => (t.goalId._id || t.goalId) === goal._id);
+
+            if (task) {
+                return sum + (task.percentage || (task.completed ? 100 : 0));
+            }
+            return sum;
         }, 0);
 
-        return Math.round(totalProgress / dayTasks.length);
+        return Math.round(totalProgress / activeGoalsForDate.length);
     };
 
     const prevMonth = () => {
