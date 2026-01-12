@@ -14,8 +14,10 @@ const Calendar = ({ goals, tasks, onUpdate, readOnly = false }) => {
     const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     const getTasksForDate = (date) => {
-        const dateString = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-            .toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
         return tasks.filter(task => task.date === dateString || task.date.startsWith(dateString));
     };
 
