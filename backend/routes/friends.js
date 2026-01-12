@@ -1,6 +1,7 @@
 import express from 'express';
 import Friend from '../models/Friend.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -44,6 +45,26 @@ router.post('/request', authenticateToken, async (req, res) => {
 
         await friendRequest.save();
 
+        // Create notification for recipient
+        await Notification.create({
+            userId: recipientId,
+            type: 'friend_request',
+            title: 'New Friend Request',
+            message: `${req.user.username} sent you a friend request`,
+            metadata: {
+                requestId: friendRequest._id,
+                requesterId: req.user._id
+            }
+        });
+
+        // Emit socket event if available
+        if (req.io) {
+            req.io.to(recipientId).emit('notification', {
+                type: 'friend_request',
+                from: req.user.username
+            });
+        }
+
         res.status(201).json({
             message: 'Friend request sent',
             request: friendRequest
@@ -76,6 +97,25 @@ router.post('/accept/:requestId', authenticateToken, async (req, res) => {
 
         const requester = await User.findById(friendRequest.requester)
             .select('uuid username');
+
+        // Create notification for requester
+        await Notification.create({
+            userId: friendRequest.requester,
+            type: 'friend_accepted',
+            title: 'Friend Request Accepted',
+            message: `${req.user.username} accepted your friend request`,
+            metadata: {
+                friendId: req.user._id
+            }
+        });
+
+        // Emit socket event
+        if (req.io) {
+            req.io.to(friendRequest.requester.toString()).emit('notification', {
+                type: 'friend_accepted',
+                from: req.user.username
+            });
+        }
 
         res.json({
             message: 'Friend request accepted',

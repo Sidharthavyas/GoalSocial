@@ -19,7 +19,7 @@ const NotificationCenter = () => {
         // Use both click and touchstart for better mobile support
         document.addEventListener('click', handleClickOutside, true);
         document.addEventListener('touchstart', handleClickOutside, true);
-        
+
         return () => {
             document.removeEventListener('click', handleClickOutside, true);
             document.removeEventListener('touchstart', handleClickOutside, true);
@@ -35,7 +35,9 @@ const NotificationCenter = () => {
             consistency_over_perfection: '💪',
             friend_pressure: '👥',
             one_tap_return: '⚡',
-            friend_online: '🟢'
+            friend_online: '🟢',
+            friend_request: '👋',
+            friend_accepted: '✅'
         };
         return icons[type] || '📢';
     };
@@ -48,6 +50,8 @@ const NotificationCenter = () => {
         // Navigate based on notification type
         if (notification.type === 'friend_online' && notification.metadata?.friendId) {
             navigate(`/friends/${notification.metadata.friendId}`);
+        } else if (notification.type === 'friend_request' || notification.type === 'friend_accepted') {
+            navigate('/friends');
         } else {
             navigate('/dashboard');
         }
@@ -90,7 +94,7 @@ const NotificationCenter = () => {
             </button>
 
             {isOpen && (
-                <div 
+                <div
                     className="notification-dropdown"
                     onClick={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
@@ -130,12 +134,12 @@ const NotificationCenter = () => {
                                             {notification.message}
                                         </div>
                                         <div className="notification-time">
-                                            {new Date(notification.createdAt).toLocaleDateString('en-US', {
+                                            {notification.createdAt ? new Date(notification.createdAt).toLocaleDateString('en-US', {
                                                 month: 'short',
                                                 day: 'numeric',
                                                 hour: 'numeric',
                                                 minute: '2-digit'
-                                            })}
+                                            }) : 'Just now'}
                                         </div>
                                     </div>
                                     <button

@@ -55,6 +55,10 @@ const NOTIFICATION_MESSAGES = {
     friendReacted: {
         title: '😍 {{friendName}} reacted to your update',
         message: '{{friendName}} reacted with {{reaction}} to your progress'
+    },
+    friendChallengeJoined: {
+        title: '🏆 {{friendName}} joined a challenge!',
+        message: '{{friendName}} joined: "{{challengeTitle}}". Join them!'
     }
 };
 
@@ -138,6 +142,13 @@ export const createNotification = async (userId, type, metadata = {}) => {
                 message = NOTIFICATION_MESSAGES.friendReacted.message
                     .replace('{{friendName}}', metadata.friendName)
                     .replace('{{reaction}}', metadata.reaction);
+                break;
+
+            case 'friend_challenge_joined':
+                title = NOTIFICATION_MESSAGES.friendChallengeJoined.title.replace('{{friendName}}', metadata.friendName);
+                message = NOTIFICATION_MESSAGES.friendChallengeJoined.message
+                    .replace('{{friendName}}', metadata.friendName)
+                    .replace('{{challengeTitle}}', metadata.challengeTitle);
                 break;
 
             default:

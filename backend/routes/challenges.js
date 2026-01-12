@@ -3,6 +3,8 @@ import Challenge from '../models/Challenge.js';
 import User from '../models/User.js';
 import Task from '../models/Task.js';
 import Goal from '../models/Goal.js';
+import Friend from '../models/Friend.js';
+import { createNotification } from '../services/notificationService.js';
 import { authenticateToken as auth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -56,6 +58,28 @@ router.post('/:id/join', auth, async (req, res) => {
 
         challenge.participants.push(req.user.id);
         await challenge.save();
+
+        // Notify friends about joining challenge
+        try {
+            const friends = await Friend.find({
+                $or: [{ requester: req.user._id }, { recipient: req.user._id }],
+                status: 'accepted'
+            });
+
+            for (const friendship of friends) {
+                const friendId = friendship.requester.toString() === req.user._id.toString()
+                    ? friendship.recipient
+                    : friendship.requester;
+
+                await createNotification(friendId, 'friend_challenge_joined', {
+                    friendName: req.user.username,
+                    challengeTitle: challenge.title,
+                    challengeId: challenge._id
+                });
+            }
+        } catch (error) {
+            console.error('Error sending challenge notifications:', error);
+        }
 
         res.json(challenge);
     } catch (error) {
